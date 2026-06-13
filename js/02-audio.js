@@ -127,7 +127,7 @@ function lfoSet(param, v) {
   LFO_STATE[param] = parseFloat(v);
   if (_lfoNode) {
     if (param === 'rate')  _lfoNode.frequency.value = LFO_STATE.rate;
-    if (param === 'depth') { _lfoNode.min = 1 - LFO_STATE.depth; _lfoNode.max = 1 + LFO_STATE.depth; }
+    if (param === 'depth') { _lfoNode.min = -LFO_STATE.depth; _lfoNode.max = LFO_STATE.depth; }
   }
   const el = document.getElementById('sv-lfo-' + param); if (el) el.textContent = parseFloat(v).toFixed(2);
 }
@@ -179,7 +179,7 @@ async function startFlow() {
     _lfoGain.connect(eqLow);
     masterGain.connect(analyser);
     // LFO natif Tone.js — fonctionne dans l'audio thread, zéro commandes JS
-    _lfoNode = new Tone.LFO({ frequency: LFO_STATE.rate, min: 1 - LFO_STATE.depth, max: 1 + LFO_STATE.depth, type: 'sine' }).start();
+    _lfoNode = new Tone.LFO({ frequency: LFO_STATE.rate, min: -LFO_STATE.depth, max: LFO_STATE.depth, type: 'sine' }).start();
     if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
     flowing = true;
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));

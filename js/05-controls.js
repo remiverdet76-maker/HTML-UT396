@@ -61,7 +61,13 @@ function setN(i, raw) {
 }
 function setRatio(i, ri) {
   PAIRS[i].pingala.ri = ri;
-  if (flowing) swapPingala(i); else updatePairUI(i);
+  if (flowing) {
+    tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
+    tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
+    updatePairUI(i);
+  } else {
+    updatePairUI(i);
+  }
   saveState();
 }
 function setDelta(i, raw) {
@@ -69,12 +75,13 @@ function setDelta(i, raw) {
   if (isNaN(d)) return;
   PAIRS[i].ida.delta = d;
   updatePairUI(i);
-  if (flowing) swapIDebounced(i);
+  if (flowing) tuneOsc(PAIRS[i].ida.id, calcIFreq(i));
   saveState();
 }
 function togglePolarity(i) {
   PAIRS[i].ida.polarity *= -1;
-  if (flowing) swapIda(i); else updatePairUI(i);
+  if (flowing) tuneOsc(PAIRS[i].ida.id, calcIFreq(i));
+  else updatePairUI(i);
   saveState();
 }
 
@@ -148,12 +155,12 @@ function nIncrement(i) { setN(i, Math.round((PAIRS[i].pingala.n + 0.1)*10)/10); 
 function nReset(i) {
   PAIRS[i].pingala.n = (i === MASTER_IDX) ? 1.0 : 0.2 + (i*0.5);
   updatePairUI(i);
-  if (flowing) swapPDebounced(i);
+  if (flowing) { tuneOsc(PAIRS[i].pingala.id, calcPFreq(i)); tuneOsc(PAIRS[i].ida.id, calcIFreq(i)); }
 }
 function nRandom(i) {
   PAIRS[i].pingala.n = Math.round((0.1 + Math.random()*5.0)*10)/10;
   updatePairUI(i);
-  if (flowing) swapPDebounced(i);
+  if (flowing) { tuneOsc(PAIRS[i].pingala.id, calcPFreq(i)); tuneOsc(PAIRS[i].ida.id, calcIFreq(i)); }
 }
 
 function masterStep(delta) {
