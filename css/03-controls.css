@@ -321,14 +321,10 @@
   box-shadow:0 0 16px rgba(200,180,255,.3);
 }
 
-/* ─── Navigation — barre gauche verticale ───── */
+/* ─── Navigation — colonne dans #right-dock ─── */
 #tab-nav{
-  position:fixed;
-  left:10px;top:50%;
-  transform:translateY(-50%);
   display:flex;flex-direction:column;
   gap:.32rem;
-  z-index:100;
   padding:.42rem .32rem;
   background:rgba(2,1,14,.92);
   border:1px solid rgba(200,100,255,.18);

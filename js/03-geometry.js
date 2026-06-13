@@ -8,7 +8,7 @@ const GEO_NAMES=['Cube Métatron','Dodécaèdre','Icosaèdre','Double Pyramide',
 const GEO_IDS  =['metatron','dodeca','icosa','bipyramid','merkaba','graine','fleur','arbre','sphere'];
 let activeGeometry=0;
 
-const V={rx:.28,ry:0,trx:.28,try_:0,zoom:1,tzoom:1,drag:false,lmx:0,lmy:0,t:0,spd:1,autoRot:true};
+const V={rx:.28,ry:0,trx:.28,try_:0,zoom:2.5,tzoom:2.5,drag:false,lmx:0,lmy:0,t:0,spd:1,autoRot:true};
 
 // HP: wi=vitesse flux · ex=échelle géo · f=couplage fréquence audio
 const HP={wi:6.0,ex:.18,tM:7,ns:200,br:true,pa:true,ma:true,la:true,gl:.65,f:1,breathe:1};
@@ -481,6 +481,7 @@ function drawMetatron(){
 }
 
 // ── Drag / zoom canvas ────────────────────────────────────────────
+let _lastPinch=0;
 function g3dInitDrag(){
   const cv=document.getElementById('meta-canvas');
   if(!cv||cv._g3dDrag) return;
@@ -503,17 +504,30 @@ function g3dInitDrag(){
     V.tzoom=Math.max(.3,Math.min(3,V.tzoom*(e.deltaY>0?.92:1.09)));
   },{passive:false});
   cv.addEventListener('touchstart',e=>{
-    if(e.touches.length===1){V.drag=true;V.lmx=e.touches[0].clientX;V.lmy=e.touches[0].clientY;V.autoRot=false;}
+    if(e.touches.length===1){
+      V.drag=true;V.lmx=e.touches[0].clientX;V.lmy=e.touches[0].clientY;V.autoRot=false;
+    } else if(e.touches.length===2){
+      V.drag=false;
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      _lastPinch=Math.sqrt(dx*dx+dy*dy);
+    }
   },{passive:true});
   cv.addEventListener('touchmove',e=>{
     e.preventDefault();
-    if(e.touches.length===1&&V.drag){
+    if(e.touches.length===2){
+      const dx=e.touches[0].clientX-e.touches[1].clientX;
+      const dy=e.touches[0].clientY-e.touches[1].clientY;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(_lastPinch>0) V.tzoom=Math.max(.3,Math.min(3,V.tzoom*dist/_lastPinch));
+      _lastPinch=dist;
+    } else if(e.touches.length===1&&V.drag){
       V.try_+=(e.touches[0].clientX-V.lmx)*.008;
       V.trx+=(e.touches[0].clientY-V.lmy)*.008;
       V.lmx=e.touches[0].clientX;V.lmy=e.touches[0].clientY;
     }
   },{passive:false});
-  cv.addEventListener('touchend',()=>{V.drag=false;});
+  cv.addEventListener('touchend',()=>{V.drag=false;_lastPinch=0;});
   cv.style.cursor='grab';cv.style.pointerEvents='auto';
 }
 

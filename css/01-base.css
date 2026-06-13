@@ -36,13 +36,16 @@ body{
   pointer-events:all;
 }
 
-/* Bouton Flux — droite, centré verticalement */
-#flux-side{
+/* Dock droit — Flux (haut) + Nav (bas), centrés verticalement */
+#right-dock{
   position:fixed;
-  right:.8rem;left:auto;
+  right:.8rem;
   top:50%;transform:translateY(-50%);
-  z-index:22;
+  display:flex;flex-direction:column;align-items:center;
+  gap:.55rem;
+  z-index:100;
 }
+#flux-side{ position:static; }
 
 /* FBF Hub — bas centre, bouton seul */
 #fbf-hub{
@@ -81,13 +84,11 @@ body{
   backdrop-filter:blur(10px);
 }
 
-/* Navigation — top centre, horizontal */
+/* Navigation — dans #right-dock, colonne verticale */
 #tab-nav{
-  position:fixed;top:1rem;left:50%;transform:translateX(-50%);
-  z-index:30;
-  display:flex;flex-direction:row;
-  gap:.45rem;align-items:center;
-  flex-wrap:nowrap;
+  position:static;
+  display:flex;flex-direction:column;
+  gap:.32rem;align-items:stretch;
 }
 
 /* ─── Panels latéraux ────────────────────── */

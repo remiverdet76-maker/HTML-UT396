@@ -505,6 +505,7 @@ function init() {
 
   // Init 3D geometry engine
   animMetatron();
+  setGeometry(0); // Cube Métatron par défaut, taille max
 
   // Sync global delta
   setGlobalDelta(globalDelta);

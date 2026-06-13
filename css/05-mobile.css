@@ -49,9 +49,12 @@
 /* ── Paysage mobile (hauteur ≤ 500px) ───────── */
 @media (max-height: 500px) and (orientation: landscape) {
 
-  /* Nav verticale déjà sur la gauche — réduire */
+  /* Dock droit — réduire */
+  #right-dock {
+    right: 5px !important;
+    gap: .3rem !important;
+  }
   #tab-nav {
-    left: 6px !important;
     padding: .28rem .26rem !important;
     gap: .22rem !important;
     border-radius: 14px !important;
@@ -62,10 +65,10 @@
     padding: .32rem .6rem !important;
   }
 
-  /* Flux droit — réduire */
+  /* Flux — réduire */
   #flux-btn {
     width: 44px !important;
-    height: 90px !important;
+    height: 70px !important;
     border-radius: 22px !important;
   }
   .flux-icon  { font-size: 1.1rem !important; }
