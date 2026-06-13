@@ -521,11 +521,25 @@ function init() {
   ui('idle', 'Prêt · Cliquez FLUX ou FBF pour rayonner');
 }
 
+// ── Forçage mode paysage ─────────────────────────────────────────
+function _checkOrientation() {
+  const portrait = window.innerHeight > window.innerWidth;
+  const ov = document.getElementById('rotate-overlay');
+  if (!ov) return;
+  ov.style.display = portrait ? 'flex' : 'none';
+  if (portrait) {
+    try { screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
+  }
+}
+window.addEventListener('resize', _checkOrientation);
+window.addEventListener('orientationchange', _checkOrientation);
+
 function launchInit() {
   let done = false;
   function go() { if (done) return; done=true; setTimeout(init, 60); }
   try { document.fonts.ready.then(go); } catch(e) {}
   setTimeout(go, 800);
+  _checkOrientation();
 }
 
 if (document.readyState==='complete') { launchInit(); }

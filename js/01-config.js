@@ -70,5 +70,5 @@ function safeF(f)    { return Math.max(36, Math.min(864, f)); }
 function fmtFreq(f)  { return f.toFixed(1) + ' Hz'; }
 function fmtShort(f) { return f.toFixed(1); }
 
-// AudioContext optimisé pour casques Bluetooth (grands buffers, latence playback)
-try { Tone.setContext(new Tone.Context({ latencyHint: 'playback' })); } catch(e) {}
+// AudioContext optimisé pour casques Bluetooth — grands buffers + scheduling lookahead 500 ms
+try { Tone.setContext(new Tone.Context({ latencyHint: 'playback', lookAhead: 0.5 })); } catch(e) {}

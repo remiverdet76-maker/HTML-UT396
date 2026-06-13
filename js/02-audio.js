@@ -9,7 +9,9 @@ let limiter = null;
 let eqLow = null, eqMid = null, eqHigh = null;
 let masterDelay = null, masterReverb = null;
 let chorus = null, compressor = null;
-const LFO_STATE = {on:false, rate:.25, depth:.08, _t:0};
+const LFO_STATE = {on:false, rate:.25, depth:.08};
+let _lfoNode = null, _lfoGain = null;  // LFO natif Tone.js (audio thread)
+let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
 let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
 
@@ -112,12 +114,35 @@ function setFadeDur(v) {
 }
 
 function lfoToggle(on) {
-  LFO_STATE.on = on; LFO_STATE._t = 0;
-  if (!on && masterGain) try { masterGain.gain.setTargetAtTime(masterVol, Tone.now(), 0.1); } catch(e) {}
+  LFO_STATE.on = on;
+  if (!_lfoNode || !_lfoGain) return;
+  if (on) {
+    _lfoNode.connect(_lfoGain.gain);
+  } else {
+    try { _lfoNode.disconnect(); } catch(e) {}
+    _lfoGain.gain.setTargetAtTime(1, Tone.now(), 0.1);
+  }
 }
 function lfoSet(param, v) {
   LFO_STATE[param] = parseFloat(v);
+  if (_lfoNode) {
+    if (param === 'rate')  _lfoNode.frequency.value = LFO_STATE.rate;
+    if (param === 'depth') { _lfoNode.min = 1 - LFO_STATE.depth; _lfoNode.max = 1 + LFO_STATE.depth; }
+  }
   const el = document.getElementById('sv-lfo-' + param); if (el) el.textContent = parseFloat(v).toFixed(2);
+}
+
+function _startBTKeepalive() {
+  if (_btKeepalive) return;
+  try {
+    const ctx = Tone.context.rawContext;
+    const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    src.connect(ctx.destination);
+    src.start();
+    _btKeepalive = src;
+  } catch(e) {}
 }
 
 function setChorusDepth(v) { if (chorus) try { chorus.depth = parseFloat(v); } catch(e) {} }
@@ -142,14 +167,20 @@ async function startFlow() {
   try {
     await Tone.start();
     if (Tone.context.state !== 'running') await Tone.context.resume();
+    _startBTKeepalive();
     initFXChain();
     analyser   = new Tone.Analyser('waveform', 256);
     masterGain = new Tone.Gain(0);
+    _lfoGain   = new Tone.Gain(1);
     const _now = Tone.now();
     masterGain.gain.setValueAtTime(0, _now);
-    masterGain.gain.linearRampToValueAtTime(masterVol, _now + _fadeDur);
-    masterGain.connect(eqLow);
+    masterGain.gain.setTargetAtTime(masterVol, _now, _fadeDur / 3);
+    masterGain.connect(_lfoGain);
+    _lfoGain.connect(eqLow);
     masterGain.connect(analyser);
+    // LFO natif Tone.js — fonctionne dans l'audio thread, zéro commandes JS
+    _lfoNode = new Tone.LFO({ frequency: LFO_STATE.rate, min: 1 - LFO_STATE.depth, max: 1 + LFO_STATE.depth, type: 'sine' }).start();
+    if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
     flowing = true;
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
@@ -185,11 +216,11 @@ async function stopFlow() {
     setTimeout(() => { ['o','g','p'].forEach(k => { try { n[k].dispose?.(); } catch(e){} }); }, 500);
   });
   setTimeout(() => {
-    [masterGain, analyser].forEach(x => {
+    [_lfoNode, _lfoGain, masterGain, analyser].forEach(x => {
       try { x?.disconnect(); } catch(e){}
-      try { x?.dispose(); } catch(e){}
+      try { x?.dispose?.(); } catch(e){}
     });
-    masterGain = null; analyser = null;
+    _lfoNode = null; _lfoGain = null; masterGain = null; analyser = null;
     PAIRS.forEach((_, i) => updateOrbUI(i));
     const mc = document.getElementById('vpc-p' + MASTER_IDX);
     if (mc) mc.style.boxShadow = '';
@@ -202,11 +233,7 @@ function masterTick() {
   masterRAF = requestAnimationFrame(masterTick);
   metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
   drawMetatron();
-  if (LFO_STATE.on && masterGain && flowing) {
-    LFO_STATE._t += 0.016;
-    const lv = masterVol * (1 + LFO_STATE.depth * Math.sin(LFO_STATE._t * LFO_STATE.rate * Math.PI * 2));
-    try { masterGain.gain.setTargetAtTime(Math.max(0, lv), Tone.now(), 0.015); } catch(e) {}
-  }
+  // LFO géré nativement par Tone.LFO — aucun traitement JS ici
   if (!flowing || !analyser || document.visibilityState === 'hidden') return;
   const data = analyser.getValue();
   let sum = 0, count = 0;
