@@ -1,0 +1,2511 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FBF 432 - Édition Anniversaire</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;}
+body{
+  min-height:100vh;font-family:'IM Fell English',Georgia,serif;color:#f0ead8;
+  background:#0f031c;
+  background-image:
+    radial-gradient(ellipse 140% 60% at 50% -5%,  rgba(200,100,255,.22),transparent 55%),
+    radial-gradient(ellipse 80%  90% at  4%  45%,  rgba(100,30,200,.26), transparent 55%),
+    radial-gradient(ellipse 80%  90% at 96%  55%,  rgba(30,100,220,.26), transparent 55%),
+    radial-gradient(ellipse 120% 55% at 50%  108%, rgba(120,10,200,.32), transparent 55%);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:.5rem 0 3rem;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Ccircle cx='80' cy='80' r='72' fill='none' stroke='%23d8b0ff' stroke-width='.4' opacity='.25'/%3E%3Ccircle cx='80' cy='80' r='52' fill='none' stroke='%23d8b0ff' stroke-width='.3' opacity='.18'/%3E%3Ccircle cx='80' cy='80' r='32' fill='none' stroke='%23d8b0ff' stroke-width='.25' opacity='.14'/%3E%3Cline x1='80' y1='8' x2='80' y2='152' stroke='%23d8b0ff' stroke-width='.2' opacity='.14'/%3E%3Cline x1='8' y1='80' x2='152' y2='80' stroke='%23d8b0ff' stroke-width='.2' opacity='.14'/%3E%3Cline x1='22' y1='22' x2='138' y2='138' stroke='%23d8b0ff' stroke-width='.18' opacity='.1'/%3E%3Cline x1='138' y1='22' x2='22' y2='138' stroke='%23d8b0ff' stroke-width='.18' opacity='.1'/%3E%3C/svg%3E");
+  background-size:160px 160px;opacity:.08;
+}
+
+.wrap {
+  max-width: 1500px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
+  padding: 0 .6rem;
+  box-sizing: border-box;
+}
+
+.view-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.meta-container {
+  position: relative;
+  width: 100%;
+  height: clamp(320px, 55vw, 600px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.meta-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  pointer-events: all;
+}
+
+header{text-align:center;}
+header h1{
+  font-family:'Cinzel Decorative',serif;font-size:3.8rem;font-weight:700;letter-spacing:.32em;
+  background:linear-gradient(135deg,#FF8EFF 0%,#C084FC 25%,#63E6FF 50%,#86FFC0 75%,#FFE080 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;
+  text-shadow: 0 0 35px rgba(200, 100, 255, 0.35);
+}
+header .sub{font-size:1.1rem;font-style:italic;letter-spacing:.18em;color:rgba(220,200,255,.65);margin-top:.6rem;}
+
+#meta-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+#sphere-layer{position:absolute;inset:0;}
+#sphere-layer .vp-wrap,#sphere-layer .vp-center-wrap{pointer-events:all;}
+
+/* Sphères Vesica - Taille augmentée */
+.vp-wrap{
+  position:absolute;transform:translate(-50%,-50%);
+  width:180px;height:180px;
+  display:flex;align-items:center;justify-content:center;
+  z-index:6;
+}
+.vp-p{
+  width:105px;height:105px;border-radius:50%;border:2px solid;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  cursor:pointer;transition:filter .35s,transform .25s,opacity .4s;
+  flex-shrink:0;
+}
+.vp-p:hover{filter:brightness(1.5);transform:scale(1.1);}
+.vp-p:active{animation:tap-flash .25s ease-out;}
+@keyframes tap-flash{0%{filter:brightness(2.2);transform:scale(1.15);}100%{filter:brightness(1);transform:scale(1);}}
+.vp-p.vp-muted{opacity:.12;filter:saturate(.06);}
+.vp-p.vp-live{animation:vplive 8s ease-in-out infinite;}
+@keyframes vplive{0%,100%{filter:brightness(1);}50%{filter:brightness(1.38);}}
+.vp-type{font-family:'Cinzel Decorative',serif;font-size:.65rem;letter-spacing:.06em;opacity:.7;}
+.vp-freq{font-family:'IM Fell English',serif;font-size:1.7rem;line-height:1;color:#f5eedc;text-shadow:0 0 12px rgba(255,255,255,.45);font-weight:700;}
+.vp-hz{display:none;}
+
+.vp-center-wrap{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:200px;height:200px;
+  display:flex;align-items:center;justify-content:center;
+  z-index:8;
+}
+.ms-freq{font-family:'IM Fell English',serif;font-size:2.2rem;color:#F3D9FF;line-height:1;cursor:text;text-shadow:0 0 20px rgba(220,130,255,.75);font-weight:bold;}
+.ms-freq:hover{color:#fff;}
+.ms-state{font-size:.7rem;font-style:italic;letter-spacing:.1em;color:rgba(220,180,255,.7);text-transform:uppercase;transition:color .5s;font-weight:bold;}
+#freq-input-master{
+  display:none;width:95px;background:transparent;border:none;border-bottom:2px solid rgba(220,140,255,.75);
+  color:#F3D9FF;font-family:'IM Fell English',serif;font-size:1.8rem;text-align:center;outline:none;-moz-appearance:textfield;
+}
+#freq-input-master::-webkit-inner-spin-button,#freq-input-master::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+/* Micro Boutons d'ajustement - augmentés pour lisibilité */
+.micro-btn{
+  position:absolute;width:42px;height:42px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.7);
+  background:rgba(12,2,32,.9);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:700;cursor:pointer;transition:all .18s;z-index:10;
+  color:rgba(255,255,255,.95);text-shadow:0 0 6px rgba(255,255,255,.5);
+  box-shadow:0 0 8px rgba(0,0,0,.8);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.micro-btn:hover{border-color:#fff;color:#fff;transform:scale(1.3);box-shadow:0 0 18px rgba(180,100,255,.8);}
+.micro-left {left:2px; top:50%;transform:translateY(-50%);}
+.micro-right{right:2px;top:50%;transform:translateY(-50%);}
+.micro-top  {top:2px;  left:50%;transform:translateX(-50%);}
+.micro-bot  {bottom:2px;left:50%;transform:translateX(-50%);}
+
+/* Ligne d'ajustement globale des polices x2.5 */
+.ctrl-row{
+  display:flex;flex-direction:column;gap:1.5rem;align-items:center;
+  width:100%;
+}
+.ctrl-col{display:flex;flex-direction:column;gap:1.2rem;width:100%;}
+
+/* Style de l'ajustement Delta global */
+.delta-sphere-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:.8rem;
+  background:rgba(200,100,255,.08);border:1.5px solid rgba(200,100,255,.25);
+  border-radius:18px;padding:1.2rem 1.6rem;width:100%;
+}
+.delta-sphere-label{font-size:.9rem;font-style:italic;letter-spacing:.18em;text-transform:uppercase;color:rgba(220,190,255,.8);text-align:center;font-weight:bold;}
+.delta-sphere-row{display:flex;align-items:center;gap:1rem;justify-content:center;width:100%;}
+.delta-sphere-btn{
+  width:55px;height:55px;border-radius:50%;
+  background:radial-gradient(circle,rgba(220,100,255,.24) 0%,rgba(220,100,255,.08) 60%,transparent 100%);
+  border:2px solid rgba(220,100,255,.65);
+  color:#F3D9FF;font-size:1.8rem;font-weight:700;line-height:1;
+  cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 15px rgba(200,80,255,.25);
+}
+.delta-sphere-btn:hover{border-color:#F3D9FF;box-shadow:0 0 26px rgba(220,100,255,.6);transform:scale(1.15);}
+.delta-sphere-val{
+  display:flex;flex-direction:column;align-items:center;gap:.3rem;
+  min-width:110px;
+}
+.delta-sphere-num{
+  width:110px;background:rgba(25,8,48,.8);
+  border:1.5px solid rgba(220,100,255,.38);border-bottom:3.5px solid rgba(220,100,255,.8);
+  color:#F3D9FF;font-family:'IM Fell English',serif;font-size:2.2rem;
+  text-align:center;padding:.3rem .4rem;border-radius:8px;
+  outline:none;-moz-appearance:textfield;transition:border-color .2s;
+  font-weight:bold;
+}
+.delta-sphere-wave{font-family:'IM Fell English',serif;font-size:1.1rem;font-style:italic;letter-spacing:.1em;font-weight:bold;}
+.delta-sphere-range{font-size:.75rem;font-style:italic;color:rgba(220,190,255,.5);letter-spacing:.1em;}
+
+/* Master Volume */
+.mvol-wrap{display:flex;flex-direction:column;align-items:center;gap:.5rem;width:100%;max-width:350px;margin: 0 auto;}
+.mvol-label{font-size:.9rem;font-style:italic;letter-spacing:.16em;text-transform:uppercase;color:rgba(220,190,255,.7);font-weight:bold;}
+.mvol-row{display:flex;align-items:center;gap:1rem;width:100%;justify-content:center;}
+.mvol-slider{flex:1;cursor:pointer;accent-color:#D29DFF;height:24px;}
+.mvol-val{font-family:'IM Fell English',serif;font-size:1.2rem;color:rgba(235,210,255,.85);min-width:45px;text-align:right;font-weight:bold;}
+
+/* Boutons de commande principaux */
+.btn-reset{
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.25);
+  color:rgba(245,240,225,.75);font-size:1.6rem;width:55px;height:55px;
+  border-radius:50%;cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-reset:hover{border-color:rgba(255,200,100,.8);color:rgba(255,200,100,1);box-shadow:0 0 18px rgba(255,180,60,.4);transform:rotate(-180deg);}
+
+.btn-flow{
+  background:rgba(200,100,255,.12);border:2px solid rgba(200,100,255,.6);color:#F3D9FF;
+  padding:1rem 3.5rem;font-family:'Cinzel Decorative',serif;font-size:1.3rem;letter-spacing:.28em;
+  text-transform:uppercase;border-radius:6px;cursor:pointer;transition:all .5s;
+  text-shadow:0 0 16px rgba(200,100,255,.5);
+  font-weight:bold;
+}
+.btn-flow:hover:not(:disabled){background:rgba(200,100,255,.22);box-shadow:0 0 38px rgba(200,100,255,.4);border-color:#F3D9FF;}
+.btn-flow:disabled{opacity:.32;cursor:not-allowed;filter:grayscale(.5);}
+
+/* Status Bar */
+.status{display:flex;align-items:center;justify-content:center;gap:.8rem;font-size:1.1rem;font-style:italic;letter-spacing:.14em;color:rgba(200,170,255,.6);font-weight:bold;}
+.wave-badge{font-family:'IM Fell English',serif;font-size:1.1rem;font-style:italic;padding:.15rem .6rem;border-radius:12px;border:1.5px solid transparent;transition:all .4s;letter-spacing:.08em;font-weight:bold;}
+.wave-badge.live{border-color:currentColor;background:rgba(200,100,255,.15);box-shadow:0 0 12px currentColor;}
+.dot{width:12px;height:12px;border-radius:50%;background:rgba(180,100,255,.4);transition:all .5s;}
+.dot.live{background:#D29DFF;box-shadow:0 0 14px rgba(200,100,255,.9);animation:blink 2s infinite;}
+
+/* Contrôle Fréquence Maître — compact 50% */
+.mfreq-ctrl{
+  display:flex;flex-direction:column;align-items:center;gap:.3rem;
+  background:rgba(200,100,255,.08);border:1.5px solid rgba(200,100,255,.28);
+  border-radius:12px;padding:.45rem .8rem;width:100%;
+}
+.mfreq-label{font-size:.6rem;font-style:italic;letter-spacing:.18em;text-transform:uppercase;color:rgba(220,180,255,.8);font-weight:bold;}
+.mfreq-row{display:flex;align-items:center;gap:.4rem;justify-content:center;width:100%;}
+.mfreq-btn{
+  width:34px;height:34px;border-radius:50%;
+  background:radial-gradient(circle,rgba(220,100,255,.24) 0%,rgba(220,100,255,.08) 65%,transparent 100%);
+  border:1.5px solid rgba(220,100,255,.7);color:#F3D9FF;
+  font-size:.95rem;font-weight:700;cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;
+}
+.mfreq-btn:hover{border-color:#F3D9FF;box-shadow:0 0 14px rgba(220,100,255,.5);transform:scale(1.12);}
+.mfreq-btn.sm{width:28px;height:28px;font-size:.7rem;opacity:.8;}
+.mfreq-input{
+  width:82px;background:rgba(25,8,48,.8);
+  border:1.5px solid rgba(220,100,255,.38);border-bottom:2.5px solid rgba(220,100,255,.8);
+  color:#F3D9FF;font-family:'IM Fell English',serif;font-size:1.45rem;
+  text-align:center;padding:.12rem .2rem;border-radius:7px;
+  outline:none;-moz-appearance:textfield;font-weight:bold;
+}
+.mfreq-range{font-size:.5rem;font-style:italic;color:rgba(220,180,255,.45);letter-spacing:.12em;}
+
+/* BOUTON MAGIQUE - Sphère Multicolore de type Gémeaux */
+.magic-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+.magic-btn-sphere {
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  background: radial-gradient(circle at 30% 30%, #FF8EFF, #63E6FF, #FFE080, #100225);
+  background-size: 200% 200%;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel Decorative', serif;
+  font-size: 0.88rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.6);
+  box-shadow: 0 0 28px rgba(200, 100, 255, 0.7), inset 0 0 15px rgba(255,255,255,0.4);
+  animation: magicRotate 6s ease-in-out infinite alternate;
+  transition: all 0.3s;
+}
+.magic-btn-sphere:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 50px rgba(99, 230, 255, 0.9), inset 0 0 25px rgba(255,255,255,0.6);
+  border-color: #63E6FF;
+}
+.magic-btn-sphere:active {
+  transform: scale(0.95);
+}
+@keyframes magicRotate {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+.magic-adjust-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: #f0ead8;
+  font-size: 1.6rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.magic-adjust-btn:hover {
+  border-color: #63E6FF;
+  background: rgba(99, 230, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Progression Harmonique */
+.prog-wrap{
+  width:100%;
+  background:rgba(255,180,80,.07);
+  border:1.5px solid rgba(255,180,80,.28);
+  border-radius:18px;padding:1.2rem 1.6rem;
+  display:flex;flex-direction:column;gap:.9rem;
+}
+.prog-title{
+  font-family:'Cinzel Decorative',serif;font-size:1rem;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(255,200,100,.85);text-align:center;font-weight:bold;
+}
+.prog-row{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;justify-content:center;width:100%;}
+.prog-label{font-size:.9rem;font-style:italic;color:rgba(255,210,130,.8);letter-spacing:.1em;min-width:60px;font-weight:bold;}
+.prog-select{
+  flex: 1;
+  background:rgba(25,12,2,.8);border:1.5px solid rgba(255,180,80,.38);
+  border-bottom:3.5px solid rgba(255,180,80,.75);
+  color:rgba(255,220,150,1);font-family:'IM Fell English',serif;
+  font-style:italic;font-size:1.1rem;padding:.4rem .6rem;
+  border-radius:8px;cursor:pointer;outline:none;
+  font-weight:bold;
+}
+.prog-mode-row{display:flex;gap:.5rem;justify-content:center;flex-wrap:wrap;width:100%;}
+.prog-mode-btn{
+  font-family:'IM Fell English',serif;font-size:.9rem;font-style:italic;
+  padding:.35rem .9rem;border-radius:16px;cursor:pointer;
+  border:1.5px solid rgba(255,180,80,.38);background:rgba(255,180,80,.08);
+  color:rgba(255,210,130,.75);transition:all .2s;
+  font-weight:bold;
+}
+.prog-mode-btn:hover{background:rgba(255,180,80,.2);color:#FFE080;}
+.prog-mode-btn.active{
+  background:rgba(255,180,80,.28);border-color:rgba(255,180,80,.8);
+  color:#FFD080;box-shadow:0 0 14px rgba(255,160,40,.35);
+}
+.prog-range-row{display:flex;align-items:center;gap:.6rem;justify-content:center;flex-wrap:wrap;width:100%;}
+.prog-range-input{
+  width:90px;background:rgba(25,12,2,.8);
+  border:1.5px solid rgba(255,180,80,.38);border-bottom:3.5px solid rgba(255,180,80,.75);
+  color:rgba(255,220,150,1);font-family:'IM Fell English',serif;font-size:1.2rem;
+  text-align:center;padding:.3rem .4rem;border-radius:8px;
+  outline:none;-moz-appearance:textfield;font-weight:bold;
+}
+.prog-freq-display{
+  font-family:'IM Fell English',serif;font-size:1.1rem;
+  color:rgba(255,220,130,.75);text-align:center;
+  letter-spacing:.1em;font-style:italic;min-height:1.5rem;
+  transition:color .3s;font-weight:bold;
+}
+.prog-freq-display.active{color:rgba(255,200,80,1);text-shadow:0 0 10px rgba(255,180,60,0.5);}
+.btn-prog{
+  background:rgba(255,180,80,.12);border:2px solid rgba(255,180,80,.6);
+  color:#FFD080;font-family:'Cinzel Decorative',serif;font-size:1rem;
+  letter-spacing:.18em;padding:.8rem 2.2rem;border-radius:6px;
+  cursor:pointer;transition:all .3s;
+  display:block;margin:0 auto;font-weight:bold;
+}
+.btn-prog:hover{background:rgba(255,180,80,.24);box-shadow:0 0 24px rgba(255,160,40,.35);border-color:#FFE080;}
+.btn-prog.running{
+  background:rgba(255,100,60,.18);border-color:rgba(255,120,60,.72);
+  color:#FFB080;animation:prog-pulse 2s ease-in-out infinite;
+}
+
+/* Onglets & Navigation */
+.tabs-bar{
+  display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;width:100%;
+}
+.tab-btn{
+  font-family:'IM Fell English',serif;font-size:1.1rem;font-style:italic;letter-spacing:.1em;
+  padding:.5rem 1.2rem;border-radius:24px;cursor:pointer;transition:background .2s,border-color .2s,color .2s;
+  border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);
+  color:rgba(245,240,225,.7);font-weight:bold;
+}
+.tab-btn:hover{background:rgba(255,255,255,.15);color:#fff;}
+.tab-btn.active{color:#fff;font-style:normal;box-shadow: 0 0 14px rgba(200,100,255,0.3);}
+.tab-btn.live-pair::after{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:currentColor;margin-left:.45rem;vertical-align:middle;animation:blink 2s infinite;}
+.tab-pane{display:none;width:100%;}
+.tab-pane.active{display:block;}
+
+/* Panneaux des Paires - Agrandis */
+.pair-panel{
+  background:rgba(255,255,255,.05);border:1.5px solid rgba(255,255,255,.14);
+  border-left:6px solid transparent;border-radius:18px;padding:1.4rem 1.6rem;
+  display:flex;flex-direction:column;gap:1.2rem;
+  backdrop-filter:blur(8px);
+}
+.pair-head{display:flex;align-items:center;gap:.8rem;padding-bottom:.6rem;border-bottom:1px solid rgba(255,255,255,.15);}
+.pair-dot{width:15px;height:15px;border-radius:50%;flex-shrink:0;}
+.pair-name{font-family:'Cinzel Decorative',serif;font-size:1.1rem;letter-spacing:.12em;flex:1;font-weight:bold;}
+.pair-mute-p,.pair-mute-i{
+  font-family:inherit;font-size:.9rem;padding:.3rem .8rem;border-radius:6px;cursor:pointer;transition:all .2s;letter-spacing:.06em;
+  background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.25);color:rgba(245,240,225,.8);
+  font-weight:bold;
+}
+.pair-mute-p:hover,.pair-mute-i:hover{border-color:rgba(255,255,255,.6);color:#fff;}
+.pair-mute-p.muted,.pair-mute-i.muted{background:rgba(220,60,60,.16);border-color:rgba(220,70,70,.5);color:rgba(255,150,130,.92);}
+.btn-activer{
+  background:rgba(120,220,60,.1);border:1.5px solid rgba(120,220,60,.45);
+  color:rgba(150,240,90,.85);font-family:inherit;font-size:.9rem;
+  padding:.3rem .8rem;border-radius:6px;cursor:pointer;transition:all .2s;
+  font-weight:bold;
+}
+.btn-activer:hover{background:rgba(120,220,60,.22);border-color:rgba(120,220,60,.8);color:#b2ff59;}
+
+/* Formules Mathématiques Modifiées */
+.block-formula{
+  display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap;
+  font-family:'IM Fell English',serif;font-style:italic;font-size:1.15rem;
+  padding:.4rem .6rem;background:rgba(0,0,0,.3);border-radius:8px;
+  border:1.1px solid rgba(255,255,255,0.06);
+}
+.bf-sym{color:rgba(210,190,255,.5);font-style:normal;font-size:1rem;margin:0 .1rem;}
+.bf-master,.bf-ratio,.bf-n{color:rgba(235,215,255,1);font-weight:bold;}
+.bf-result{color:#F3D9FF;font-size:1.35rem;font-style:normal;margin-left:.2rem;font-weight:bold;}
+.bf-link{color:rgba(170,215,255,1);font-weight:bold;}
+.bf-delta{color:rgba(235,215,255,1);font-weight:bold;}
+
+.accord-header{
+  display:flex;align-items:center;gap:.6rem;cursor:pointer;
+  padding:.5rem .6rem;border-radius:6px;
+  transition:background .18s;user-select:none;
+}
+.accord-header:hover{background:rgba(255,255,255,.08);}
+.accord-arrow{font-size:.9rem;transition:transform .22s;color:rgba(255,255,255,.45);}
+.accord-arrow.open{transform:rotate(90deg);}
+.accord-body{overflow:hidden;transition:max-height .3s ease,opacity .2s;max-height:0;opacity:0;}
+.accord-body.open{max-height:700px;opacity:1;}
+
+.bctrl{display:flex;flex-direction:column;gap:.3rem;}
+.bctrl-row{display:flex;align-items:center;justify-content:space-between;gap:.4rem;}
+.bctrl-label{font-size:.85rem;font-style:italic;letter-spacing:.12em;text-transform:uppercase;color:rgba(220,190,255,.65);font-weight:bold;}
+.wave-state{font-family:'IM Fell English',serif;font-size:.9rem;font-style:italic;letter-spacing:.1em;transition:color .3s;flex-shrink:0;font-weight:bold;}
+select.bsel{
+  width:100%;background:rgba(25,10,50,.8);border:1.5px solid rgba(180,120,255,.35);
+  color:rgba(240,230,255,.95);font-family:'IM Fell English',serif;font-style:italic;font-size:1.1rem;
+  padding:.4rem .6rem;border-radius:8px;cursor:pointer;outline:none;
+  font-weight:bold;
+}
+select.bsel option{background:#17032b;color:#f5eedc;}
+input[type="range"].brange{width:100%;cursor:pointer;height:24px;}
+
+.param-row{display:flex;align-items:center;gap:.8rem;}
+.param-label{font-size:.95rem;font-style:italic;color:rgba(220,190,255,.65);letter-spacing:.1em;min-width:40px;font-weight:bold;}
+input.param-input{
+  width:100px;background:rgba(25,10,50,.8);
+  border:1.5px solid rgba(180,120,255,.32);border-bottom:3.5px solid rgba(220,140,255,.6);
+  color:#F3D9FF;font-family:'IM Fell English',serif;font-style:italic;font-size:1.3rem;
+  text-align:center;padding:.3rem .4rem;border-radius:6px;
+  outline:none;-moz-appearance:textfield;font-weight:bold;
+}
+.param-hint{font-size:.75rem;font-style:italic;color:rgba(220,190,255,.45);}
+.polarity-btn{
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(200,160,255,.38);
+  color:rgba(240,220,255,.85);font-family:'IM Fell English',serif;
+  font-size:1.2rem;width:34px;height:34px;border-radius:50%;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;font-weight:bold;
+}
+.polarity-btn:hover{border-color:#F3D9FF;color:#fff;}
+.polarity-btn.negative{color:#FFB0B0;border-color:rgba(255,160,160,.5);}
+
+/* Onglet de Sélection de Géométrie */
+.geometry-select-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  background: rgba(200, 100, 255, 0.05);
+  border: 1.5px solid rgba(200, 100, 255, 0.22);
+  border-radius: 18px;
+  padding: 1rem;
+  width: 100%;
+}
+.geometry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+.geometry-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1.5px solid rgba(200, 100, 255, 0.25);
+  color: rgba(245, 240, 225, 0.7);
+  border-radius: 8px;
+  padding: 0.5rem;
+  font-family: 'IM Fell English', serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.geometry-btn:hover {
+  background: rgba(200, 100, 255, 0.15);
+  border-color: #F3D9FF;
+  color: #fff;
+}
+.geometry-btn.active {
+  background: rgba(200, 100, 255, 0.3);
+  border-color: #F3D9FF;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(200, 100, 255, 0.5);
+}
+
+/* ── STYLES MASTER FX & FLUX SPECTROID ── */
+.fx-panel {
+  display:flex; flex-direction:column; gap:1.5rem;
+  padding:1rem; max-width:900px; margin:0 auto;
+}
+.fx-block {
+  background:rgba(255,255,255,.05); border:1.5px solid rgba(200,160,255,.22);
+  border-radius:16px; padding:1.2rem;
+  display:flex; flex-direction:column; gap:1rem;
+}
+.fx-title {
+  font-family:'Cinzel Decorative',serif; font-size:1rem;
+  letter-spacing:0.2em; color:#F3D9FF; text-transform:uppercase;
+  border-bottom:1px solid rgba(200,160,255,.25); padding-bottom:0.6rem;
+  display:flex; justify-content:space-between; align-items:center;
+  font-weight:bold;
+}
+.fx-row {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:1rem; flex-wrap:wrap; width:100%;
+}
+.fx-control-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex: 1;
+  min-width: 250px;
+}
+.fx-label {
+  font-size:0.9rem; font-style:italic; color:rgba(220,195,255,.8); letter-spacing:0.1em;
+  min-width: 90px; font-weight:bold;
+}
+.fx-slider {
+  flex:1; accent-color:#D29DFF; cursor:pointer; height:20px;
+}
+.fx-btn-step {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(200,160,255,.4);
+  background: rgba(12,2,32,.7);
+  color: #F3D9FF;
+  font-size: 1.2rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.fx-btn-step:hover {
+  background: rgba(200,160,255,.2);
+  border-color: #F3D9FF;
+  transform: scale(1.1);
+}
+.fx-select {
+  background:rgba(25,10,50,.8);border:1.5px solid rgba(180,120,255,.3);
+  color:rgba(240,230,255,.9);font-family:'IM Fell English',serif;font-style:italic;font-size:1rem;
+  padding:.4rem .6rem;border-radius:6px;cursor:pointer;outline:none;
+  font-weight:bold;
+}
+.fx-val-disp {
+  font-family:'IM Fell English',serif; font-size:1rem; color:#D29DFF;
+  min-width: 45px; text-align: right; font-weight:bold;
+}
+
+/* Spectroid Canvas (Parametric EQ Visualizer) */
+.spectroid-container {
+  width: 100%;
+  height: 200px;
+  background: #080112;
+  border: 2px solid rgba(200,160,255,.45);
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 25px rgba(200,100,255,0.15) inset;
+}
+#spectroid-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#btn-fullscreen{
+  position:fixed;top:.7rem;right:.8rem;z-index:9999;
+  width:46px;height:46px;border-radius:50%;
+  background:rgba(10,2,25,.8);border:2.1px solid rgba(255,255,255,.35);
+  color:rgba(255,255,255,.8);font-size:1.3rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;backdrop-filter:blur(6px);
+}
+#btn-fullscreen:hover {
+  border-color:#63E6FF; color:#fff; box-shadow: 0 0 15px rgba(99,230,255,0.4);
+}
+
+.section-sep{
+  width:100%;display:flex;align-items:center;gap:1.2rem;
+  font-family:'Cinzel Decorative',serif;font-size:.75rem;letter-spacing:.3em;
+  text-transform:uppercase;color:rgba(220,180,255,.45);
+}
+.section-sep::before,.section-sep::after{content:'';flex:1;height:1.5px;background:rgba(200,120,255,.22);}
+
+/* Preset Tab style */
+.preset-panel{display:flex;flex-direction:column;gap:1.5rem;padding:.6rem .2rem;}
+.preset-intro{font-size:.95rem;font-style:italic;color:rgba(220,200,255,.65);text-align:center;letter-spacing:.1em;line-height:1.6;font-weight:bold;}
+.preset-section-title{
+  font-family:'Cinzel Decorative',serif;font-size:.8rem;letter-spacing:.22em;
+  text-transform:uppercase;color:rgba(220,180,255,.75);
+  display:flex;align-items:center;gap:.8rem;font-weight:bold;
+}
+.preset-section-title::before,.preset-section-title::after{content:'';flex:1;height:1px;background:rgba(200,140,255,.25);}
+.preset-grid{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(65px, 1fr));gap:.45rem;
+}
+.preset-freq-btn{
+  display:flex;flex-direction:column;align-items:center;gap:.1rem;
+  padding:.6rem .3rem;border-radius:10px;cursor:pointer;
+  border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.05);
+  transition:all .18s;
+}
+.preset-freq-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.45);transform:scale(1.08);}
+.preset-freq-btn.active{border-color:rgba(220,140,255,1);background:rgba(200,100,255,.24);box-shadow:0 0 16px rgba(200,100,255,.35);}
+.preset-freq-hz{font-family:'IM Fell English',serif;font-size:1.15rem;color:#f5eedc;line-height:1;font-weight:bold;}
+.preset-freq-label{font-size:.65rem;font-style:italic;color:rgba(220,190,255,.55);letter-spacing:.08em;font-weight:bold;}
+.preset-assign-wrap{
+  background:rgba(0,0,0,.35);border-radius:14px;padding:1rem 1.2rem;
+  display:flex;flex-direction:column;gap:.7rem;border:1.5px solid rgba(255,255,255,.1);
+}
+.preset-assign-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;}
+.preset-assign-label{font-size:.85rem;font-style:italic;color:rgba(220,190,255,.65);min-width:110px;letter-spacing:.08em;font-weight:bold;}
+.preset-assign-freq{
+  font-family:'IM Fell English',serif;font-size:1.15rem;
+  padding:.2rem .6rem;border-radius:6px;border:1.5px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.08);color:#f5eedc;font-weight:bold;
+}
+.preset-assign-ratio{font-size:.8rem;color:rgba(220,190,255,.6);font-style:italic;font-weight:bold;}
+.btn-preset-launch{
+  background:rgba(200,100,255,.15);border:2px solid rgba(200,100,255,.55);
+  color:#F3D9FF;font-family:'Cinzel Decorative',serif;font-size:.95rem;
+  letter-spacing:.2em;padding:.9rem 2.5rem;border-radius:6px;
+  cursor:pointer;transition:all .3s;margin:0 auto;display:block;
+  font-weight:bold;
+}
+.btn-preset-launch:hover{background:rgba(200,100,255,.26);box-shadow:0 0 32px rgba(200,100,255,.35);border-color:#F3D9FF;}
+
+/* Notice & Guide */
+.notice-panel{
+  display:flex;flex-direction:column;gap:1.2rem;
+  padding:.8rem .4rem;max-width:800px;margin:0 auto;
+}
+.notice-h1{
+  font-family:'Cinzel Decorative',serif;font-size:1.3rem;letter-spacing:.2em;
+  text-align:center;color:#F3D9FF;margin-bottom:.5rem;font-weight:bold;
+}
+.notice-block{
+  background:rgba(255,255,255,.05);border-left:4px solid rgba(200,100,255,.45);
+  border-radius:0 12px 12px 0;padding:.9rem 1.1rem;
+  display:flex;flex-direction:column;gap:.4rem;
+}
+.notice-term{
+  font-family:'Cinzel Decorative',serif;font-size:.85rem;letter-spacing:.15em;
+  color:rgba(200,100,255,1);text-transform:uppercase;font-weight:bold;
+}
+.notice-def{font-size:.95rem;font-style:italic;color:rgba(235,225,255,.8);line-height:1.6;}
+
+/* ── MAGIC LAYOUT 3 COLONNES ── */
+.magic-layout{
+  display:grid;grid-template-columns:auto 96px 1fr;
+  gap:.65rem;width:100%;align-items:center;margin:.5rem 0;
+}
+@media(max-width:640px){.magic-layout{grid-template-columns:auto 80px 1fr;}}
+.magic-step-col{display:flex;flex-direction:column;gap:.26rem;align-items:center;}
+.magic-step-btn{
+  padding:.27rem .52rem;min-width:50px;border-radius:8px;
+  background:rgba(99,230,255,.09);border:1.5px solid rgba(99,230,255,.3);
+  color:#63E6FF;font-family:'IM Fell English',serif;
+  font-size:.78rem;font-weight:bold;cursor:pointer;transition:all .14s;text-align:center;
+}
+.magic-step-btn:hover{background:rgba(99,230,255,.22);border-color:rgba(99,230,255,.72);transform:scale(1.07);}
+.magic-right-col{display:flex;flex-direction:column;gap:.42rem;}
+.magic-step-row{display:flex;gap:.26rem;flex-wrap:wrap;justify-content:flex-start;}
+/* Tableau doré Cosmos */
+.cosmos-table-wrap{
+  background:rgba(200,155,40,.07);border:1px solid rgba(200,155,40,.28);
+  border-radius:10px;padding:.3rem .44rem;
+}
+.cosmos-table-title{
+  font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(240,195,70,.7);text-align:center;
+  margin-bottom:.2rem;font-style:italic;
+}
+.cosmos-row{
+  display:grid;grid-template-columns:9px 1fr 38px 30px;
+  gap:.06rem .14rem;align-items:center;
+  padding:.1rem 0;border-bottom:1px solid rgba(200,155,40,.1);
+}
+.cosmos-row:last-child{border-bottom:none;}
+.cosmos-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.cosmos-freq{font-size:1.11rem;font-weight:bold;font-style:normal;font-family:'IM Fell English',serif;}
+.cosmos-ratio{font-size:.92rem;font-style:italic;text-align:center;opacity:.88;}
+.cosmos-n{font-size:1.01rem;text-align:right;font-style:italic;opacity:.82;}
+
+/* Binaural compact — bleu électrique */
+.delta-binaural-compact{
+  background:linear-gradient(135deg,rgba(0,80,255,.09),rgba(20,200,255,.05))!important;
+  border-color:rgba(30,155,255,.48)!important;
+  gap:.4rem!important;padding:.45rem .8rem!important;
+}
+.delta-binaural-compact .delta-sphere-label{
+  font-size:.55rem!important;color:rgba(80,195,255,.95)!important;
+}
+.delta-binaural-compact .delta-sphere-btn{
+  width:34px!important;height:34px!important;font-size:1.1rem!important;
+  border-color:rgba(30,155,255,.65)!important;
+  background:radial-gradient(circle,rgba(30,155,255,.22) 0%,transparent 100%)!important;
+  box-shadow:0 0 9px rgba(0,140,255,.2)!important;
+}
+.delta-binaural-compact .delta-sphere-num{
+  width:70px!important;font-size:1.35rem!important;
+  border-color:rgba(30,155,255,.38)!important;
+  border-bottom-color:rgba(30,155,255,.88)!important;
+}
+.delta-binaural-compact .delta-sphere-wave{font-size:.7rem!important;color:#63CCFF!important;}
+.delta-binaural-compact .delta-sphere-range{font-size:.5rem!important;}
+
+/* Geometry select inside Metatron — full-width below canvas */
+.geometry-meta-wrap{
+  width:100%;
+  background:rgba(200,100,255,.05);
+  border:1.5px solid rgba(200,100,255,.22);
+  border-radius:18px;padding:.7rem 1rem;
+}
+
+</style>
+</head>
+
+<body>
+<div class="wrap">
+<button id="btn-fullscreen" onclick="toggleFullscreen()" title="Plein écran">⛶</button>
+
+  <header>
+    <h1>FBF 432</h1>
+    <div class="sub">Harmonique Cosmique · 6 Canaux Binauraux · Géométrie Sacrée</div>
+  </header>
+
+  <div class="tabs-bar" id="tabs-bar"></div>
+
+  <!-- Onglet Principal Metatron -->
+  <div class="tab-pane active" id="tab-meta">
+    <div class="view-meta">
+
+      <!-- Canvas Géométrie Sacrée — pleine largeur -->
+      <div class="meta-container" id="meta-container">
+        <canvas id="meta-canvas"></canvas>
+        <div id="sphere-layer"></div>
+      </div>
+
+      <!-- Sélecteur de Géométrie Sacrée — pleine largeur sous le canvas -->
+      <div class="geometry-meta-wrap">
+        <div class="delta-sphere-label" style="color:#D29DFF;font-size:.6rem;margin-bottom:.5rem;">Sélecteur de Géométrie Sacrée</div>
+        <div class="geometry-grid">
+          <button class="geometry-btn active" id="gbtn-0" onclick="setGeometry(0)">Metatron Or</button>
+          <button class="geometry-btn" id="gbtn-1" onclick="setGeometry(1)">Cube de Métatron</button>
+          <button class="geometry-btn" id="gbtn-2" onclick="setGeometry(2)">Merkaba</button>
+          <button class="geometry-btn" id="gbtn-3" onclick="setGeometry(3)">Sri Yantra</button>
+          <button class="geometry-btn" id="gbtn-4" onclick="setGeometry(4)">Torus 3D</button>
+          <button class="geometry-btn" id="gbtn-5" onclick="setGeometry(5)">Fleur de Vie</button>
+          <button class="geometry-btn" id="gbtn-6" onclick="setGeometry(6)">Graine de Vie</button>
+          <button class="geometry-btn" id="gbtn-7" onclick="setGeometry(7)">Arbre de Vie</button>
+          <button class="geometry-btn" id="gbtn-8" onclick="setGeometry(8)">Vesica Piscis</button>
+          <button class="geometry-btn" id="gbtn-9" onclick="setGeometry(9)">Noeud Infini</button>
+          <button class="geometry-btn" id="gbtn-10" onclick="setGeometry(10)">Équilibre Vectoriel</button>
+          <button class="geometry-btn" id="gbtn-11" onclick="setGeometry(11)">Réseau 64-Tetra</button>
+        </div>
+      </div>
+
+      <!-- Contrôleurs audio -->
+      <div class="meta-controls">
+        <div class="ctrl-row">
+          <div class="ctrl-col">
+
+            <!-- Mode Cosmique — + à gauche, − à droite -->
+            <div class="delta-sphere-wrap" style="border-color:rgba(99,230,255,.45);background:rgba(99,230,255,.04);padding:.8rem .9rem .9rem;">
+              <div class="delta-sphere-label" style="color:#63E6FF;">✦ Mode Cosmique Automatique ✦</div>
+
+              <div class="magic-layout">
+
+                <!-- Col gauche : étapes POSITIVES -->
+                <div class="magic-step-col">
+                  <button class="magic-step-btn" onclick="masterStep(108)">+108</button>
+                  <button class="magic-step-btn" onclick="masterStep(72)">+72</button>
+                  <button class="magic-step-btn" onclick="masterStep(36)">+36</button>
+                  <button class="magic-step-btn" onclick="masterStep(12)">+12</button>
+                </div>
+
+                <!-- Centre : Sphère Magique -->
+                <button class="magic-btn-sphere" onclick="triggerMagicAuto()" id="magic-btn">
+                  <span>BOUTON</span>
+                  <span style="font-size:.65rem;letter-spacing:.1em;opacity:.9;">MAGIQUE</span>
+                </button>
+
+                <!-- Col droite : étapes NÉGATIVES + tableau doré -->
+                <div class="magic-right-col">
+                  <div class="magic-step-row">
+                    <button class="magic-step-btn" onclick="masterStep(-12)">−12</button>
+                    <button class="magic-step-btn" onclick="masterStep(-36)">−36</button>
+                    <button class="magic-step-btn" onclick="masterStep(-72)">−72</button>
+                    <button class="magic-step-btn" onclick="masterStep(-108)">−108</button>
+                  </div>
+                  <div class="cosmos-table-wrap" id="cosmos-table">
+                    <div class="cosmos-table-title">Fréq · Ratio · N</div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="delta-sphere-range" style="color:rgba(99,230,255,.65);margin-top:.3rem;">Gamme, Fréquence et Ratios Sacrés instantanés</div>
+            </div>
+
+            <!-- Volume général + Status — au-dessus de Fréquence maître -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem;width:100%;">
+              <div class="status" id="status">
+                <div class="dot" id="dot"></div>
+                <span id="stxt" style="font-size:1.1rem;font-weight:bold;">Initialisation...</span>
+                <span class="wave-badge" id="wave-badge"></span>
+              </div>
+              <div class="mvol-wrap">
+                <span class="mvol-label">Volume général</span>
+                <div class="mvol-row">
+                  <input type="range" id="mvol-slider" class="mvol-slider"
+                         min="0" max="1" step="0.01" value="0.8"
+                         oninput="setMasterVol(this.value)">
+                  <span class="mvol-val" id="mvol-val">80%</span>
+                  <button class="btn-reset" id="btn-reset" onclick="resetAll()" title="Réinitialiser" style="margin-left:.7rem;">↺</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Fréquence Maître compact + Rayonner/Dissoudre -->
+            <div class="mfreq-ctrl">
+              <div class="mfreq-label">Fréquence maître</div>
+              <div class="mfreq-row">
+                <button class="mfreq-btn sm" onclick="masterStep(-1)" title="-1 Hz">−</button>
+                <input type="number" id="master-input" class="mfreq-input"
+                       min="36" max="1296" value="432" step="1"
+                       oninput="onMasterInput(this.value)"
+                       onchange="onMasterChange(this.value)">
+                <button class="mfreq-btn" onclick="masterStep(1)" title="+1 Hz">+</button>
+              </div>
+              <div class="mfreq-range">36 — 1296 Hz</div>
+              <div style="display:flex;gap:.7rem;width:100%;margin-top:.5rem;">
+                <button class="btn-flow" id="btn-ray" onclick="startFlow()" style="flex:1;padding:.6rem .8rem;font-size:1rem;border-color:#86FFC0;color:#86FFC0;background:rgba(134,255,192,0.06);">Rayonner</button>
+                <button class="btn-flow" id="btn-dis" onclick="stopFlow()" style="flex:1;padding:.6rem .8rem;font-size:1rem;border-color:#FF8E8E;color:#FF8E8E;background:rgba(255,142,142,0.06);">Dissoudre</button>
+              </div>
+            </div>
+
+            <!-- Battement Binaural Global — compact bleu électrique -->
+            <div class="delta-sphere-wrap delta-binaural-compact">
+              <div class="delta-sphere-label">Battement Binaural Global (Toutes Paires)</div>
+              <div class="delta-sphere-row">
+                <button class="delta-sphere-btn" onclick="deltaStep(-0.1)" title="-0.1 Hz">−</button>
+                <div class="delta-sphere-val">
+                  <input type="number" class="delta-sphere-num" id="global-delta-input"
+                         min="0.1" max="36" step="0.1" value="1.8"
+                         oninput="setGlobalDelta(this.value)"
+                         onchange="setGlobalDelta(this.value)">
+                  <span class="delta-sphere-wave" id="global-ws" style="color:#63CCFF">Delta</span>
+                  <span class="delta-sphere-range">0.1 — 36 Hz</span>
+                </div>
+                <button class="delta-sphere-btn" onclick="deltaStep(0.1)" title="+0.1 Hz">+</button>
+              </div>
+            </div>
+
+            <!-- Partager Configuration + hint clavier -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:.8rem;width:100%;flex-wrap:wrap;">
+              <button class="btn-flow" onclick="exportState()" style="flex:1;padding:.6rem 1rem;font-size:.85rem;border-color:rgba(99,230,255,.5);color:#63E6FF;background:rgba(99,230,255,.06);">⎘ Partager Config</button>
+              <span style="font-size:.7rem;font-style:italic;color:rgba(220,190,255,.3);letter-spacing:.1em;white-space:nowrap;">[ Espace ] Rayonner / Dissoudre</span>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const FADE = 1.6;
+const swapTimers = {};
+let masterFreq = 252, flowing = false;
+let masterVol = 0.8;
+let nodes = {}, masterGain = null, analyser = null;
+
+// Chaîne FX — créée une seule fois à l'init
+let limiter = null;
+let eqLow = null, eqMid = null, eqHigh = null;
+let masterDelay = null, masterReverb = null;
+let metaAngle = 0, masterRAF = null;
+
+// Type de géométrie active (0 à 11)
+let activeGeometry = 0;
+
+// 8 ratios sacrés demandés par l'utilisateur
+const RATIO_OPTS = [
+  {r:9/10, l:'9/10'},
+  {r:10/9, l:'10/9'},
+  {r:11/10, l:'11/10'},
+  {r:10/11, l:'10/11'},
+  {r:12/11, l:'12/11'},
+  {r:11/12, l:'11/12'},
+  {r:10/12, l:'10/12'},
+  {r:12/10, l:'12/10'}
+];
+
+const MASTER_IDX = 6;
+// Initialisation des 7 oscillateurs (déployés avec binaural par défaut à 1.8 Hz)
+const PAIRS = [
+  { label:'Paire 1', color:'#FF6B6B', grad:['#FF6B6B','#FF9A8B'],
+    pingala:{id:'p0', ri:2, n:0.3, vol:.12}, ida:{id:'i0', delta:1.8,  polarity:1, vol:.12} },
+  { label:'Paire 2', color:'#FFB347', grad:['#FFB347','#FFD080'],
+    pingala:{id:'p1', ri:2, n:0.6, vol:.12}, ida:{id:'i1', delta:1.8,  polarity:1, vol:.12} },
+  { label:'Paire 3', color:'#E8FF60', grad:['#E8FF60','#C8FF80'],
+    pingala:{id:'p2', ri:2, n:1.2, vol:.12}, ida:{id:'i2', delta:1.8,  polarity:1, vol:.12} },
+  { label:'Paire 4', color:'#56FFB0', grad:['#56FFB0','#80FFD0'],
+    pingala:{id:'p3', ri:2, n:1.8, vol:.12}, ida:{id:'i3', delta:1.8,  polarity:1, vol:.12} },
+  { label:'Paire 5', color:'#60D8FF', grad:['#60D8FF','#80B0FF'],
+    pingala:{id:'p4', ri:2, n:2.5, vol:.12}, ida:{id:'i4', delta:1.8,  polarity:1, vol:.12} },
+  { label:'Paire 6', color:'#C080FF', grad:['#C080FF','#E080FF'],
+    pingala:{id:'p5', ri:2, n:2.9, vol:.12}, ida:{id:'i5', delta:1.8,  polarity:1, vol:.12} },
+  { label:'Maître',  color:'#FFB0FF', grad:['#FFB0FF','#FF80C0'],
+    pingala:{id:'p6', ri:0, n:1.0, vol:.14}, ida:{id:'i6', delta:1.8,  polarity:1, vol:.14} },
+];
+
+let mutedOscs = {};
+PAIRS.forEach(p => {
+  mutedOscs[p.pingala.id] = false;
+  mutedOscs[p.ida.id]     = false;
+});
+
+function waveState(hz) {
+  const a = Math.abs(hz);
+  if (a < 0.5) return {s:'—',     c:'rgba(200,200,255,.4)'};
+  if (a <= 4)  return {s:'Delta', c:'#C890FF'};
+  if (a <= 8)  return {s:'Thêta', c:'#F5D460'};
+  if (a <= 13) return {s:'Alpha', c:'#56FFB0'};
+  if (a <= 30) return {s:'Bêta',  c:'#60D8FF'};
+  return              {s:'Gamma', c:'#FF9A8B'};
+}
+
+// Formule de calcul ajustée selon votre demande : Fréquence = masterFreq * ratio * n
+function calcPFreq(i) {
+  const p = PAIRS[i].pingala;
+  if (i === MASTER_IDX) return masterFreq; // Le maitre reste calé sur la fréquence d'ancrage
+  return Math.max(36, Math.min(1296, masterFreq * RATIO_OPTS[p.ri].r * p.n));
+}
+function calcIFreq(i) {
+  const { ida } = PAIRS[i];
+  return Math.max(36, Math.min(1296, calcPFreq(i) + ida.polarity * ida.delta));
+}
+function safeF(f) { return Math.max(36, Math.min(1296, f)); }
+
+function fmtFreq(f) {
+  return f.toFixed(1) + ' Hz';
+}
+function fmtShort(f) {
+  return f.toFixed(1);
+}
+
+function buildOsc(id, freq, vol, pan) {
+  const p = new Tone.Panner(pan);
+  const o = new Tone.Oscillator({ frequency: safeF(freq), type: 'sine' });
+  const g = new Tone.Gain(0);
+  o.connect(p); p.connect(g); g.connect(masterGain);
+  o.start();
+  if (!mutedOscs[id] && vol > 0) {
+    const now = Tone.now();
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(0, now);
+    g.gain.setTargetAtTime(vol, now, FADE / 5);
+  }
+  return { o, g, p };
+}
+
+const TUNE_T = 0.08;
+function tuneOsc(id, freq) {
+  const node = nodes[id]; if (!node) return;
+  try {
+    const f = safeF(freq), now = Tone.now();
+    node.o.frequency.cancelScheduledValues(now);
+    node.o.frequency.setValueAtTime(node.o.frequency.value, now);
+    node.o.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
+  } catch(e) {}
+}
+
+function releaseOsc(node) {
+  try {
+    const now = Tone.now();
+    node.g.gain.cancelScheduledValues(now);
+    node.g.gain.setValueAtTime(node.g.gain.value, now);
+    node.g.gain.setTargetAtTime(0, now, FADE / 5);
+    node.o.stop(now + FADE + 0.1);
+  } catch(e) {}
+  setTimeout(() => {
+    ['o','g','p'].forEach(k => { try { node[k].dispose?.(); } catch(e){} });
+  }, (FADE + 0.4) * 1000);
+}
+
+function swapPingala(i) {
+  if (!flowing || !masterGain) return;
+  const { pingala } = PAIRS[i];
+  if (nodes[pingala.id]) releaseOsc(nodes[pingala.id]);
+  nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+  setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
+  updatePairUI(i);
+}
+function swapIda(i) {
+  if (!flowing || !masterGain) return;
+  const { ida } = PAIRS[i];
+  if (nodes[ida.id]) releaseOsc(nodes[ida.id]);
+  nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+  updatePairUI(i);
+}
+function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
+function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] = setTimeout(() => swapIda(i), 380); }
+
+function setN(i, raw) {
+  const n = Math.round(Math.max(0.1, parseFloat(raw)) * 10) / 10;
+  if (isNaN(n)) return;
+  PAIRS[i].pingala.n = n;
+  updatePairUI(i);
+  if (flowing) {
+    tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
+    tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
+  }
+  saveState();
+}
+function setRatio(i, ri) {
+  PAIRS[i].pingala.ri = ri;
+  if (flowing) swapPingala(i); else updatePairUI(i);
+  saveState();
+}
+function setDelta(i, raw) {
+  const d = Math.round(Math.max(0.1, Math.min(36, parseFloat(raw))) * 10) / 10;
+  if (isNaN(d)) return;
+  PAIRS[i].ida.delta = d;
+  updatePairUI(i);
+  if (flowing) swapIDebounced(i);
+  saveState();
+}
+function togglePolarity(i) {
+  PAIRS[i].ida.polarity *= -1;
+  if (flowing) swapIda(i); else updatePairUI(i);
+  saveState();
+}
+
+function safeRamp(gainParam, target, duration) {
+  const now = Tone.now();
+  gainParam.cancelScheduledValues(now);
+  gainParam.setValueAtTime(gainParam.value, now);
+  gainParam.setTargetAtTime(target, now, Math.max(0.01, duration / 5));
+}
+function toggleMuteP(i) {
+  const pid = PAIRS[i].pingala.id;
+  mutedOscs[pid] = !mutedOscs[pid];
+  const node = nodes[pid];
+  if (node) safeRamp(node.g.gain, mutedOscs[pid] ? 0 : PAIRS[i].pingala.vol, 0.5);
+  updatePairUI(i); saveState();
+}
+function toggleMuteI(i) {
+  const iid = PAIRS[i].ida.id;
+  mutedOscs[iid] = !mutedOscs[iid];
+  const node = nodes[iid];
+  if (node) safeRamp(node.g.gain, mutedOscs[iid] ? 0 : PAIRS[i].ida.vol, 0.5);
+  updatePairUI(i); updateMasterState(); saveState();
+}
+function setVolP(i, vol) {
+  PAIRS[i].pingala.vol = vol;
+  const pid = PAIRS[i].pingala.id;
+  const d = document.getElementById('o-pvol-'+i); if (d) d.textContent = vol.toFixed(2);
+  const node = nodes[pid]; if (node && !mutedOscs[pid]) safeRamp(node.g.gain, vol, 0.3);
+  saveState();
+}
+function setVolI(i, vol) {
+  PAIRS[i].ida.vol = vol;
+  const iid = PAIRS[i].ida.id;
+  const d = document.getElementById('o-ivol-'+i); if (d) d.textContent = vol.toFixed(2);
+  const node = nodes[iid]; if (node && !mutedOscs[iid]) safeRamp(node.g.gain, vol, 0.3);
+  saveState();
+}
+function setMasterVol(v) {
+  masterVol = Math.max(0, Math.min(1, parseFloat(v)));
+  if (masterGain) safeRamp(masterGain.gain, masterVol, 0.3);
+  const d = document.getElementById('mvol-val');
+  if (d) d.textContent = Math.round(masterVol * 100) + '%';
+  saveState();
+}
+function setMasterFreq(f) {
+  masterFreq = Math.max(36, Math.min(1296, f));
+  updateDisplay();
+  if (flowing) PAIRS.forEach((_, i) => {
+    tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
+    tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
+  });
+  saveState();
+}
+
+let globalDelta = 1.8;
+function deltaStep(delta) {
+  const d = Math.round(Math.max(0.1, Math.min(36, globalDelta + delta)) * 10) / 10;
+  setGlobalDelta(d);
+}
+function setGlobalDelta(raw) {
+  const d = Math.round(Math.max(0.1, Math.min(36, parseFloat(raw))) * 10) / 10;
+  if (isNaN(d)) return;
+  globalDelta = d;
+  PAIRS.forEach((pair, i) => {
+    pair.ida.delta = d;
+    updatePairUI(i); 
+    if (flowing) tuneOsc(pair.ida.id, calcIFreq(i)); 
+    const tb = document.getElementById('tabBtn-'+i);
+    if (tb) tb.classList.toggle('live-pair', flowing && !mutedOscs[pair.pingala.id]);
+  });
+  const ws  = waveState(d);
+  const gws = document.getElementById('global-ws');
+  if (gws) { gws.textContent = ws.s; gws.style.color = ws.c; }
+  const gdi = document.getElementById('global-delta-input');
+  if (gdi && document.activeElement !== gdi) gdi.value = d.toFixed(1);
+  saveState();
+}
+
+function nDecrement(i) {
+  const n = Math.max(0.1, Math.round((PAIRS[i].pingala.n - 0.1) * 10) / 10);
+  setN(i, n);
+}
+function nIncrement(i) {
+  const n = Math.round((PAIRS[i].pingala.n + 0.1) * 10) / 10;
+  setN(i, n);
+}
+function nReset(i) {
+  PAIRS[i].pingala.n = (i === MASTER_IDX) ? 1.0 : 0.2 + (i * 0.5);
+  updatePairUI(i);
+  if (flowing) swapPDebounced(i);
+}
+function nRandom(i) {
+  PAIRS[i].pingala.n = Math.round((0.1 + Math.random() * 5.0) * 10) / 10;
+  updatePairUI(i);
+  if (flowing) swapPDebounced(i);
+}
+
+// Sélection de Géométrie
+function setGeometry(g) {
+  activeGeometry = g;
+  document.querySelectorAll('.geometry-btn').forEach((btn, idx) => {
+    btn.classList.toggle('active', idx === g);
+  });
+  drawMetatron();
+}
+
+// ─────────────────────────────────────────────────────────────
+// BOUTON MAGIQUE - DEPLOIMENT ALEATOIRE POUR LES MAMIES
+// ─────────────────────────────────────────────────────────────
+function triggerMagicAuto() {
+  const targetBtn = document.getElementById('magic-btn');
+  targetBtn.style.transform = 'scale(0.9)';
+  setTimeout(() => targetBtn.style.transform = '', 150);
+
+  // 1. Choix d'une fréquence maître cohérente entre 100 et 350 Hz
+  const newMaster = Math.floor(100 + Math.random() * 250);
+  
+  // 2. Choix d'un ratio unique pour toute la gamme
+  const ri = Math.floor(Math.random() * RATIO_OPTS.length);
+  
+  // 3. Déploiement progressif de n pour éviter que les sphères s'entrechoquent (écart minimum de 0.4)
+  let baseN = 0.2;
+  PAIRS.forEach((pair, idx) => {
+    if (idx === MASTER_IDX) {
+      pair.pingala.ri = ri;
+      pair.pingala.n = 1.0;
+    } else {
+      pair.pingala.ri = ri;
+      pair.pingala.n = Math.round(baseN * 10) / 10;
+      baseN += 0.4 + (Math.random() * 0.8);
+    }
+    // Mode binaural actif par défaut (1.8 Hz)
+    pair.ida.delta = 1.8;
+  });
+
+  setMasterFreq(newMaster);
+  setGlobalDelta(1.8);
+
+  // Lancement du flux si pas déjà actif
+  if (!flowing) {
+    startFlow();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// FX CHAIN — créée une seule fois, jamais re-chainée (#11)
+// ─────────────────────────────────────────────────────────────
+function initFXChain() {
+  if (eqLow) return;
+  eqLow  = new Tone.Filter({ type: 'lowshelf',  frequency: 200,  Q: 1, gain: 0 });
+  eqMid  = new Tone.Filter({ type: 'peaking',   frequency: 1000, Q: 1, gain: 0 });
+  eqHigh = new Tone.Filter({ type: 'highshelf', frequency: 5000, Q: 1, gain: 0 });
+  masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
+  masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
+  limiter      = new Tone.Limiter(-1.5).toDestination();
+  eqLow.chain(eqMid, eqHigh, masterDelay, masterReverb, limiter);
+}
+
+// ─────────────────────────────────────────────────────────────
+// START / STOP FLOW
+// ─────────────────────────────────────────────────────────────
+async function startFlow() {
+  ui('idle', '✦ Éveil du Metatron…');
+  try {
+    await Tone.start();
+    if (Tone.context.state !== 'running') await Tone.context.resume();
+
+    initFXChain();
+
+    analyser   = new Tone.Analyser('waveform', 256);
+    masterGain = new Tone.Gain(0);
+    const _now = Tone.now();
+    masterGain.gain.setTargetAtTime(masterVol, _now, FADE / 5);
+    masterGain.connect(eqLow);
+    masterGain.connect(analyser);
+
+    flowing = true;
+    PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
+    PAIRS.forEach((_, i) => updateOrbUI(i));
+    ui('live', 'En expansion…');
+
+  } catch(err) {
+    flowing = false; nodes = {};
+    ui('idle', 'Erreur audio — relancer');
+  }
+}
+
+async function stopFlow() {
+  ui('idle', 'Dissolution…');
+
+  if (progRunning) stopProgression();
+  Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
+
+  try {
+    if (masterGain) {
+      const _t = Tone.now();
+      masterGain.gain.cancelScheduledValues(_t);
+      masterGain.gain.setTargetAtTime(0, _t, 0.08);
+    }
+  } catch(e) {}
+
+  const nodesCopy = {...nodes};
+  nodes = {};
+  flowing = false;
+
+  Object.values(nodesCopy).forEach(n => {
+    if (!n) return;
+    try {
+      const _t = Tone.now();
+      n.g.gain.cancelScheduledValues(_t);
+      n.g.gain.setTargetAtTime(0, _t, 0.05);
+      n.o.stop(_t + 0.3);
+    } catch(e) {}
+    setTimeout(() => { ['o','g','p'].forEach(k => { try { n[k].dispose?.(); } catch(e){} }); }, 500);
+  });
+
+  setTimeout(() => {
+    [masterGain, analyser].forEach(x => {
+      try { x?.disconnect(); } catch(e){}
+      try { x?.dispose(); } catch(e){}
+    });
+    masterGain = null; analyser = null;
+    PAIRS.forEach((_, i) => updateOrbUI(i));
+    const mc = document.getElementById('vpc-p' + MASTER_IDX);
+    if (mc) mc.style.boxShadow = '';
+    ui('idle', 'Metatron immobile');
+  }, 600);
+}
+
+function masterTick() {
+  masterRAF = requestAnimationFrame(masterTick);
+
+  // Géométrie sacrée — toujours active
+  metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
+  drawMetatron();
+
+  if (!flowing || !analyser || document.visibilityState === 'hidden') return;
+
+  const data = analyser.getValue();
+  let sum = 0, count = 0;
+  for (let k = 0; k < data.length; k += 4) { sum += Math.abs(data[k]); count++; }
+  const e = Math.min(1, sum / count * 7);
+
+  // Glow centre Maître
+  const mc = document.getElementById('vpc-p' + MASTER_IDX);
+  if (mc) {
+    const g = Math.round(e * 45);
+    const a = (0.12 + e * .48).toFixed(2);
+    mc.style.boxShadow = `0 0 ${g}px rgba(255,160,255,${a}),0 0 ${g*2}px rgba(255,160,255,${(+a*.35).toFixed(2)}),inset 0 0 ${Math.round(g*.5)}px rgba(255,160,255,${(+a*.25).toFixed(2)})`;
+  }
+
+  // RMS par sphère vésica (#17)
+  PAIRS.forEach((pair, i) => {
+    if (i === MASTER_IDX) return;
+    const vcp = document.getElementById('vpc-p' + i);
+    if (!vcp || mutedOscs[pair.pingala.id]) return;
+    const lvl = Math.min(1, e * 0.65 + 0.12);
+    const alpha = Math.round(lvl * 200).toString(16).padStart(2, '0');
+    vcp.style.boxShadow = `0 0 ${Math.round(lvl*22)}px ${pair.color}${alpha},0 0 ${Math.round(lvl*10)}px ${pair.color}44`;
+  });
+
+  drawSpectroid();
+}
+
+function ui(state, text) {
+  document.getElementById('dot').classList.toggle('live', state === 'live');
+  document.getElementById('status').classList.toggle('live', state === 'live');
+  document.getElementById('stxt').textContent = text;
+  const bdis = document.getElementById('btn-dis');
+  const bray = document.getElementById('btn-ray');
+  if (bdis) bdis.disabled = (state !== 'live');
+  if (bray) bray.disabled = (state === 'live');
+}
+
+// ─────────────────────────────────────────────────────────────
+// HTML & TABS BUILDERS
+// ─────────────────────────────────────────────────────────────
+
+function buildMasterFXHTML() {
+  return `<div class="fx-panel">
+    <!-- Parametric Equalizer Visualizer FL Studio Style -->
+    <div class="fx-block">
+      <div class="fx-title"><span>Visualiseur Paramétrique FL</span></div>
+      <div class="spectroid-container">
+        <canvas id="spectroid-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Basses -->
+    <div class="fx-block">
+      <div class="fx-title"><span>Égaliseur : Basses (Low Shelf)</span></div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Fréquence</span>
+          <button class="fx-btn-step" onclick="adjustFX('eqLowFreq', -20)">−</button>
+          <input type="range" class="fx-slider" id="eqLowFreq" min="20" max="400" value="200" oninput="updateFX('eqLowFreq', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('eqLowFreq', 20)">+</button>
+          <span class="fx-val-disp" id="eqLowFreq-val">200 Hz</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Gain</span>
+          <button class="fx-btn-step" onclick="adjustFX('eqLowGain', -1)">−</button>
+          <input type="range" class="fx-slider" id="eqLowGain" min="-24" max="24" value="0" oninput="updateFX('eqLowGain', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('eqLowGain', 1)">+</button>
+          <span class="fx-val-disp" id="eqLowGain-val">0 dB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Médiums -->
+    <div class="fx-block">
+      <div class="fx-title"><span>Égaliseur : Médiums (Peaking)</span></div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Fréquence</span>
+          <button class="fx-btn-step" onclick="adjustFX('eqMidFreq', -100)">−</button>
+          <!-- Utilisation d'une échelle logarithmique améliorée pour la précision -->
+          <input type="range" class="fx-slider" id="eqMidFreq" min="200" max="4000" value="1000" oninput="updateFX('eqMidFreq', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('eqMidFreq', 100)">+</button>
+          <span class="fx-val-disp" id="eqMidFreq-val">1000 Hz</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Gain</span>
+          <button class="fx-btn-step" onclick="adjustFX('eqMidGain', -1)">−</button>
+          <input type="range" class="fx-slider" id="eqMidGain" min="-24" max="24" value="0" oninput="updateFX('eqMidGain', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('eqMidGain', 1)">+</button>
+          <span class="fx-val-disp" id="eqMidGain-val">0 dB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aigus -->
+    <div class="fx-block">
+      <div class="fx-title"><span>Égaliseur : Aigus (High Shelf)</span></div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Fréquence</span>
+          <button class="fx-btn-step" onclick="adjustFX('eqHighFreq', -500)">−</button>
+          <input type="range" class="fx-slider" id="eqHighFreq" min="2000" max="16000" value="5000" oninput="updateFX('eqHighFreq', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('eqHighFreq', 500)">+</button>
+          <span class="fx-val-disp" id="eqHighFreq-val">5000 Hz</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Gain</span>
+          <button class="fx-btn-step" onclick="adjustFX('eqHighGain', -1)">−</button>
+          <input type="range" class="fx-slider" id="eqHighGain" min="-24" max="24" value="0" oninput="updateFX('eqHighGain', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('eqHighGain', 1)">+</button>
+          <span class="fx-val-disp" id="eqHighGain-val">0 dB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Espace & Echo -->
+    <div class="fx-block">
+      <div class="fx-title"><span>Espace Cosmique & Résonance (Delay & Reverb)</span></div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Écho (Delay)</span>
+          <button class="fx-btn-step" onclick="adjustFX('delayWet', -0.02)">-</button>
+          <input type="range" class="fx-slider" id="delayWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('delayWet', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('delayWet', 0.02)">+</button>
+          <span class="fx-val-disp" id="delayWet-val">0%</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Réverbération</span>
+          <button class="fx-btn-step" onclick="adjustFX('reverbWet', -0.02)">-</button>
+          <input type="range" class="fx-slider" id="reverbWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('reverbWet', this.value)">
+          <button class="fx-btn-step" onclick="adjustFX('reverbWet', 0.02)">+</button>
+          <span class="fx-val-disp" id="reverbWet-val">0%</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Fonction globale d'ajustement par pas précis (demande utilisateur de + et - sur chaque paramètre)
+function adjustFX(paramId, step) {
+  const slider = document.getElementById(paramId);
+  if (!slider) return;
+  const newValue = parseFloat(slider.value) + step;
+  slider.value = Math.max(parseFloat(slider.min), Math.min(parseFloat(slider.max), newValue));
+  updateFX(paramId, slider.value);
+}
+
+function updateFX(paramId, value) {
+  const valDisp = document.getElementById(paramId + '-val');
+  if (!valDisp) return;
+
+  if (paramId.includes('Freq')) {
+    valDisp.textContent = Math.round(value) + ' Hz';
+    if (paramId === 'eqLowFreq' && eqLow) eqLow.frequency.value = value;
+    if (paramId === 'eqMidFreq' && eqMid) eqMid.frequency.value = value;
+    if (paramId === 'eqHighFreq' && eqHigh) eqHigh.frequency.value = value;
+  } else if (paramId.includes('Gain')) {
+    valDisp.textContent = Math.round(value) + ' dB';
+    if (paramId === 'eqLowGain' && eqLow) eqLow.gain.value = value;
+    if (paramId === 'eqMidGain' && eqMid) eqMid.gain.value = value;
+    if (paramId === 'eqHighGain' && eqHigh) eqHigh.gain.value = value;
+  } else {
+    // Sliders Wet/Dry (0 à 1)
+    valDisp.textContent = Math.round(value * 100) + '%';
+    if (paramId === 'delayWet' && masterDelay) masterDelay.wet.value = value;
+    if (paramId === 'reverbWet' && masterReverb) masterReverb.wet.value = value;
+  }
+}
+
+// Visualisation Spectroid FL Studio Style
+function drawSpectroid() {
+  const canvas = document.getElementById('spectroid-canvas');
+  if (!canvas || !canvas.parentElement) return;
+  const ctx = canvas.getContext('2d');
+  const pw = canvas.parentElement.clientWidth, ph = canvas.parentElement.clientHeight;
+  if (pw > 0 && (canvas.width !== pw || canvas.height !== ph)) { canvas.width = pw; canvas.height = ph; }
+
+  if (!flowing || !analyser) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.font = 'italic 16px IM Fell English';
+    ctx.fillText('En attente de rayonnement harmonique...', canvas.width/2 - 120, canvas.height/2);
+    return;
+  }
+
+  const values = analyser.getValue();
+  ctx.fillStyle = '#080112';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Tracé d'une onde d'analyse de spectre fluide et lumineuse
+  ctx.beginPath();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = 'rgba(210, 150, 255, 0.85)';
+  
+  const sliceWidth = canvas.width / values.length;
+  let x = 0;
+
+  for (let i = 0; i < values.length; i++) {
+    const v = values[i] * 1.5;
+    const y = (v + 1) * canvas.height / 2;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+    x += sliceWidth;
+  }
+
+  ctx.lineTo(canvas.width, canvas.height / 2);
+  ctx.stroke();
+
+  // Ajout de barres d'égalisation translucides de style FL Studio
+  ctx.fillStyle = 'rgba(99, 230, 255, 0.15)';
+  for (let i = 0; i < canvas.width; i += 30) {
+    const valIdx = Math.floor((i / canvas.width) * values.length);
+    const h = Math.abs(values[valIdx]) * canvas.height * 0.8;
+    ctx.fillRect(i, canvas.height - h, 20, h);
+  }
+}
+
+function updateMasterState() {
+  const active = PAIRS.filter(p => !mutedOscs[p.ida.id]);
+  const el = document.getElementById('ms-state');
+  const badge = document.getElementById('wave-badge');
+  if (!active.length) {
+    if (el) { el.textContent = 'Binaural'; el.style.color = 'rgba(200,140,255,.5)'; }
+    if (badge) { badge.textContent = ''; badge.className = 'wave-badge'; }
+    return;
+  }
+  const avg = active.reduce((s, p) => s + p.ida.delta, 0) / active.length;
+  const ws = waveState(avg);
+  if (el) { el.textContent = ws.s; el.style.color = ws.c; }
+  if (badge && flowing) {
+    badge.textContent = ws.s + ' · ' + avg.toFixed(2) + ' Hz';
+    badge.style.color = ws.c;
+    badge.className = 'wave-badge live';
+  } else if (badge) { badge.textContent = ''; badge.className = 'wave-badge'; }
+}
+
+function updateDisplay() {
+  const msf = document.getElementById('ms-freq');
+  if (msf) msf.textContent = masterFreq;
+  const mi = document.getElementById('master-input');
+  if (mi && document.activeElement !== mi) mi.value = masterFreq;
+  document.title = 'FBF ' + masterFreq;
+  PAIRS.forEach((_, i) => updatePairUI(i));
+  updateMasterState();
+  patchCosmosTable();
+}
+
+function updatePairUI(i) {
+  const pair = PAIRS[i];
+  const pF   = calcPFreq(i), iF = calcIFreq(i);
+  const ws   = waveState(pair.ida.delta);
+
+  const pfreq = document.getElementById('pfreq-'+i); if (pfreq) pfreq.textContent = fmtFreq(pF);
+  const ifreq = document.getElementById('ifreq-'+i); if (ifreq) ifreq.textContent = fmtFreq(iF);
+  const bmf   = document.getElementById('bmf-'+i);   if (bmf)   bmf.textContent = masterFreq;
+  const brl   = document.getElementById('brl-'+i);   if (brl)   brl.textContent = RATIO_OPTS[pair.pingala.ri].l;
+  const bfn   = document.getElementById('bfn-'+i);   if (bfn)   bfn.textContent = pair.pingala.n;
+  const bfr   = document.getElementById('bfr-'+i);   if (bfr)   bfr.textContent = fmtFreq(pF);
+  const brs   = document.getElementById('brat-'+i);  if (brs)   brs.value = pair.pingala.ri;
+  const bn    = document.getElementById('bn-'+i);
+  if (bn && document.activeElement !== bn) bn.value = pair.pingala.n;
+
+  const ibp   = document.getElementById('ibf-p-'+i); if (ibp)   ibp.textContent = fmtShort(pF);
+  const ipol  = document.getElementById('ipol-'+i);
+  if (ipol) { ipol.textContent = pair.ida.polarity === 1 ? '+' : '−'; ipol.classList.toggle('negative', pair.ida.polarity === -1); }
+  const ibd   = document.getElementById('ibf-d-'+i); if (ibd)   ibd.textContent = pair.ida.delta;
+  const ibr   = document.getElementById('ibf-r-'+i); if (ibr)   ibr.textContent = fmtFreq(iF);
+  const bws   = document.getElementById('bws-'+i);   if (bws)   { bws.textContent = ws.s; bws.style.color = ws.c; }
+  const bd    = document.getElementById('bd-'+i);
+  if (bd && document.activeElement !== bd) bd.value = pair.ida.delta;
+
+  const pmb = document.getElementById('pmute-'+i);
+  const isMutedP = !!mutedOscs[pair.pingala.id];
+  if (pmb) { pmb.textContent = isMutedP ? 'Son' : 'Mute'; pmb.classList.toggle('muted', isMutedP); }
+  const imb = document.getElementById('imute-'+i);
+  const isMutedI = !!mutedOscs[pair.ida.id];
+  if (imb) {
+    if (isMutedI) { imb.textContent = 'Activer'; imb.className = 'btn-activer'; }
+    else          { imb.textContent = 'Couper';  imb.className = 'pair-mute-i muted'; }
+  }
+
+  updateOrbUI(i);
+  const tl = document.getElementById('tab-label-'+i);
+  if (tl) tl.textContent = fmtShort(pF);
+}
+
+function updateOrbUI(i) {
+  const pair = PAIRS[i];
+  const pF = calcPFreq(i);
+  const isMutedP = !!mutedOscs[pair.pingala.id];
+  const vcp = document.getElementById('vpc-p' + i);
+  if (vcp) {
+    vcp.classList.toggle('vp-muted', isMutedP);
+    vcp.classList.toggle('vp-live',  flowing && !isMutedP);
+    if (i === MASTER_IDX) {
+      const msf = document.getElementById('ms-freq');
+      if (msf) msf.textContent = fmtShort(pF);
+    } else {
+      const f = document.getElementById('vp-pf-' + i); if (f) f.textContent = fmtShort(pF);
+    }
+  }
+  const tb = document.getElementById('tabBtn-'+i);
+  if (tb) tb.classList.toggle('live-pair', flowing && !isMutedP);
+  const tl = document.getElementById('tab-label-' + i); if (tl) tl.textContent = fmtShort(pF);
+}
+
+let activeTab = 0;
+function switchTab(idx) {
+  activeTab = idx;
+  document.querySelectorAll('.tab-pane').forEach((p, j) => p.classList.toggle('active', j === idx));
+  document.querySelectorAll('.tab-btn').forEach((b, j) => {
+    b.classList.toggle('active', j === idx);
+    if (j === idx) b.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  });
+}
+
+function toggleFullscreen() {
+  const btn = document.getElementById('btn-fullscreen');
+  if (!document.fullscreenElement) {
+    let p = null;
+    if (document.documentElement.requestFullscreen) p = document.documentElement.requestFullscreen();
+    if (btn) btn.textContent = '✕';
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    if (btn) btn.textContent = '⛶';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// RE-CONSTRUCTION DES DESIGN DE GEOMETRIE SACREE SUR CANVAS
+// ─────────────────────────────────────────────────────────────
+function drawMetatron() {
+  const cv   = document.getElementById('meta-canvas');
+  const cont = document.getElementById('meta-container');
+  if (!cv || !cont) return;
+  const vw   = cont.clientWidth;
+  const vh   = cont.clientHeight;
+  const sz   = Math.min(vw, vh); 
+  const dpr  = window.devicePixelRatio || 1;
+  
+  cv.width  = vw * dpr;
+  cv.height = vh * dpr;
+  cv.style.width  = vw + 'px';
+  cv.style.height = vh + 'px';
+  
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, vw, vh);
+
+  const cx = vw / 2, cy = vh / 2;
+  const R  = sz * 0.35; // Élargi sans jamais dépasser du cadre
+  const r  = sz * 0.15; 
+  const a  = metaAngle;
+
+  ctx.save();
+
+  // 12 Geométries Sacrées dessinées mathématiquement
+  if (activeGeometry === 0) {
+    // METATRON COSMIQUE COLORE (Soleil central avec Flower of Life)
+    // Fond Fleur de vie ultra subtile
+    ctx.strokeStyle = 'rgba(255,140,255,0.08)';
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      for (let j = -3; j <= 3; j++) {
+        ctx.beginPath();
+        ctx.arc(cx + i*r*0.8, cy + j*r*0.8, r*0.8, 0, Math.PI*2);
+        ctx.stroke();
+      }
+    }
+    // Cube de metatron classique
+    drawMetatronClassic(ctx, cx, cy, R, r, a, sz, true);
+    
+    // Soleil central d'anniversaire rayonnant
+    ctx.beginPath();
+    ctx.arc(cx, cy, r*0.7, 0, Math.PI*2);
+    const sunGrad = ctx.createRadialGradient(cx, cy, 2, cx, cy, r*0.7);
+    sunGrad.addColorStop(0, '#FFFFFF');
+    sunGrad.addColorStop(0.3, '#FFE080');
+    sunGrad.addColorStop(0.7, '#FF8EFF');
+    sunGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunGrad;
+    ctx.fill();
+    
+    // Rayons solaires
+    ctx.strokeStyle = '#FFE080';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 16; i++) {
+      const angle = a + (i * Math.PI / 8);
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle)*r*1.1, cy + Math.sin(angle)*r*1.1);
+      ctx.stroke();
+    }
+  } 
+  else if (activeGeometry === 1) {
+    // CUBE DE METATRON CLASSIQUE — coloré
+    drawMetatronClassic(ctx, cx, cy, R, r, a, sz, true);
+  }
+  else if (activeGeometry === 2) {
+    // MERKABA — dégradé arc-en-ciel
+    const size = R * 0.9;
+    const gMerk = ctx.createLinearGradient(cx-size, cy-size, cx+size, cy+size);
+    gMerk.addColorStop(0, '#FF6B6B'); gMerk.addColorStop(0.5, '#FF8EFF'); gMerk.addColorStop(1, '#63E6FF');
+    ctx.strokeStyle = gMerk; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - size); ctx.lineTo(cx + size*0.86, cy + size*0.5); ctx.lineTo(cx - size*0.86, cy + size*0.5);
+    ctx.closePath(); ctx.stroke();
+    const gMerk2 = ctx.createLinearGradient(cx+size, cy+size, cx-size, cy-size);
+    gMerk2.addColorStop(0, '#56FFB0'); gMerk2.addColorStop(0.5, '#FFE080'); gMerk2.addColorStop(1, '#C080FF');
+    ctx.strokeStyle = gMerk2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + size); ctx.lineTo(cx + size*0.86, cy - size*0.5); ctx.lineTo(cx - size*0.86, cy - size*0.5);
+    ctx.closePath(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, size*1.1, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+    // Centre lumineux
+    const gC = ctx.createRadialGradient(cx, cy, 2, cx, cy, size*0.25);
+    gC.addColorStop(0, 'rgba(255,255,255,.85)'); gC.addColorStop(1, 'transparent');
+    ctx.beginPath(); ctx.arc(cx, cy, size*0.25, 0, Math.PI*2);
+    ctx.fillStyle = gC; ctx.fill();
+  }
+  else if (activeGeometry === 3) {
+    // SRI YANTRA — triangles arc-en-ciel
+    const sriPalette = ['#FF6B6B','#FF8EFF','#FFE080','#56FFB0','#63E6FF','#C080FF','#FFB0FF','#FF6B6B','#63E6FF'];
+    ctx.lineWidth = 2;
+    const tCount = 9;
+    for (let i = 0; i < tCount; i++) {
+      const offset = (i - tCount/2) * 18;
+      const isUp = i % 2 === 0;
+      ctx.strokeStyle = sriPalette[i % sriPalette.length];
+      ctx.beginPath();
+      if (isUp) {
+        ctx.moveTo(cx, cy - R*0.85 + offset);
+        ctx.lineTo(cx + R*0.73, cy + R*0.48 + offset);
+        ctx.lineTo(cx - R*0.73, cy + R*0.48 + offset);
+      } else {
+        ctx.moveTo(cx, cy + R*0.85 + offset);
+        ctx.lineTo(cx + R*0.73, cy - R*0.48 + offset);
+        ctx.lineTo(cx - R*0.73, cy - R*0.48 + offset);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+    // Point central
+    const gSri = ctx.createRadialGradient(cx, cy, 0, cx, cy, 18);
+    gSri.addColorStop(0, '#FFE080'); gSri.addColorStop(1, 'transparent');
+    ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI*2); ctx.fillStyle = gSri; ctx.fill();
+  }
+  else if (activeGeometry === 4) {
+    // TORUS 3D — arc-en-ciel par anneau
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 24; i++) {
+      const t = i / 24;
+      const h = Math.round(t * 360);
+      ctx.strokeStyle = `hsla(${h},100%,65%,0.7)`;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(a + (i * Math.PI / 12));
+      ctx.beginPath(); ctx.ellipse(0, 0, R*0.9, R*0.3, 0, 0, Math.PI*2);
+      ctx.stroke(); ctx.restore();
+    }
+    // Cercle central brillant
+    const gT = ctx.createRadialGradient(cx, cy, 0, cx, cy, R*0.18);
+    gT.addColorStop(0, 'rgba(255,255,255,.6)'); gT.addColorStop(1, 'transparent');
+    ctx.beginPath(); ctx.arc(cx, cy, R*0.18, 0, Math.PI*2); ctx.fillStyle = gT; ctx.fill();
+  }
+  else if (activeGeometry === 5) {
+    // FLEUR DE VIE — couleur par pétale
+    const fleurCols = ['#FF6B6B','#FFB347','#FFE080','#56FFB0','#60D8FF','#C080FF'];
+    const radius = R * 0.3;
+    for (let k = 0; k < 6; k++) {
+      ctx.strokeStyle = fleurCols[k]; ctx.lineWidth = 1.5;
+      const ang = a + k * Math.PI / 3;
+      const nx = cx + radius * Math.cos(ang), ny = cy + radius * Math.sin(ang);
+      ctx.beginPath(); ctx.arc(nx, ny, radius, 0, Math.PI*2); ctx.stroke();
+      for (let j = 0; j < 6; j++) {
+        const ang2 = a + j * Math.PI / 3;
+        ctx.strokeStyle = fleurCols[(k+j)%6]; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.arc(nx + radius*Math.cos(ang2), ny + radius*Math.sin(ang2), radius, 0, Math.PI*2); ctx.stroke();
+      }
+    }
+    ctx.beginPath(); ctx.arc(cx, cy, R*0.9, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI*2);
+    ctx.strokeStyle = '#FFE080'; ctx.lineWidth = 2; ctx.stroke();
+  }
+  else if (activeGeometry === 6) {
+    // GRAINE DE VIE — couleur par cercle
+    const seedCols = ['#FFE080','#FF6B6B','#FF8EFF','#56FFB0','#63E6FF','#C080FF'];
+    const rSeed = R * 0.45;
+    ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cx, cy, rSeed, 0, Math.PI*2); ctx.stroke();
+    for(let i=0; i<6; i++) {
+      ctx.strokeStyle = seedCols[i]; ctx.lineWidth = 2;
+      const angle = a + (i * Math.PI) / 3;
+      ctx.beginPath(); ctx.arc(cx + Math.cos(angle)*rSeed, cy + Math.sin(angle)*rSeed, rSeed, 0, Math.PI*2); ctx.stroke();
+    }
+    const gSeed = ctx.createRadialGradient(cx, cy, 0, cx, cy, rSeed*0.35);
+    gSeed.addColorStop(0, 'rgba(255,224,128,.8)'); gSeed.addColorStop(1, 'transparent');
+    ctx.beginPath(); ctx.arc(cx, cy, rSeed*0.35, 0, Math.PI*2); ctx.fillStyle = gSeed; ctx.fill();
+  }
+  else if (activeGeometry === 7) {
+    // ARBRE DE VIE KABBALISTIQUE — sephiroth colorés
+    const sephCols = ['#FFE080','#C0C0FF','#63CFFF','#60D8FF','#FF6B6B','#56FFB0','#FFB347','#C080FF','#FF8EFF','#FFFFFF'];
+    const treeNodes = [
+      {x: cx, y: cy - R*0.8}, {x: cx + R*0.35, y: cy - R*0.55}, {x: cx - R*0.35, y: cy - R*0.55},
+      {x: cx, y: cy - R*0.2}, {x: cx + R*0.35, y: cy + R*0.05}, {x: cx - R*0.35, y: cy + R*0.05},
+      {x: cx, y: cy + R*0.4}, {x: cx + R*0.35, y: cy + R*0.65}, {x: cx - R*0.35, y: cy + R*0.65},
+      {x: cx, y: cy + R*0.9}
+    ];
+    ctx.strokeStyle = 'rgba(240,220,255,0.45)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    treeNodes.forEach((n1, i) => {
+      treeNodes.forEach((n2, j) => {
+        if (i < j && Math.hypot(n1.x-n2.x, n1.y-n2.y) < R*1.1) { ctx.moveTo(n1.x, n1.y); ctx.lineTo(n2.x, n2.y); }
+      });
+    });
+    ctx.stroke();
+    treeNodes.forEach((n, idx) => {
+      const gc = ctx.createRadialGradient(n.x, n.y, 2, n.x, n.y, 16);
+      gc.addColorStop(0, sephCols[idx]); gc.addColorStop(1, 'transparent');
+      ctx.beginPath(); ctx.arc(n.x, n.y, 16, 0, Math.PI*2);
+      ctx.fillStyle = gc; ctx.fill();
+      ctx.strokeStyle = sephCols[idx]; ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+  }
+  else if (activeGeometry === 8) {
+    // VESICA PISCIS — dégradé et intersection lumineuse
+    ctx.lineWidth = 3;
+    const gV1 = ctx.createLinearGradient(cx-R*0.85, cy-R*0.55, cx+R*0.25, cy+R*0.55);
+    gV1.addColorStop(0,'#FF8EFF'); gV1.addColorStop(1,'rgba(255,142,255,0.3)');
+    ctx.beginPath(); ctx.arc(cx - R*0.3, cy, R*0.55, 0, Math.PI*2);
+    ctx.strokeStyle = gV1; ctx.stroke();
+    const gV2 = ctx.createLinearGradient(cx-R*0.25, cy-R*0.55, cx+R*0.85, cy+R*0.55);
+    gV2.addColorStop(0,'rgba(99,230,255,0.3)'); gV2.addColorStop(1,'#63E6FF');
+    ctx.beginPath(); ctx.arc(cx + R*0.3, cy, R*0.55, 0, Math.PI*2);
+    ctx.strokeStyle = gV2; ctx.stroke();
+    // Amande centrale lumineuse
+    const gVm = ctx.createRadialGradient(cx, cy, 0, cx, cy, R*0.28);
+    gVm.addColorStop(0,'rgba(255,255,255,.55)'); gVm.addColorStop(0.6,'rgba(180,220,255,.2)'); gVm.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(cx, cy, R*0.28, 0, Math.PI*2); ctx.fillStyle = gVm; ctx.fill();
+  }
+  else if (activeGeometry === 9) {
+    // NOEUD INFINI — arc-en-ciel
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(a);
+    const gInf = ctx.createLinearGradient(-R*0.5, -R*0.5, R*0.5, R*0.5);
+    gInf.addColorStop(0,'#56FFB0'); gInf.addColorStop(0.5,'#63E6FF'); gInf.addColorStop(1,'#C080FF');
+    ctx.strokeStyle = gInf; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.rect(-R*0.5, -R*0.5, R, R); ctx.stroke();
+    ctx.strokeStyle = '#FFE080'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(0, 0, R*0.35, 0, Math.PI*2); ctx.stroke();
+    const gInfC = ctx.createRadialGradient(0, 0, 0, 0, 0, R*0.15);
+    gInfC.addColorStop(0,'rgba(255,224,128,.7)'); gInfC.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(0, 0, R*0.15, 0, Math.PI*2); ctx.fillStyle = gInfC; ctx.fill();
+    ctx.restore();
+  }
+  else if (activeGeometry === 10) {
+    // EQUILIBRE VECTORIEL — segments en arc-en-ciel
+    const size = R * 0.8;
+    const eqCols = ['#FF6B6B','#FFB347','#FFE080','#56FFB0','#63E6FF','#C080FF'];
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(a);
+    const pts = Array.from({length:6}, (_, i) => {
+      const angle = i * Math.PI / 3;
+      return [Math.cos(angle)*size, Math.sin(angle)*size];
+    });
+    for (let i = 0; i < 6; i++) {
+      ctx.strokeStyle = eqCols[i]; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[(i+1)%6][0], pts[(i+1)%6][1]); ctx.stroke();
+      ctx.strokeStyle = eqCols[i]; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
+    }
+    const gEq = ctx.createRadialGradient(0, 0, 0, 0, 0, size*0.22);
+    gEq.addColorStop(0,'rgba(255,255,255,.65)'); gEq.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(0, 0, size*0.22, 0, Math.PI*2); ctx.fillStyle = gEq; ctx.fill();
+    ctx.restore();
+  }
+  else if (activeGeometry === 11) {
+    // RESEAU 64 TETRAEDRE — cercles et rayons arc-en-ciel
+    const rStep = R * 0.3;
+    const tetCols = ['#63E6FF','#C080FF','#FF8EFF'];
+    for(let i=1; i<=3; i++) {
+      ctx.strokeStyle = tetCols[i-1]; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, rStep * i, 0, Math.PI*2); ctx.stroke();
+    }
+    for(let i=0; i<12; i++) {
+      const t = i / 12;
+      ctx.strokeStyle = `hsla(${Math.round(t*360)},100%,68%,0.75)`;
+      ctx.lineWidth = 1.2;
+      const angle = a + (i * Math.PI / 6);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(angle)*R, cy + Math.sin(angle)*R); ctx.stroke();
+    }
+    const gTet = ctx.createRadialGradient(cx, cy, 0, cx, cy, rStep*0.5);
+    gTet.addColorStop(0,'rgba(99,230,255,.8)'); gTet.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(cx, cy, rStep*0.5, 0, Math.PI*2); ctx.fillStyle = gTet; ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+// Fonction utilitaire de dessin classique de Metatron
+function drawMetatronClassic(ctx, cx, cy, R, r, a, sz, hasColor) {
+  const centers = [{ x: cx, y: cy }];
+  for (let k = 0; k < 6; k++) {
+    centers.push({
+      x: cx + R * Math.cos(a + k * Math.PI / 3),
+      y: cy + R * Math.sin(a + k * Math.PI / 3)
+    });
+  }
+  const centers2 = [];
+  for (let k = 0; k < 6; k++) {
+    centers2.push({
+      x: cx + R * 2 * Math.cos(a + Math.PI / 6 + k * Math.PI / 3),
+      y: cy + R * 2 * Math.sin(a + Math.PI / 6 + k * Math.PI / 3)
+    });
+  }
+
+  const allC = [...centers, ...centers2];
+  
+  // Liens vectoriels
+  for (let p = 0; p < allC.length; p++) {
+    for (let q = p + 1; q < allC.length; q++) {
+      const dist = Math.hypot(allC[p].x - allC[q].x, allC[p].y - allC[q].y);
+      if (dist < sz * 0.76) {
+        ctx.beginPath();
+        ctx.moveTo(allC[p].x, allC[p].y);
+        ctx.lineTo(allC[q].x, allC[q].y);
+        if (hasColor) {
+          ctx.strokeStyle = 'rgba(99, 230, 255, 0.3)';
+        } else {
+          ctx.strokeStyle = 'rgba(200, 100, 255, 0.25)';
+        }
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+    }
+  }
+
+  // Noeuds et sphères
+  centers.forEach((c, k) => {
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = hasColor ? '#FFE080' : '#FF8EFF';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+  });
+
+  centers2.forEach((c, k) => {
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r * .7, 0, Math.PI * 2);
+    ctx.strokeStyle = hasColor ? '#63E6FF' : '#63E6FF';
+    ctx.lineWidth   = 1.0;
+    ctx.stroke();
+  });
+}
+
+function animMetatron() { if (!masterRAF) masterTick(); }
+
+const HEX_DEG = [0, 60, 120, 180, 240, 300];
+
+function buildVesicaPairs() {
+  const layer = document.getElementById('sphere-layer');
+  const cont  = document.getElementById('meta-container');
+  if (!layer || !cont) return;
+  const vw    = cont.clientWidth;
+  const vh    = cont.clientHeight;
+  const sz    = Math.min(vw, vh);
+  
+  document.querySelectorAll('.vp-wrap,.vp-center-wrap').forEach(n => n.remove());
+
+  const cx = vw / 2, cy = vh / 2;
+  const R  = sz * 0.40; // Spacing étendu pour éviter les chevauchements
+
+  for (let i = 0; i < 6; i++) {
+    const pair = PAIRS[i];
+    const c    = pair.color;
+    const rad  = (HEX_DEG[i] - 90) * Math.PI / 180;
+    const px   = cx + R * Math.cos(rad);
+    const py   = cy + R * Math.sin(rad);
+    const isMutedP = !!mutedOscs[pair.pingala.id];
+    const pF   = calcPFreq(i);
+
+    const vp = document.createElement('div');
+    vp.className = 'vp-wrap';
+    vp.id = 'vp' + i;
+    vp.style.left = px + 'px';
+    vp.style.top  = py + 'px';
+    vp.innerHTML = `
+      <div class="vp-p ${isMutedP?'vp-muted':''} ${flowing&&!isMutedP?'vp-live':''}"
+           id="vpc-p${i}"
+           style="border-color:${c}AA;background:radial-gradient(circle,${c}44 0%,${c}1A 60%,transparent 100%);box-shadow:0 0 18px ${c}35;"
+           onclick="switchTab(${i+4})">
+        <span class="vp-type" style="color:${c}CC">Canal ${i+1}</span>
+        <span class="vp-freq" id="vp-pf-${i}">${fmtShort(pF)}</span>
+      </div>
+      <div class="micro-btn micro-left" style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nDecrement(${i})">−</div>
+      <div class="micro-btn micro-right" style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nIncrement(${i})">+</div>
+      <div class="micro-btn micro-top" style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nReset(${i})">↺</div>
+      <div class="micro-btn micro-bot" style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nRandom(${i})">⚄</div>`;
+    layer.appendChild(vp);
+  }
+
+  const mp  = PAIRS[MASTER_IDX];
+  const mc  = mp.color;
+  const isMutedMP = !!mutedOscs[mp.pingala.id];
+
+  const vcw = document.createElement('div');
+  vcw.className = 'vp-center-wrap';
+  vcw.id = 'vp' + MASTER_IDX;
+  vcw.innerHTML = `
+    <div class="vp-p ${isMutedMP?'vp-muted':''} ${flowing&&!isMutedMP?'vp-live':''}"
+         id="vpc-p${MASTER_IDX}"
+         style="border-color:${mc}CC;background:radial-gradient(circle,${mc}50 0%,${mc}20 55%,rgba(26,5,51,.6) 100%);box-shadow:0 0 25px ${mc}50;backdrop-filter:blur(4px);"
+         onclick="switchTab(${MASTER_IDX+4})">
+      <span class="vp-type" style="color:${mc}BB;font-size:.7rem;letter-spacing:.14em;">MAÎTRE</span>
+      <span class="ms-freq" id="ms-freq" onclick="event.stopPropagation();openFreqEdit();">${masterFreq}</span>
+      <input type="number" id="freq-input-master" min="36" max="1296" placeholder="${masterFreq}" autocomplete="off"
+             onkeydown="handleFreqKey(event);">
+      <span class="ms-state" id="ms-state">Binaural</span>
+    </div>
+    <div class="micro-btn micro-left" style="border-color:${mc}BB;color:${mc};" onclick="nDecrement(${MASTER_IDX})">−</div>
+    <div class="micro-btn micro-right" style="border-color:${mc}BB;color:${mc};" onclick="nIncrement(${MASTER_IDX})">+</div>
+    <div class="micro-btn micro-top" style="border-color:${mc}BB;color:${mc};" onclick="nReset(${MASTER_IDX})">↺</div>
+    <div class="micro-btn micro-bot" style="border-color:${mc}BB;color:${mc};" onclick="nRandom(${MASTER_IDX})">⚄</div>`;
+  layer.appendChild(vcw);
+
+  const inp = document.getElementById('freq-input-master');
+  if (inp && !inp._bound) {
+    inp._bound = true;
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); exitEditMaster(true); }
+      if (e.key === 'Escape') exitEditMaster(false);
+    });
+    inp.addEventListener('blur', () => exitEditMaster(true));
+  }
+  if (typeof activeTab !== 'undefined') switchTab(activeTab); 
+}
+
+function openFreqEdit() {
+  const freq = document.getElementById('ms-freq');
+  const inp  = document.getElementById('freq-input-master');
+  if (!freq || !inp) return;
+  freq.style.display = 'none';
+  inp.style.display = 'block'; inp.value = masterFreq; inp.focus(); inp.select();
+}
+function handleFreqKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); exitEditMaster(true); }
+  if (e.key === 'Escape') exitEditMaster(false);
+}
+function exitEditMaster(apply) {
+  const freq = document.getElementById('ms-freq');
+  const inp  = document.getElementById('freq-input-master');
+  if (!freq || !inp) return;
+  inp.style.display = 'none';
+  freq.style.display = 'block';
+  if (!apply) return;
+  let v = parseInt(inp.value);
+  if (isNaN(v) || v < 36 || v > 1296) return;
+  setMasterFreq(v);
+}
+
+function toggleAccord(id) {
+  const body  = document.getElementById('ab-'+id);
+  const arrow = document.getElementById('aa-'+id);
+  if (!body || !arrow) return;
+  const open = body.classList.toggle('open');
+  arrow.classList.toggle('open', open);
+}
+
+function resetAll() {
+  if (flowing) {
+    const s = document.getElementById('stxt');
+    if (s) s.textContent = 'Dissoudre d\'abord ↑';
+    return;
+  }
+  masterFreq = 252; globalDelta = 1.8; masterVol = 0.8;
+  PAIRS.forEach((p, i) => {
+    p.pingala.ri = i % RATIO_OPTS.length;
+    p.pingala.n  = (i === MASTER_IDX) ? 1.0 : 0.2 + (i * 0.5);
+    p.pingala.vol = .12;
+    p.ida.delta   = 1.8;
+    p.ida.polarity = 1;
+    p.ida.vol     = .12;
+    mutedOscs[p.pingala.id] = false;
+    mutedOscs[p.ida.id]     = false;
+  });
+  PAIRS[MASTER_IDX].pingala.vol = .14;
+  PAIRS[MASTER_IDX].ida.vol     = .14;
+  try { localStorage.removeItem(LS_KEY); } catch(e) {}
+  const mvs = document.getElementById('mvol-slider');
+  if (mvs) mvs.value = 0.8;
+  const mvv = document.getElementById('mvol-val');
+  if (mvv) mvv.textContent = '80%';
+  updateDisplay();
+  setGlobalDelta(1.8);
+}
+
+let progRunning  = false;
+let progTimer    = null;
+let progMode     = 'up';      
+let progDir      = 1;         
+let progFreqCur  = 252;       
+
+function getProgRange() {
+  const lo = Math.max(36,   Math.min(1296, parseInt(document.getElementById('prog-min')?.value) || 36));
+  const hi = Math.max(lo+1, Math.min(1296, parseInt(document.getElementById('prog-max')?.value) || 1296));
+  return { lo, hi };
+}
+
+function progStep() {
+  const ri = parseInt(document.getElementById('prog-ratio').value);
+  const r  = RATIO_OPTS[ri].r;
+  const { lo, hi } = getProgRange();
+  let next;
+
+  next = Math.round(progFreqCur * (progDir === 1 ? r : 1/r) * 100) / 100;
+  if (next > hi) {
+    next = lo;
+  }
+  if (next < lo) {
+    next = hi;
+  }
+
+  next = Math.max(lo, Math.min(hi, next));
+  progFreqCur = next;
+  masterFreq  = Math.round(next);
+  updateDisplay();
+  
+  if (flowing) {
+    PAIRS.forEach((pair, i) => {
+      tuneOsc(pair.pingala.id, calcPFreq(i));
+      tuneOsc(pair.ida.id,     calcIFreq(i));
+    });
+  }
+  const disp = document.getElementById('prog-display');
+  if (disp) {
+    disp.textContent = masterFreq + ' Hz · ' + RATIO_OPTS[ri].l;
+    disp.classList.add('active');
+  }
+  saveState();
+}
+
+function startProgression() {
+  const dur = parseInt(document.getElementById('prog-dur').value);
+  const { lo, hi } = getProgRange();
+  progFreqCur = (masterFreq >= lo && masterFreq <= hi) ? masterFreq : lo; 
+  progDir = 1;
+  progRunning = true;
+
+  document.getElementById('btn-prog-on').style.background = 'rgba(255,180,80,.28)';
+  document.getElementById('btn-prog-off').style.background = '';
+
+  const disp = document.getElementById('prog-display');
+  if (disp) disp.textContent = masterFreq + ' Hz — départ';
+
+  progStep(); 
+  progTimer = setInterval(progStep, dur);
+}
+
+function stopProgression() {
+  progRunning = false;
+  clearInterval(progTimer); progTimer = null;
+  document.getElementById('btn-prog-on').style.background = '';
+  document.getElementById('btn-prog-off').style.background = 'rgba(255,255,255,0.08)';
+  const disp = document.getElementById('prog-display');
+  if (disp) { disp.textContent = masterFreq + ' Hz — arrêté'; disp.classList.remove('active'); }
+}
+
+function masterStep(delta) {
+  const v = Math.max(36, Math.min(1296, masterFreq + delta));
+  setMasterFreq(v);
+}
+function onMasterInput(raw) {
+  const v = parseInt(raw);
+  if (isNaN(v) || v < 36 || v > 1296) return;
+  masterFreq = v;
+  const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = v;
+  document.title = 'FBF ' + v;
+  PAIRS.forEach((pair, i) => {
+    const pF = Math.max(36, Math.min(1296, v * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
+    const iF = Math.max(36, Math.min(1296, pF + pair.ida.polarity * pair.ida.delta));
+    if (flowing) { tuneOsc(pair.pingala.id, pF); tuneOsc(pair.ida.id, iF); }
+    const pf  = document.getElementById('pfreq-'+i);     if (pf)  pf.textContent  = fmtFreq(pF);
+    const iff = document.getElementById('ifreq-'+i);     if (iff) iff.textContent = fmtFreq(iF);
+    const tl  = document.getElementById('tab-label-'+i); if (tl)  tl.textContent  = fmtShort(pF);
+    const vpf = document.getElementById('vp-pf-'+i);     if (vpf) vpf.textContent = fmtShort(pF);
+  });
+}
+function onMasterChange(raw) {
+  const v = Math.max(36, Math.min(1296, parseInt(raw)));
+  if (!isNaN(v)) setMasterFreq(v);
+}
+
+const LS_KEY = 'fbf432_state_cosmic';
+let _saveTimer = null;
+function saveState() { clearTimeout(_saveTimer); _saveTimer = setTimeout(_doSave, 500); }
+function _doSave() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      masterFreq, globalDelta, masterVol,
+      pairs: PAIRS.map(p => ({
+        ri:p.pingala.ri, n:p.pingala.n, volP:p.pingala.vol,
+        delta:p.ida.delta, polarity:p.ida.polarity, volI:p.ida.vol,
+        mutedP:!!mutedOscs[p.pingala.id], mutedI:!!mutedOscs[p.ida.id]
+      }))
+    }));
+  } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if (!s) return;
+    if (s.masterFreq >= 36 && s.masterFreq <= 1296) masterFreq = s.masterFreq;
+    if (s.globalDelta > 0) globalDelta = s.globalDelta;
+    if (s.masterVol >= 0 && s.masterVol <= 1) masterVol = s.masterVol;
+    (s.pairs||[]).forEach((sp,i) => {
+      if (!PAIRS[i]) return;
+      if (sp.ri >= 0 && sp.ri < RATIO_OPTS.length) PAIRS[i].pingala.ri = sp.ri;
+      if (!isNaN(sp.n) && sp.n >= 0) PAIRS[i].pingala.n = sp.n;
+      if (sp.volP >= 0) PAIRS[i].pingala.vol = sp.volP;
+      if (sp.delta > 0) PAIRS[i].ida.delta = sp.delta;
+      if (sp.polarity===1||sp.polarity===-1) PAIRS[i].ida.polarity = sp.polarity;
+      if (sp.volI >= 0) PAIRS[i].ida.vol = sp.volI;
+      mutedOscs[PAIRS[i].pingala.id] = !!sp.mutedP;
+      mutedOscs[PAIRS[i].ida.id]     = !!sp.mutedI;
+    });
+  } catch(e) {}
+}
+
+const SOLFEGE = {36:'Ut₁',72:'Ut₂',108:'Sol₁',144:'Ré₂',180:'La₂',
+  216:'Mi₂',252:'Si♭₂',288:'Ré₃',324:'Sol₃',360:'La₃',
+  396:'Sol♭₃',432:'La₃☉'};
+
+let presetSelected = 252;
+let presetAssign = []; 
+
+function selectPreset(freq) {
+  presetSelected = freq;
+  document.querySelectorAll('.preset-freq-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.freq) === freq);
+  });
+}
+
+function applyPreset() {
+  setMasterFreq(presetSelected);
+  if (flowing) PAIRS.forEach((_, i) => swapPingala(i));
+  else updateDisplay();
+  saveState();
+  const btn = document.getElementById('preset-launch-btn');
+  if (btn) { btn.textContent = '✓ Appliqué'; setTimeout(() => btn.textContent = '▶ Lancer', 1800); }
+}
+
+function buildPresetHTML() {
+  const PRESET_FREQS = [36, 72, 108, 144, 180, 216, 252, 288, 324, 360, 396, 432];
+  const grid = PRESET_FREQS.map(f => {
+    const sol = SOLFEGE[f] ? `<span class="preset-freq-label">${SOLFEGE[f]}</span>` : '<span class="preset-freq-label">&nbsp;</span>';
+    return `<button class="preset-freq-btn${f===presetSelected?' active':''}" data-freq="${f}"
+      onclick="selectPreset(${f})">
+      <span class="preset-freq-hz">${f}</span>
+      ${sol}
+    </button>`;
+  }).join('');
+
+  return `<div class="preset-panel">
+    <div class="preset-intro">Sélectionnez une fréquence de base sacrée</div>
+    <div class="preset-section-title">Fréquences d'Ancrage</div>
+    <div class="preset-grid">${grid}</div>
+    <button class="btn-preset-launch" id="preset-launch-btn" onclick="applyPreset()">▶ Lancer</button>
+  </div>`;
+}
+
+function buildNoticeHTML() {
+  return `<div class="notice-panel">
+    <div class="notice-h1">✦ Notice Anniversaire Gémeaux ✦</div>
+    <div class="notice-block">
+      <div class="notice-term">Mélodie Cosmique</div>
+      <div class="notice-def">Formule ajustée : Fréquence = Maître × Ratio × n. Un déploiement plus organique et aéré qui respecte l'oreille et l'âme.</div>
+    </div>
+    <div class="notice-block">
+      <div class="notice-term">Le Bouton Magique</div>
+      <div class="notice-def">Parfait pour vos proches et "mamies". Il suffit d'appuyer pour générer instantanément un flux parfait et vibrant sans réglage technique complexe.</div>
+    </div>
+    <div class="notice-block">
+      <div class="notice-term">Sélecteur de Géométrie</div>
+      <div class="notice-def">Vous pouvez désormais observer l'harmonie des ondes prendre vie à travers 12 des structures sacrées les plus célèbres du cosmos.</div>
+    </div>
+  </div>`;
+}
+
+function buildTabs() {
+  const bar  = document.getElementById('tabs-bar');
+  const wrap = document.querySelector('.wrap');
+  if (!bar || !wrap) return;
+  bar.innerHTML = '';
+
+  const t0 = document.createElement('button');
+  t0.className = 'tab-btn active';
+  t0.innerHTML = '✦ Metatron';
+  t0.style.background = 'rgba(180,80,255,.15)';
+  t0.style.borderColor = 'rgba(180,80,255,.45)';
+  t0.style.color = '#E0BFFF';
+  t0.onclick = () => switchTab(0);
+  bar.appendChild(t0);
+
+  const tFX = document.createElement('button');
+  tFX.className = 'tab-btn';
+  tFX.innerHTML = '✦ Master FX';
+  tFX.style.borderColor = 'rgba(160,200,255,.4)';
+  tFX.style.color = '#A0C8FF';
+  tFX.onclick = () => { switchTab(1); drawSpectroid(); };
+  bar.appendChild(tFX);
+  const paneFX = document.createElement('div');
+  paneFX.className = 'tab-pane';
+  paneFX.id = 'tab-fx';
+  paneFX.innerHTML = buildMasterFXHTML();
+  wrap.appendChild(paneFX);
+
+  const tPre = document.createElement('button');
+  tPre.className = 'tab-btn';
+  tPre.id = 'tabBtn-preset';
+  tPre.innerHTML = '✦ Preset';
+  tPre.style.borderColor = 'rgba(255,180,80,.5)';
+  tPre.style.color = '#FFD080';
+  tPre.onclick = () => { switchTab(2); };
+  bar.appendChild(tPre);
+  const panePre = document.createElement('div');
+  panePre.className = 'tab-pane';
+  panePre.id = 'tab-preset';
+  panePre.innerHTML = buildPresetHTML();
+  wrap.appendChild(panePre);
+
+  const tNot = document.createElement('button');
+  tNot.className = 'tab-btn';
+  tNot.id = 'tabBtn-notice';
+  tNot.innerHTML = '✦ Notice';
+  tNot.style.borderColor = 'rgba(100,220,255,.4)';
+  tNot.style.color = '#80E8FF';
+  tNot.onclick = () => switchTab(3);
+  bar.appendChild(tNot);
+  const paneNot = document.createElement('div');
+  paneNot.className = 'tab-pane';
+  paneNot.id = 'tab-notice';
+  paneNot.innerHTML = buildNoticeHTML();
+  wrap.appendChild(paneNot);
+
+  // Onglets pour les 7 paires d'oscillateurs
+  PAIRS.forEach((pair, i) => {
+    const tb = document.createElement('button');
+    tb.className = 'tab-btn';
+    tb.id = 'tabBtn-'+i;
+    tb.style.borderColor = pair.color + '55';
+    tb.innerHTML = `<span style="color:${pair.color}">${pair.label}</span> <span id="tab-label-${i}" style="font-size:.8rem;opacity:.55">${fmtShort(calcPFreq(i))}</span>`;
+    tb.onclick = () => switchTab(i + 4);
+    bar.appendChild(tb);
+    const pane = document.createElement('div');
+    pane.className = 'tab-pane';
+    pane.id = 'tab-pair-'+i;
+    pane.innerHTML = buildPairHTML(pair, i);
+    wrap.appendChild(pane);
+  });
+
+  selectPreset(presetSelected);
+}
+
+function buildPairHTML(pair, i) {
+  const c    = pair.color;
+  const pF   = calcPFreq(i), iF = calcIFreq(i);
+  const ws   = waveState(pair.ida.delta);
+  const isMutedI = !!mutedOscs[pair.ida.id];
+  const isMutedP = !!mutedOscs[pair.pingala.id];
+
+  return `<div class="pair-panel" style="border-left-color:${c};margin-top:.5rem;">
+    <div class="pair-head">
+      <span class="pair-dot" style="background:${c}"></span>
+      <span class="pair-name" style="color:${c}">${pair.label} — Pingala / Ida</span>
+    </div>
+
+    <!-- Pingala (Canal Droit) -->
+    <div style="background:rgba(0,0,0,.2);border-radius:12px;border-left:4px solid ${c}88; margin-bottom:1rem;">
+      <div class="accord-header" onclick="toggleAccord('p${i}')">
+        <span class="accord-arrow open" id="aa-p${i}">▶</span>
+        <span style="font-family:'Cinzel Decorative',serif;font-size:.8rem;letter-spacing:.14em;color:${c};font-weight:bold;">☀ PINGALA (DROIT)</span>
+        <span id="pfreq-${i}" style="font-family:'IM Fell English',serif;font-size:1.25rem;color:${c};margin-left:auto;font-weight:bold;">${fmtFreq(pF)}</span>
+        <button class="pair-mute-p${isMutedP?' muted':''}" id="pmute-${i}" onclick="event.stopPropagation();toggleMuteP(${i})">${isMutedP?'Son':'Mute'}</button>
+      </div>
+      <div class="accord-body open" id="ab-p${i}" style="padding:0 1rem 1rem;">
+      <div class="block-formula">
+        <span class="bf-master" id="bmf-${i}">${masterFreq}</span>
+        <span class="bf-sym">×</span>
+        <span class="bf-ratio" id="brl-${i}">${RATIO_OPTS[pair.pingala.ri].l}</span>
+        <span class="bf-sym">×</span>
+        <span class="bf-n" id="bfn-${i}">${pair.pingala.n}</span>
+        <span class="bf-sym">=</span>
+        <span class="bf-result" id="bfr-${i}">${fmtFreq(pF)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;">
+        <span style="font-size:.8rem;font-style:italic;color:rgba(220,190,255,.6);min-width:60px;font-weight:bold;">Vol P</span>
+        <input type="range" class="brange" id="pvol-${i}" min="0" max="0.45" step="0.01" value="${pair.pingala.vol}"
+          style="flex:1;accent-color:${c};" oninput="setVolP(${i},parseFloat(this.value))">
+        <span style="font-family:'IM Fell English',serif;font-size:.9rem;color:rgba(225,200,255,.85);min-width:40px;text-align:right;font-weight:bold;" id="o-pvol-${i}">${pair.pingala.vol.toFixed(2)}</span>
+      </div>
+      <div class="bctrl">
+        <div class="bctrl-row"><span class="bctrl-label">Ratio harmonique</span></div>
+        <select class="bsel" id="brat-${i}" onchange="setRatio(${i},parseInt(this.value))">
+          ${RATIO_OPTS.map((r,j)=>`<option value="${j}"${j===pair.pingala.ri?' selected':''}>${r.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="param-row" style="margin-top:.5rem;">
+        <span class="param-label">n =</span>
+        <input type="number" class="param-input" id="bn-${i}" min="0.1" step="0.1" value="${pair.pingala.n}" oninput="setN(${i},this.value)">
+        <span class="param-hint">Multiplier n</span>
+      </div>
+      </div>
+    </div>
+    
+    <!-- Ida (Canal Gauche) -->
+    <div style="background:rgba(0,0,0,.15);border-radius:12px;border-left:4px dashed ${c}55;">
+      <div class="accord-header" onclick="toggleAccord('i${i}')">
+        <span class="accord-arrow open" id="aa-i${i}">▶</span>
+        <span style="font-family:'Cinzel Decorative',serif;font-size:.8rem;letter-spacing:.14em;color:${c};opacity:.8;font-weight:bold;">☽ IDA (GAUCHE)</span>
+        <span id="ifreq-${i}" style="font-family:'IM Fell English',serif;font-size:1.2rem;color:${c};opacity:.8;margin-left:auto;font-weight:bold;">${fmtFreq(iF)}</span>
+        <button id="imute-${i}" class="${isMutedI?'btn-activer':'pair-mute-i muted'}" onclick="event.stopPropagation();toggleMuteI(${i})">${isMutedI?'Activer':'Couper'}</button>
+      </div>
+      <div class="accord-body open" id="ab-i${i}" style="padding:0 1rem 1rem;">
+      <div class="block-formula">
+        <span class="bf-link" id="ibf-p-${i}">${fmtShort(pF)}</span>
+        <button class="polarity-btn${pair.ida.polarity===-1?' negative':''}" id="ipol-${i}" onclick="togglePolarity(${i})">${pair.ida.polarity===1?'+':'−'}</button>
+        <span class="bf-delta" id="ibf-d-${i}">${pair.ida.delta}</span>
+        <span class="bf-sym">=</span>
+        <span class="bf-result" id="ibf-r-${i}">${fmtFreq(iF)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;padding:.5rem 0;">
+        <span style="font-size:.8rem;font-style:italic;color:rgba(220,190,255,.6);min-width:60px;font-weight:bold;">Vol I</span>
+        <input type="range" class="brange" id="ivol-${i}" min="0" max="0.45" step="0.01" value="${pair.ida.vol}"
+          style="flex:1;accent-color:${c}88;" oninput="setVolI(${i},parseFloat(this.value))">
+        <span style="font-family:'IM Fell English',serif;font-size:.9rem;color:rgba(225,200,255,.85);min-width:40px;text-align:right;font-weight:bold;" id="o-ivol-${i}">${pair.ida.vol.toFixed(2)}</span>
+      </div>
+      <div class="bctrl">
+        <div class="bctrl-row">
+          <span class="bctrl-label">Δ Binaural</span>
+          <span class="wave-state" id="bws-${i}" style="color:${ws.c}">${ws.s}</span>
+        </div>
+        <div class="param-row">
+          <span class="param-label">Δ =</span>
+          <input type="number" class="param-input" id="bd-${i}" min="0.1" max="36" step="0.1" value="${pair.ida.delta}" oninput="setDelta(${i},this.value)">
+          <span class="param-hint">Hz (0.1 → 36)</span>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildCosmosTable() {
+  const wrap = document.getElementById('cosmos-table');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="cosmos-table-title">Fréq · Ratio · N</div>' +
+    PAIRS.map((pair, i) =>
+      `<div class="cosmos-row">
+        <span class="cosmos-dot" style="background:${pair.color}cc"></span>
+        <span class="cosmos-freq" id="ct-f-${i}" style="color:${pair.color}">—</span>
+        <span class="cosmos-ratio" id="ct-r-${i}" style="color:${pair.color}bb">—</span>
+        <span class="cosmos-n"    id="ct-n-${i}" style="color:${pair.color}99">—</span>
+      </div>`
+    ).join('');
+  patchCosmosTable();
+}
+function patchCosmosTable() {
+  PAIRS.forEach((pair, i) => {
+    const pF = calcPFreq(i);
+    const f = document.getElementById('ct-f-' + i); if (f) f.textContent = pF.toFixed(1) + ' Hz';
+    const r = document.getElementById('ct-r-' + i); if (r) r.textContent = RATIO_OPTS[pair.pingala.ri].l;
+    const n = document.getElementById('ct-n-' + i); if (n) n.textContent = '×' + pair.pingala.n;
+  });
+}
+
+function init() {
+  loadState();
+  buildTabs();
+  buildVesicaPairs();
+  buildCosmosTable();
+  animMetatron();
+  setGlobalDelta(globalDelta);
+  ui('idle', 'Metatron immobile');
+}
+
+function launchInit() {
+  let done = false;
+  function go() { if (done) return; done = true; setTimeout(init, 60); }
+  try { document.fonts.ready.then(go); } catch(e) {}
+  setTimeout(go, 800);
+}
+if (document.readyState === 'complete') { launchInit(); }
+else { window.addEventListener('load', launchInit); }
+window.addEventListener('resize', () => setTimeout(() => {
+  if (masterRAF) { cancelAnimationFrame(masterRAF); masterRAF = null; }
+  buildVesicaPairs(); masterTick();
+}, 150));
+
+// ─── Raccourci Espace = Rayonner / Dissoudre (#13) ───────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.code === 'Space') { e.preventDefault(); flowing ? stopFlow() : startFlow(); }
+});
+
+// ─── Partage de configuration (#18) ──────────────────────────
+function exportState() {
+  const state = {
+    f: masterFreq, d: globalDelta, v: masterVol,
+    p: PAIRS.map(p => ({ ri: p.pingala.ri, n: p.pingala.n, vp: p.pingala.vol,
+                         dt: p.ida.delta, po: p.ida.polarity, vi: p.ida.vol }))
+  };
+  try {
+    navigator.clipboard.writeText(JSON.stringify(state));
+    const s = document.getElementById('stxt');
+    if (s) { const prev = s.textContent; s.textContent = '✓ Config copiée !'; setTimeout(() => s.textContent = prev, 2200); }
+  } catch(e) {}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cycle 432 — Lecture Vivante</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Nunito:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+/* ─── 1. Variables CSS — PALETTE VIVANTE ──────────────────────────────── */
+:root {
+  /* Verts organiques */
+  --green:      #16a34a;
+  --green-2:    #22c55e;
+  --green-3:    #4ade80;
+  --green-dim:  #15803d;
+  --green-glow: rgba(34,197,94,.22);
+
+  /* Spectre vivant */
+  --coral:   #f97316;
+  --rose:    #f43f5e;
+  --amber:   #d97706;
+  --lime:    #84cc16;
+  --teal:    #0d9488;
+  --sky:     #0ea5e9;
+  --violet:  #8b5cf6;
+  --pink:    #ec4899;
+
+  /* Compatibilité anciens noms */
+  --red:        #ef4444;
+  --red-dim:    #dc2626;
+  --red-glow:   rgba(239,68,68,.18);
+  --gold:       #d97706;
+  --gold-light: #f59e0b;
+  --gold-dim:   #92400e;
+
+  /* Texte → foncé sur fond clair */
+  --white:      #14532d;   /* texte principal vert foncé */
+  --muted:      #4d7c5a;   /* texte secondaire */
+  --text-dark:  #14532d;
+  --text-head:  #052e16;
+
+  /* Bordures */
+  --border-g:   rgba(22,163,74,.28);
+  --border-r:   rgba(239,68,68,.28);
+  --border-gold:rgba(217,119,6,.28);
+
+  /* Gradients arc-en-ciel */
+  --rainbow:      linear-gradient(90deg,#f97316,#eab308,#22c55e,#0ea5e9,#8b5cf6,#ec4899);
+  --rainbow-diag: linear-gradient(135deg,#f97316,#d97706,#22c55e,#0d9488,#8b5cf6,#f43f5e);
+  --rainbow-soft: linear-gradient(90deg,rgba(249,115,22,.5),rgba(234,179,8,.5),rgba(34,197,94,.5),rgba(14,165,233,.5),rgba(139,92,246,.5),rgba(236,72,153,.5));
+
+  --font-head: 'Cinzel', serif;
+  --font-body: 'Nunito', sans-serif;
+}
+
+/* ─── 2. Base + Background lumineux ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 90%, rgba(134,239,172,.5) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(167,243,208,.5) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgba(253,244,255,.6) 0%, transparent 60%),
+    linear-gradient(160deg, #f0fdf4 0%, #fefce8 30%, #f0f9ff 60%, #fdf4ff 85%, #fff1f2 100%);
+  background-attachment: fixed;
+  color: var(--text-dark);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+h1, h2, h3, h4 { font-family: var(--font-head); letter-spacing: .04em; color: var(--text-head); }
+
+/* Gradient rainbow sur les titres */
+.gold { color: var(--amber); }
+
+.gold-text {
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── 3. Hero + Anneaux arc-en-ciel ────────────────────────────────────── */
+.hero {
+  position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 92vh;
+  overflow: hidden;
+  padding: 40px 20px;
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 40%, rgba(134,239,172,.45) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(167,243,208,.3) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 80% 20%, rgba(253,244,255,.4) 0%, transparent 50%),
+    linear-gradient(160deg, #f0fdf4 0%, #fefce8 40%, #ecfdf5 70%, #fdf4ff 100%);
+}
+
+.orbital-wrap {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none;
+}
+
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid;
+  opacity: .55;
+  filter: blur(.4px);
+}
+
+.ring-1 { width: 240px; height: 240px; border-color: #22c55e; animation: spin 18s linear infinite; box-shadow: 0 0 12px rgba(34,197,94,.3); }
+.ring-2 { width: 390px; height: 390px; border-color: #0ea5e9; animation: spin 28s linear infinite reverse; border-style: dashed; box-shadow: 0 0 14px rgba(14,165,233,.25); }
+.ring-3 { width: 540px; height: 540px; border-color: #8b5cf6; animation: spin 40s linear infinite; box-shadow: 0 0 16px rgba(139,92,246,.2); }
+.ring-4 { width: 700px; height: 700px; border-color: #f97316; animation: spin 58s linear infinite reverse; border-style: dotted; opacity: .3; }
+
+.ring::before {
+  content: '';
+  position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+}
+
+.ring-1::before { color: #22c55e; }
+.ring-2::before { color: #0ea5e9; }
+.ring-3::before { color: #8b5cf6; }
+.ring-4::before { color: #f97316; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.hero-content {
+  position: relative; z-index: 10;
+  text-align: center;
+  max-width: 640px;
+}
+
+.hero-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, rgba(22,163,74,.12), rgba(14,165,233,.12));
+  border: 1.5px solid;
+  border-image: var(--rainbow) 1;
+  border-radius: 20px;
+  padding: 5px 20px;
+  font-size: .75rem;
+  letter-spacing: .15em;
+  color: var(--green-dim);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+  background-clip: padding-box;
+  /* fallback sans border-image */
+  border-color: var(--green);
+  box-shadow: 0 2px 12px rgba(22,163,74,.15);
+}
+
+.hero-title {
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  line-height: 1.05;
+  margin-bottom: 14px;
+  text-shadow: 0 2px 20px rgba(22,163,74,.2);
+}
+
+.hero-title:first-of-type {
+  /* "Cycle 432" en arc-en-ciel */
+}
+
+.hero-sub {
+  color: var(--muted);
+  font-size: 1.05rem;
+  max-width: 460px;
+  margin: 0 auto 32px;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.hero-numbers {
+  display: flex; gap: 28px; justify-content: center;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 18px 28px;
+  box-shadow: 0 4px 32px rgba(22,163,74,.12), 0 1px 8px rgba(0,0,0,.06);
+  border: 1px solid rgba(22,163,74,.2);
+}
+
+.hero-num {
+  display: flex; flex-direction: column; align-items: center;
+}
+
+.hero-num-val {
+  font-family: var(--font-head);
+  font-size: 2.1rem;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.hero-num-lbl {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--muted);
+}
+
+/* ─── 4. Navigation vivante ─────────────────────────────────────────────── */
+.nav-sticky {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(240,253,244,.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 2px solid transparent;
+  border-image: var(--rainbow) 1;
+  padding: 10px 20px;
+  display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  box-shadow: 0 2px 20px rgba(22,163,74,.12);
+}
+
+.nav-btn {
+  font-family: var(--font-head);
+  font-size: .72rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 8px 20px;
+  border-radius: 20px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .3s;
+}
+
+.nav-btn:hover {
+  color: var(--green-dim);
+  border-color: var(--green);
+  background: rgba(22,163,74,.08);
+  transform: translateY(-1px);
+}
+
+.nav-btn.active {
+  color: #fff;
+  background: var(--rainbow-diag);
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(22,163,74,.3);
+  transform: translateY(-1px);
+}
+
+/* ─── 5. Layout sections ───────────────────────────────────────────────── */
+section {
+  padding: 80px 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.section-number {
+  font-size: .7rem; letter-spacing: .2em;
+  text-transform: uppercase;
+  background: var(--rainbow);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.section-title {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  margin-bottom: 14px;
+}
+
+.section-sub {
+  color: var(--muted);
+  font-style: italic;
+  font-size: .95rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 40px; }
+
+/* ─── 6. Cartes 3D relief ───────────────────────────────────────────────── */
+.card {
+  border-radius: 18px;
+  padding: 26px;
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,.78);
+  backdrop-filter: blur(12px);
+  border: none;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,.07),
+    0 1px 6px rgba(0,0,0,.05),
+    inset 0 1px 0 rgba(255,255,255,.9);
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s;
+}
+
+.card:hover {
+  transform: translateY(-10px) scale(1.015);
+}
+
+/* Barre de couleur en haut — l'identité de la carte */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 5px;
+  border-radius: 18px 18px 0 0;
+}
+
+/* Lueur en bas */
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; left: 20%; right: 20%;
+  height: 20px;
+  border-radius: 50%;
+  filter: blur(8px);
+  opacity: .4;
+}
+
+.card-green::before { background: linear-gradient(90deg, #22c55e, #0d9488, #0ea5e9); }
+.card-green::after  { background: #22c55e; }
+.card-green:hover   { box-shadow: 0 20px 60px rgba(22,163,74,.2), 0 8px 20px rgba(22,163,74,.1), inset 0 1px 0 rgba(255,255,255,.9); }
+
+.card-red::before   { background: linear-gradient(90deg, #f43f5e, #f97316, #eab308); }
+.card-red::after    { background: #f97316; }
+.card-red:hover     { box-shadow: 0 20px 60px rgba(249,115,22,.2), 0 8px 20px rgba(249,115,22,.1), inset 0 1px 0 rgba(255,255,255,.9); }
+
+.card-gold::before  { background: var(--rainbow); }
+.card-gold::after   { background: #eab308; }
+.card-gold:hover    { box-shadow: 0 20px 60px rgba(234,179,8,.2), 0 8px 20px rgba(234,179,8,.12), inset 0 1px 0 rgba(255,255,255,.9); }
+
+.card-icon {
+  font-size: 1.8rem;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-family: var(--font-head);
+  font-size: .88rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+.card-body {
+  font-size: .9rem;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.card-num {
+  font-family: var(--font-head);
+  font-size: 3rem;
+  line-height: 1;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 8px;
+}
+
+/* ─── 7. Tableaux vivants ───────────────────────────────────────────────── */
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 4px 28px rgba(22,163,74,.1), 0 1px 8px rgba(0,0,0,.06);
+  margin-bottom: 40px;
+  background: rgba(255,255,255,.85);
+}
+
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+
+thead tr {
+  background: linear-gradient(90deg, #22c55e, #0d9488, #0ea5e9);
+}
+
+th {
+  padding: 14px 16px; text-align: left;
+  font-family: var(--font-head); font-size: .7rem;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: #fff;
+  border: none;
+}
+
+td {
+  padding: 11px 16px;
+  border-bottom: 1px solid rgba(22,163,74,.08);
+  color: var(--text-dark);
+}
+
+tbody tr:last-child td { border-bottom: none; }
+
+tbody tr:nth-child(even) td { background: rgba(240,253,244,.7); }
+tbody tr:nth-child(odd) td { background: rgba(255,255,255,.9); }
+tbody tr:hover td { background: rgba(134,239,172,.2) !important; }
+
+/* Spiral rows */
+td.spiral-cell {
+  background: linear-gradient(90deg, rgba(234,179,8,.08), rgba(249,115,22,.06));
+  font-weight: 600;
+  color: #92400e;
+}
+
+.phase-badge {
+  display: inline-block;
+  font-family: var(--font-head);
+  font-size: .65rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1.5px solid;
+}
+
+.badge-green {
+  border-color: #22c55e;
+  color: #15803d;
+  background: rgba(34,197,94,.1);
+}
+
+.badge-gold {
+  border-color: #eab308;
+  color: #92400e;
+  background: rgba(234,179,8,.12);
+}
+
+/* ─── 8. Décoratifs vivants ─────────────────────────────────────────────── */
+.glow-divider {
+  height: 3px;
+  background: var(--rainbow);
+  margin: 60px 0;
+  border-radius: 2px;
+  box-shadow: 0 2px 12px rgba(22,163,74,.2);
+  opacity: .7;
+}
+
+.highlight-box {
+  background: linear-gradient(135deg, rgba(240,253,244,.9), rgba(254,252,232,.9));
+  border: 2px solid transparent;
+  border-radius: 14px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(22,163,74,.08), 0 1px 6px rgba(0,0,0,.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.highlight-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  padding: 2px;
+  background: var(--rainbow);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+}
+
+.highlight-box .lbl {
+  font-family: var(--font-head);
+  font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 6px;
+}
+
+.highlight-box .val {
+  font-size: 1rem; color: var(--text-dark);
+}
+
+.formula-box {
+  background: linear-gradient(135deg, rgba(240,253,244,.95), rgba(236,253,245,.95));
+  border: 1.5px solid rgba(22,163,74,.3);
+  border-radius: 12px;
+  padding: 20px 24px;
+  font-family: 'Courier New', monospace;
+  font-size: .82rem;
+  color: #15803d;
+  margin-bottom: 24px;
+  line-height: 2;
+  box-shadow: 0 4px 20px rgba(22,163,74,.1);
+}
+
+.formula-box .comment { color: #4d7c5a; font-style: italic; }
+
+/* ─── 9. Formulaires colorés ────────────────────────────────────────────── */
+.form-group { margin-bottom: 20px; }
+
+.form-label {
+  display: block;
+  font-family: var(--font-head);
+  font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 8px;
+}
+
+.form-input {
+  width: 100%;
+  background: rgba(255,255,255,.9);
+  border: 2px solid rgba(22,163,74,.25);
+  border-radius: 10px;
+  padding: 11px 16px;
+  color: var(--text-dark);
+  font-family: var(--font-body);
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .3s, box-shadow .3s;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+
+.form-input:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 4px rgba(22,163,74,.12), 0 2px 8px rgba(0,0,0,.06);
+}
+
+.form-input::placeholder { color: #a8c4b0; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 13px 32px;
+  border-radius: 10px;
+  border: none;
+  font-family: var(--font-head);
+  font-size: .8rem; letter-spacing: .1em; text-transform: uppercase;
+  cursor: pointer;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  width: 100%;
+}
+
+.btn-gold {
+  background: var(--rainbow-diag);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(22,163,74,.25), 0 2px 8px rgba(0,0,0,.08);
+}
+
+.btn-gold:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 36px rgba(22,163,74,.35), 0 4px 12px rgba(0,0,0,.1);
+}
+
+.btn-gold:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 16px rgba(22,163,74,.2);
+}
+
+/* ─── 10. Barres + résultats + badges ──────────────────────────────────── */
+.progress-wrap { margin-bottom: 16px; }
+
+.progress-lbl {
+  display: flex; justify-content: space-between;
+  font-size: .78rem; color: var(--muted); margin-bottom: 6px;
+}
+
+.progress-bar {
+  height: 8px; border-radius: 4px;
+  background: rgba(22,163,74,.12);
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.08);
+}
+
+.progress-fill {
+  height: 100%; border-radius: 4px;
+  background: var(--rainbow);
+  transition: width .9s cubic-bezier(.34,1.2,.64,1);
+  box-shadow: 0 1px 4px rgba(22,163,74,.3);
+}
+
+/* Résultats */
+.result-section { display: none; }
+.result-section.visible { display: block; }
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.result-card {
+  background: rgba(255,255,255,.85);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  box-shadow: 0 4px 16px rgba(22,163,74,.1), 0 1px 4px rgba(0,0,0,.06);
+  border-top: 3px solid;
+  border-image: var(--rainbow) 1;
+  transition: transform .3s;
+}
+
+.result-card:hover { transform: translateY(-4px); }
+
+.result-card .rc-lbl {
+  font-size: .64rem; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+
+.result-card .rc-val {
+  font-family: var(--font-head);
+  font-size: 1.05rem;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* Blocs de lecture */
+.reading-block {
+  background: rgba(255,255,255,.82);
+  border: 2px solid;
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.06);
+  transition: transform .25s;
+}
+
+.reading-block:hover { transform: translateY(-2px); }
+
+.reading-block.tension-block { border-color: #fca5a5; background: rgba(255,241,242,.85); }
+.reading-block.mantra-block  { border-color: #fde68a; background: rgba(255,253,235,.85); }
+.reading-block.conseil-block { border-color: #86efac; background: rgba(240,253,244,.85); }
+.reading-block.lecture-block { border-color: #bfdbfe; background: rgba(239,246,255,.85); }
+.reading-block.poem-block    { border-color: transparent;
+  background: linear-gradient(135deg, rgba(240,253,244,.9), rgba(239,246,255,.9), rgba(253,244,255,.9));
+  border: 2px solid transparent;
+  position: relative;
+}
+
+.reading-block.poem-block::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 12px;
+  padding: 2px;
+  background: var(--rainbow);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+}
+
+.reading-block .rb-title {
+  font-family: var(--font-head);
+  font-size: .65rem; letter-spacing: .15em; text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.tension-block .rb-title  { color: #dc2626; }
+.mantra-block .rb-title   { color: #d97706; }
+.conseil-block .rb-title  { color: #16a34a; }
+.lecture-block .rb-title  { color: #2563eb; }
+.poem-block .rb-title     {
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+.reading-block .rb-body {
+  font-size: .95rem; color: var(--text-dark); line-height: 1.75;
+}
+
+.poem-body {
+  font-style: italic; line-height: 2.1;
+  color: var(--muted);
+  white-space: pre-wrap;
+  font-size: 1rem;
+}
+
+/* Badges */
+.spiral-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(90deg, rgba(234,179,8,.12), rgba(249,115,22,.1));
+  border: 1.5px solid #eab308;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: .75rem;
+  color: #92400e;
+  margin-bottom: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(234,179,8,.2);
+}
+
+.pivot-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(90deg, rgba(22,163,74,.1), rgba(13,148,136,.08));
+  border: 1.5px solid #22c55e;
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: .75rem;
+  color: #15803d;
+  margin-bottom: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(22,163,74,.15);
+}
+
+/* Saisons */
+.season-row {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.season-tag {
+  background: rgba(255,255,255,.85);
+  border: 1.5px solid rgba(22,163,74,.25);
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-size: .85rem;
+  flex: 1; min-width: 200px;
+  box-shadow: 0 2px 10px rgba(22,163,74,.08);
+}
+
+.season-tag .st-lbl {
+  font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 5px;
+}
+
+/* ─── Axes ──────────────────────────────────────────────────────────────── */
+.axes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.axe-card {
+  background: rgba(255,255,255,.78);
+  border-radius: 12px;
+  padding: 18px 20px;
+  border-top: 3px solid;
+  transition: transform .3s, box-shadow .3s;
+  box-shadow: 0 3px 14px rgba(22,163,74,.08);
+}
+
+/* Couleurs arc-en-ciel par numéro */
+.axe-card:nth-child(1)  { border-color: #22c55e; }
+.axe-card:nth-child(2)  { border-color: #0d9488; }
+.axe-card:nth-child(3)  { border-color: #0ea5e9; }
+.axe-card:nth-child(4)  { border-color: #6366f1; }
+.axe-card:nth-child(5)  { border-color: #8b5cf6; }
+.axe-card:nth-child(6)  { border-color: #ec4899; }
+.axe-card:nth-child(7)  { border-color: #f43f5e; }
+.axe-card:nth-child(8)  { border-color: #f97316; }
+.axe-card:nth-child(9)  { border-color: #eab308; }
+.axe-card:nth-child(10) { border-color: #84cc16; }
+.axe-card:nth-child(11) { border-color: #22c55e; }
+.axe-card:nth-child(12) { border-color: linear-gradient(90deg,#22c55e,#0ea5e9); border-color: #0ea5e9; }
+
+.axe-card:hover { transform: translateY(-5px); box-shadow: 0 10px 28px rgba(22,163,74,.15); }
+
+.axe-n {
+  font-family: var(--font-head); font-size: .65rem; letter-spacing: .1em;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 4px;
+}
+
+.axe-name {
+  font-family: var(--font-head); font-size: 1rem; margin-bottom: 4px;
+  color: var(--text-head);
+}
+
+.axe-desc { font-size: .8rem; color: var(--green-dim); margin-bottom: 6px; font-weight: 600; }
+.axe-theme { font-size: .78rem; color: var(--muted); font-style: italic; }
+
+/* Saisons cards */
+.saisonal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.saison-card {
+  background: rgba(255,255,255,.8);
+  border-radius: 14px;
+  padding: 22px;
+  text-align: center;
+  box-shadow: 0 4px 18px rgba(22,163,74,.1);
+  transition: transform .3s;
+  border-top: 3px solid transparent;
+}
+
+.saison-card:nth-child(1) { border-top-color: #22c55e; }
+.saison-card:nth-child(2) { border-top-color: #f97316; }
+.saison-card:nth-child(3) { border-top-color: #eab308; }
+.saison-card:nth-child(4) { border-top-color: #0ea5e9; }
+
+.saison-card:hover { transform: translateY(-6px); }
+
+.saison-icon { font-size: 2.2rem; margin-bottom: 10px; }
+.saison-name {
+  font-family: var(--font-head); font-size: .9rem; margin-bottom: 6px;
+  background: var(--rainbow-diag);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.saison-energy { font-size: .8rem; color: var(--muted); }
+
+/* ─── 11. Responsive ───────────────────────────────────────────────────── */
+@media (max-width: 580px) {
+  .form-row { grid-template-columns: 1fr; }
+  .ring-3, .ring-4 { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ HERO ═══════ -->
+<div class="hero" id="top">
+  <div class="orbital-wrap">
+    <div class="ring ring-4"></div>
+    <div class="ring ring-3"></div>
+    <div class="ring ring-2"></div>
+    <div class="ring ring-1"></div>
+  </div>
+  <div class="hero-content">
+    <div class="hero-badge">Sphère Omcha · Temps Biologique Fractal</div>
+    <h1 class="hero-title gold-text">Cycle 432</h1>
+    <h1 class="hero-title">Lecture Vivante</h1>
+    <p class="hero-sub">La spirale du temps biologique — 12 phases, 36 cycles, 432 jours pour un tour complet de soi.</p>
+    <div class="hero-numbers">
+      <div class="hero-num">
+        <span class="hero-num-val">432</span>
+        <span class="hero-num-lbl">Jours / Cycle</span>
+      </div>
+      <div class="hero-num">
+        <span class="hero-num-val">12</span>
+        <span class="hero-num-lbl">Phases</span>
+      </div>
+      <div class="hero-num">
+        <span class="hero-num-val">36</span>
+        <span class="hero-num-lbl">Cycles / Grand cycle</span>
+      </div>
+      <div class="hero-num">
+        <span class="hero-num-val">J+288</span>
+        <span class="hero-num-lbl">Pivot central</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════ NAVIGATION ════ -->
+<nav class="nav-sticky">
+  <button class="nav-btn active" onclick="navScroll('s1')">① Explication</button>
+  <button class="nav-btn" onclick="navScroll('s2')">② Transparence</button>
+  <button class="nav-btn" onclick="navScroll('s3')">③ Lecture Personnalisée</button>
+</nav>
+
+<!-- ════════════════════════════════════════════════ SECTION 1 : EXPLICATION ═══ -->
+<section id="s1">
+  <div class="section-header">
+    <div class="section-number">Section I</div>
+    <h2 class="section-title gold-text">Pourquoi 432 ?</h2>
+    <p class="section-sub">La structure mathématique d'un temps vivant, fractal et spiralé.</p>
+  </div>
+
+  <div class="grid-3">
+    <div class="card card-gold">
+      <div class="card-num">432</div>
+      <div class="card-title">La structure</div>
+      <div class="card-body">432 = 12 × 36. Douze phases de maturation, chacune de 36 jours. Un cycle complet de soi.</div>
+    </div>
+    <div class="card card-green">
+      <div class="card-num">12</div>
+      <div class="card-title">Phases × 3 sous-phases</div>
+      <div class="card-body">Émergence (j.1–12) · Expansion (j.13–24) · Intégration (j.25–36). Chaque phase respire en trois temps.</div>
+    </div>
+    <div class="card card-red">
+      <div class="card-num">36</div>
+      <div class="card-title">Cycles par grand cycle</div>
+      <div class="card-body">12 axes × 3 cycles chacun = 36 cycles = 15 552 jours. Un grand cycle complet.</div>
+    </div>
+  </div>
+
+  <div class="glow-divider"></div>
+
+  <!-- Tableau 12 phases -->
+  <h3 style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:.06em;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;">
+    Les 12 Phases du Cycle
+  </h3>
+
+  <div class="table-wrap">
+    <table id="phases-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nom</th>
+          <th>Mot d'Ordre</th>
+          <th>Dynamique</th>
+          <th>Passage</th>
+          <th>Jours</th>
+        </tr>
+      </thead>
+      <tbody id="phases-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="glow-divider"></div>
+
+  <!-- Sous-phases -->
+  <h3 style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:.06em;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;">
+    Les 3 Sous-phases (dans chaque phase)
+  </h3>
+
+  <div class="grid-3">
+    <div class="card card-green">
+      <div class="card-title">⬆ Émergence</div>
+      <div class="card-body"><span class="gold">Jours 1–12</span> — Lancer. L'intention prend forme, l'impulsion cherche sa direction.</div>
+    </div>
+    <div class="card card-gold">
+      <div class="card-title">⟳ Expansion</div>
+      <div class="card-body"><span class="gold">Jours 13–24</span> — Agir et développer. L'énergie se déploie pleinement dans le monde.</div>
+    </div>
+    <div class="card card-red">
+      <div class="card-title">⬇ Intégration</div>
+      <div class="card-body"><span class="gold">Jours 25–36</span> — Intégrer. Laisser décanter. La forme cherche sa fondation.</div>
+    </div>
+  </div>
+
+  <div class="glow-divider"></div>
+
+  <!-- Zone spirale -->
+  <h3 style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:.06em;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;">
+    ✦ La Zone Spirale (Jours 361–432)
+  </h3>
+
+  <div class="grid-2">
+    <div class="card card-gold">
+      <div class="card-title">Au-delà du cercle</div>
+      <div class="card-body">
+        Les phases 11 (Sagesse) et 12 (Transcendance) s'étendent au-delà du cercle parfait de 360°.
+        Ces 72 jours créent une spirale — ils appartiennent partiellement au cycle suivant, à un niveau supérieur.
+      </div>
+    </div>
+    <div class="card card-green">
+      <div class="card-title">Chevauchement fractal</div>
+      <div class="card-body">
+        Dans la zone spirale, deux cycles se superposent. Ce qui se vit ici est un pont vivant :
+        l'intégration de ce qui fut et l'émergence de ce qui vient. La densité de conscience y est maximale.
+      </div>
+    </div>
+  </div>
+
+  <div class="glow-divider"></div>
+
+  <!-- Saisons -->
+  <h3 style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:.06em;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;">
+    Pression Saisonnière (J0)
+  </h3>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:.9rem;">
+    La saison de départ de ton cycle (J0) imprime une pression de fond sur l'ensemble des 432 jours.
+  </p>
+
+  <div class="saisonal-grid">
+    <div class="saison-card">
+      <div class="saison-icon">🌱</div>
+      <div class="saison-name">Printemps</div>
+      <div class="saison-energy">Élan croissant. Le cycle se déploie dans un mouvement naturellement ascendant.</div>
+    </div>
+    <div class="saison-card">
+      <div class="saison-icon">☀️</div>
+      <div class="saison-name">Été</div>
+      <div class="saison-energy">Intensité maximale. Le cycle s'exprime dans toute sa puissance et son éclat.</div>
+    </div>
+    <div class="saison-card">
+      <div class="saison-icon">🍂</div>
+      <div class="saison-name">Automne</div>
+      <div class="saison-energy">Retour vers l'intérieur. Le cycle intègre et lâche avec une sagesse naturelle.</div>
+    </div>
+    <div class="saison-card">
+      <div class="saison-icon">❄️</div>
+      <div class="saison-name">Hiver</div>
+      <div class="saison-energy">Gestation silencieuse. La force se construit dans le secret et la profondeur.</div>
+    </div>
+  </div>
+
+  <div class="glow-divider"></div>
+
+  <!-- 12 Axes -->
+  <h3 style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:.06em;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;">
+    Les 12 Axes de Maturation (3 cycles chacun)
+  </h3>
+
+  <div class="axes-grid" id="axes-grid"></div>
+
+</section>
+
+<!-- ════════════════════════════════════════════════ SECTION 2 : TRANSPARENCE ═══ -->
+<section id="s2">
+  <div class="section-header">
+    <div class="section-number">Section II</div>
+    <h2 class="section-title gold-text">Comment le Cycle se Calcule</h2>
+    <p class="section-sub">Transparence complète sur les formules et les points clés.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="highlight-box">
+      <div class="lbl">J0 — Le Point d'Ancrage</div>
+      <div class="val">Date de naissance ou de commencement. Tout le système se calibre depuis ce point.</div>
+    </div>
+    <div class="highlight-box">
+      <div class="lbl">J+288 — Le Pivot Fondamental</div>
+      <div class="val">Exactement 288 jours après le début du cycle actuel. Fin de la phase 8 (Transformation). Le cycle bascule vers l'intégration.</div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <span class="comment">// Depuis J0 jusqu'à aujourd'hui</span><br>
+    N jours écoulés depuis J0<br><br>
+    <span class="comment">// Position dans le grand cycle</span><br>
+    Grand cycle = floor(N ÷ 15552)  <span class="comment">// 36 × 432 = 15552 jours</span><br>
+    Jour dans le grand cycle = N mod 15552<br><br>
+    <span class="comment">// Position dans le cycle actuel</span><br>
+    Numéro du cycle = floor(jour_grand_cycle ÷ 432)  <span class="comment">// 0 à 35</span><br>
+    Jour dans le cycle = jour_grand_cycle mod 432  <span class="comment">// 0 à 431 → affich. 1 à 432</span><br><br>
+    <span class="comment">// Phase et jour dans la phase</span><br>
+    Phase = floor(jour_cycle ÷ 36)  <span class="comment">// 0 à 11 → Phase 1 à 12</span><br>
+    Jour dans la phase = (jour_cycle mod 36) + 1  <span class="comment">// 1 à 36</span><br><br>
+    <span class="comment">// Zone spirale</span><br>
+    Zone spirale = jour_cycle ≥ 360  <span class="comment">// phases 11–12</span><br><br>
+    <span class="comment">// J+288 du cycle en cours</span><br>
+    J0_cycle = J0 + (grand_cycle × 15552 + num_cycle × 432) jours<br>
+    J+288 = J0_cycle + 288 jours
+  </div>
+
+  <div class="glow-divider"></div>
+
+  <!-- Calculateur interactif -->
+  <h3 style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:.06em;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:18px;">
+    Calculateur de Position
+  </h3>
+  <p style="color:var(--muted);margin-bottom:24px;font-size:.9rem;">
+    Entre une date J0 pour obtenir la position précise dans le système 432.
+  </p>
+
+  <div class="card card-gold" style="max-width:560px;margin:0 auto 40px;">
+    <div class="form-group">
+      <label class="form-label" for="calc-j0">Date J0 (naissance ou commencement)</label>
+      <input type="date" class="form-input" id="calc-j0">
+    </div>
+    <button class="btn btn-gold" onclick="runCalc()">◈ Calculer ma position</button>
+
+    <div class="result-section" id="calc-result" style="margin-top:28px;">
+      <div class="result-grid" id="calc-grid"></div>
+      <div id="calc-progress"></div>
+      <div id="calc-pivot"></div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ════════════════════════════════════════════════ SECTION 3 : LECTURE ═══ -->
+<section id="s3">
+  <div class="section-header">
+    <div class="section-number">Section III</div>
+    <h2 class="section-title gold-text">Lecture Personnalisée</h2>
+    <p class="section-sub">Ton positionnement exact et ta guidance du cycle en cours.</p>
+  </div>
+
+  <div class="card card-green" style="max-width:620px;margin:0 auto 40px;">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="read-j0">Date J0</label>
+        <input type="date" class="form-input" id="read-j0">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="read-name">Prénom (optionnel)</label>
+        <input type="text" class="form-input" id="read-name" placeholder="Ton prénom">
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="runReading()">✦ Générer ma Lecture</button>
+  </div>
+
+  <div class="result-section" id="reading-result"></div>
+
+</section>
+
+<!-- ════════════════════════════════════════════════════════════ SCRIPT ═══ -->
+<script>
+
+/* ─── 13. Données PHASES ───────────────────────────────────────────────── */
+const PHASES = [
+  {
+    n:1, nom:"Éveil", motOrdre:"Naissance", dynamique:"Ouverture", passage:"Le Commencement", symbol:"◌",
+    tension:"Peur de commencer. Résistance à l'impulsion initiale qui cherche à naître.",
+    resolution:"L'impulsion n'a pas besoin d'être parfaite pour être juste. Le commencement existe avant la clarté.",
+    mantra:"Je commence. L'impulsion est pure.",
+    conseils:[
+      "Identifie une seule chose qui veut naître dans ce cycle. Note-la clairement.",
+      "Observe ta résistance à commencer sans la juger — elle protège quelque chose.",
+      "Agis aujourd'hui sur une seule intention : la plus petite action possible.",
+      "Est-ce la peur de l'échec, ou la peur de ce que le succès changerait ?",
+      "Simplifie tes intentions. Garde les trois qui résonnent le plus profondément.",
+      "L'impulsion juste génère plus d'énergie qu'elle n'en consomme — observe."
+    ],
+    lectures:[
+      "Au seuil de l'innommé, toutes les possibilités coexistent encore. Ce n'est pas le vide — c'est la plénitude du potentiel.",
+      "Commencer ne nécessite pas de voir le chemin entier. Il suffit de voir le prochain pas, puis le suivant.",
+      "Ce que tu crois être une peur du commencement est souvent la peur de la transformation que ce commencement va provoquer."
+    ],
+    poeme:"Je suis le point zéro\nAvant la première respiration\nAvant le premier mouvement\nDans ce silence fertile\nJe contiens tout ce que je serai."
+  },
+  {
+    n:2, nom:"Élan", motOrdre:"Énergie", dynamique:"Élan", passage:"L'Impulsion", symbol:"⟳",
+    tension:"Énergie dispersée dans trop de directions. L'impulsion est forte mais sans axe directeur.",
+    resolution:"Identifier un seul cap pour cette période. L'élan ciblé construit, l'élan dispersé épuise.",
+    mantra:"Mon élan trouve sa direction. Je choisis et j'avance.",
+    conseils:[
+      "Est-ce de l'élan authentique ou de la réactivité ? Observe la différence.",
+      "Simplifie tes intentions. Garde les trois qui résonnent le plus profondément.",
+      "Identifie où tu disperses ton énergie par obligation plutôt que par choix.",
+      "L'impulsion juste génère plus d'énergie qu'elle n'en consomme.",
+      "Vérifie si ton élan actuel s'aligne vraiment avec ton intention de cycle.",
+      "Un seul axe pleinement habité vaut mieux que dix directions effleurées."
+    ],
+    lectures:[
+      "L'énergie sans direction devient stagnante comme un marécage sans lit de rivière. Choisir un axe, c'est lui donner un cours.",
+      "L'élan authentique se distingue des urgences superposées que le mental fabrique pour se sentir vivant.",
+      "Ce n'est pas la quantité d'impulsion qui compte — c'est sa qualité et sa direction choisie consciemment."
+    ],
+    poeme:"Je suis l'arc tendu\nAvant que la flèche choisisse\nDans cette tension vivante\nJe contiens toute la puissance\nEn attente de direction."
+  },
+  {
+    n:3, nom:"Expansion", motOrdre:"Croissance", dynamique:"Expansion", passage:"La Floraison", symbol:"⬆",
+    tension:"Croissance trop rapide sans fondations proportionnelles. L'extension dépasse l'enracinement.",
+    resolution:"Approfondir les racines en proportion de la hauteur atteinte. La durabilité prime sur l'éclat.",
+    mantra:"Je m'étends sans me perdre. Ma croissance est ancrée dans la conscience.",
+    conseils:[
+      "Ce qui fleurit a-t-il des racines assez profondes pour tenir dans la tempête ?",
+      "La croissance rapide sans racines devient fragile — consolide ce qui existe.",
+      "Identifie ce qui grandit sous la surface et qui n'est pas encore visible.",
+      "Chaque expansion porte en elle la responsabilité de son entretien.",
+      "La durabilité vaut plus que l'éclat passager — oriente tes efforts en conséquence.",
+      "Avant la prochaine extension, intègre ce qui a déjà pris racine."
+    ],
+    lectures:[
+      "L'épanouissement visible naît d'une cultivation silencieuse et patiente, souvent invisible de l'extérieur.",
+      "S'étendre sans se disperser — la conscience centrée fait toute la différence entre croissance et débordement.",
+      "La croissance porte une responsabilité : ce qui se développe demande à être maintenu et honoré."
+    ],
+    poeme:"Je suis l'arbre qui pousse\nVers la lumière et vers le bas\nSimultanément\nDans cette double aspiration\nJe trouve mon équilibre."
+  },
+  {
+    n:4, nom:"Ancrage", motOrdre:"Stabilité", dynamique:"Enracinement", passage:"L'Ancrage", symbol:"⊕",
+    tension:"Confusion entre stabilité vivante et rigidité qui paralyse. L'ancrage devient immobilisme.",
+    resolution:"Un enracinement authentique peut se courber sans se briser. La vraie stabilité est flexible.",
+    mantra:"Je m'enracine. Ma stabilité est flexible et vivante.",
+    conseils:[
+      "Tes ancrages peuvent-ils se courber face à la tempête ? Ce qui ne peut fléchir finit par se briser.",
+      "Qu'est-ce qui crée en toi le sentiment d'être vraiment à ta place dans ce monde ?",
+      "Honore tes racines aujourd'hui, même les plus difficiles — elles t'ont porté jusqu'ici.",
+      "La vraie fondation s'adapte aux tempêtes sans perdre son centre de gravité.",
+      "Distingue ce qui est ancré et résilient de ce qui est ancré et rigide.",
+      "La stabilité véritable n'est pas l'immobilité — c'est la capacité de revenir à soi après chaque tempête."
+    ],
+    lectures:[
+      "Les racines ne se voient pas, mais elles savent ce que les branches ignorent encore.",
+      "L'ancrage vivant absorbe et s'adapte — l'ancrage mort résiste jusqu'à se rompre.",
+      "Ce qui est ancré peut traverser n'importe quelle tempête. Ce qui est figé attend seulement que ça passe."
+    ],
+    poeme:"Je suis la racine invisible\nQui tient l'arbre dans la tempête\nDans la profondeur silencieuse\nJe suis la condition\nDe toute hauteur durable."
+  },
+  {
+    n:5, nom:"Expression", motOrdre:"Créativité", dynamique:"Expression", passage:"L'Expression", symbol:"◎",
+    tension:"Auto-censure. La peur du regard extérieur comprime ce qui cherche authentiquement à se dire.",
+    resolution:"Exprimer la vérité sans chercher l'approbation en retour. Ce qui sort n'a pas besoin d'être parfait.",
+    mantra:"Ma voix est juste parce qu'elle est mienne.",
+    conseils:[
+      "Remarque où tu te censures spontanément — qu'est-ce que cette censure protège réellement ?",
+      "Ce que tu n'exprimes pas s'accumule — la créativité est une hygiène de l'âme.",
+      "Exprime quelque chose aujourd'hui sans te soucier de la forme, juste du contenu.",
+      "Qu'aimerais-tu créer si personne ne le voyait jamais ? Commence exactement par là.",
+      "Ton expression unique ne peut être reproduite par personne d'autre — c'est sa valeur.",
+      "La peur du jugement protège l'ego, pas l'être."
+    ],
+    lectures:[
+      "L'expression ne demande pas de public — elle demande de l'honnêteté envers soi-même.",
+      "Ce que tu n'exprimes pas ne disparaît pas — il cherche d'autres sorties, souvent moins choisies.",
+      "Ce que tu as à dire trouvera ses destinataires, même si ça n'intéresse pas tout le monde."
+    ],
+    poeme:"Je suis la voix\nQui cherche sa note juste\nDans le silence de la retenue\nQuand je m'exprime enfin\nJe touche ce qui était tu depuis trop longtemps."
+  },
+  {
+    n:6, nom:"Purification", motOrdre:"Libération", dynamique:"Épuration", passage:"La Lune Sombre", symbol:"◐",
+    tension:"Résistance au lâcher-prise. Accumulation de ce qui est dépassé par peur du vide qu'il laisserait.",
+    resolution:"Comprendre que vider crée de l'espace pour ce qui doit venir. Ce qui part fait de la place.",
+    mantra:"Je libère ce qui n'est plus mien. Le vide est une invitation.",
+    conseils:[
+      "Identifie une chose — pensée, habitude, relation, objet — qui alourdit sans nourrir.",
+      "Qu'est-ce qui veut vraiment partir ? Écoute en dessous de la résistance.",
+      "Qu'est-ce que tu gardes par habitude, par peur, par obligation — sans choix conscient ?",
+      "Abandonne une habitude pendant une journée — observe la résistance et ce qui émerge.",
+      "La purification vient de l'intérieur, pas de l'extérieur — discerne ce qui est vraiment prêt.",
+      "Honore le vide créé — il est un espace d'accueil, pas une perte."
+    ],
+    lectures:[
+      "La purification n'est pas une punition — c'est le retour à ta nature essentielle, dégagée des couches ajoutées.",
+      "Ce que tu lâches dans ce cycle, tu ne l'abandonnes pas — tu le remercies pour ce qu'il a été et tu le libères.",
+      "La lune sombre n'est pas l'absence de lumière — c'est la lumière qui se retourne vers l'intérieur."
+    ],
+    poeme:"Je suis l'espace qui se fait\nQuand ce qui était plein enfin se vide\nDans ce creux libéré\nJe retrouve ce qui était là\nAvant tout le reste."
+  },
+  {
+    n:7, nom:"Vision", motOrdre:"Intuition", dynamique:"Vision", passage:"La Révélation", symbol:"◎",
+    tension:"Doute des perceptions internes. Rationalisation excessive qui noie les signaux subtils dans le bruit du mental.",
+    resolution:"Distinguer la peur du mental de l'intuition du corps. Ce qui revient calmement est signal.",
+    mantra:"Ma perception est claire. Je fais confiance à ce que je vois intérieurement.",
+    conseils:[
+      "Observe les images récurrentes — ce qui revient calmement est signal, ce qui crie fort est souvent peur.",
+      "La révélation murmure souvent plutôt que de frapper comme l'éclair.",
+      "Distingue les pensées régulières des intuitions corporelles profondes.",
+      "L'intuition véritable ne force jamais — elle se pose doucement et persiste.",
+      "Note ce qui est devenu clair dans ce cycle — honore ces perceptions même sans en comprendre l'entièreté.",
+      "Ce que tu vois les yeux fermés accède à des couches que la raison n'a pas encore traduites."
+    ],
+    lectures:[
+      "Ce que tu vois les yeux fermés accède à des couches de réalité indisponibles à la perception ordinaire.",
+      "L'intuition n'est pas irrationnelle — elle est pré-rationnelle, traitant ce que le mental n'a pas encore traduit en langage.",
+      "La vraie vision ne cherche pas à convaincre — elle attend simplement que tu sois prêt à voir."
+    ],
+    poeme:"Je suis l'œil qui voit dans l'obscurité\nAvant que la raison nomme\nCe qu'elle perçoit\nDans ce silence perceptif\nJe connais sans savoir pourquoi."
+  },
+  {
+    n:8, nom:"Transformation", motOrdre:"Métamorphose", dynamique:"Mutation", passage:"La Traversée", symbol:"⟲",
+    tension:"Peur de la dissolution de l'identité familière. Résistance à la métamorphose inévitable.",
+    resolution:"La chrysalide ne résiste pas à sa propre défaite. Ce qui se défait n'est pas perdu — il se recompose.",
+    mantra:"Je me transforme. Ce qui se dissout ouvre la voie à ce qui vient.",
+    conseils:[
+      "Ce qui semblait stable commence peut-être à se fissurer — c'est peut-être exactement ce qui devait arriver.",
+      "La transformation ne demande pas de compréhension complète, juste du courage pour traverser sans savoir.",
+      "Reconnais le pivot J+288 si tu l'as atteint — l'énergie bascule vers une intégration plus profonde.",
+      "Donne-toi la permission de te défaire temporairement pour te reconfigurer différemment.",
+      "Tu ne seras plus la même personne qu'au début de ce cycle — c'est le but.",
+      "Ce que tu as construit tient même à travers la transformation — c'est sa qualité qui se révèle maintenant."
+    ],
+    lectures:[
+      "Ce qui se défait n'est pas une perte — c'est une métamorphose, un changement de forme pour continuer autrement.",
+      "Le passage demande une permission de se défaire, et la confiance que quelque chose de nouveau se configure.",
+      "Ce que j'ai construit et traversé pendant ces premiers 288 jours s'intègre maintenant dans la phase suivante."
+    ],
+    poeme:"Je suis la chrysalide\nDans l'espace entre les formes\nNi ce que j'étais\nNi encore ce que je serai\nJe traverse."
+  },
+  {
+    n:9, nom:"Guérison", motOrdre:"Renouveau", dynamique:"Guérison", passage:"La Renaissance", symbol:"✦",
+    tension:"Refus de la vulnérabilité que la guérison exige. Confusion entre guérir et faire disparaître la blessure.",
+    resolution:"La guérison intègre, elle n'efface pas. Une cicatrice est la preuve qu'on a traversé et que le tissu s'est reconstruit.",
+    mantra:"Je guéris. Ma renaissance est en cours maintenant.",
+    conseils:[
+      "Permets à ce qui a été blessé d'être intégré plutôt que réparé à la surface.",
+      "La renaissance n'est pas quelque chose qui vient après la guérison — elle est la guérison en mouvement.",
+      "Qu'est-ce qui a besoin de compassion en toi aujourd'hui, sans condition ?",
+      "La guérison n'est pas linéaire — honore les progrès même les plus légers.",
+      "Prends soin du corps comme espace où quelque chose de plus profond se déploie.",
+      "La capacité de guérir grandit avec la volonté de rester présent à la douleur plutôt que de la fuir."
+    ],
+    lectures:[
+      "La guérison arrive doucement, souvent inaperçue, dans les moments les plus ordinaires.",
+      "Une cicatrice n'est pas l'échec de la guérison — c'est la preuve de ce qui a été traversé et intégré.",
+      "La renaissance peut commencer simplement par un souffle plus libre, un moment de légèreté inattendue."
+    ],
+    poeme:"Je suis la terre après la pluie\nPrête à recevoir ce qui pousse\nDans cette ouverture tendre\nJe laisse la vie\nRevenir à elle-même."
+  },
+  {
+    n:10, nom:"Récolte", motOrdre:"Abondance", dynamique:"Récolte", passage:"La Moisson", symbol:"⊗",
+    tension:"Récolte diminuée par les attentes. Comparaison avec les moissons des autres qui dilue la valeur de la sienne.",
+    resolution:"Faire honnêtement le compte de ce qui a vraiment été semé et soigné. La récolte est toujours proportionnée au soin apporté.",
+    mantra:"Ma récolte est abondante quand je sais la voir.",
+    conseils:[
+      "Nomme trois choses concrètes que ce cycle t'a apportées — en sagesse, clarté, expérience.",
+      "Qu'est-ce qui a vraiment fleuri sans que tu l'aies reconnu comme une récolte ?",
+      "Comparer ta récolte à celle des autres dilue la valeur unique de la tienne.",
+      "Avant de clore ce cycle, sens vraiment ce que tu emportes vers le suivant.",
+      "La récolte honnête inclut aussi ce qui a germé des difficultés — c'est souvent le plus précieux.",
+      "Savoir quand s'arrêter de chercher ailleurs et reconnaître ce qui est est une forme d'abondance."
+    ],
+    lectures:[
+      "La récolte ne demande pas la fierté — elle demande la reconnaissance et le soin de ce qui a été réellement semé.",
+      "Comparer ta récolte à celle des autres, c'est oublier que ton sol est unique et que ta graine était différente.",
+      "Ce que tu as cultivé est réel, même quand il diffère de ce que tu espérais planter."
+    ],
+    poeme:"Je suis le fruit qui pèse dans la main\nRéel et lourd de ce qui a été\nDans cette plénitude tangible\nJe reconnais\nLa valeur de ce qui est."
+  },
+  {
+    n:11, nom:"Sagesse", motOrdre:"Sagesse", dynamique:"Intégration", passage:"Le Sage", symbol:"✦",
+    tension:"Retrait trop complet pendant l'intégration. Isolation excessive qui coupe du flux vivant.",
+    resolution:"Maintenir un lien avec le dehors tout en décantant. La sagesse s'approfondit dans le partage.",
+    mantra:"J'intègre. Ce que je vis appartient déjà partiellement à ce qui vient.",
+    conseils:[
+      "Tu es dans la zone spirale (j.361–396). Ce que tu vis ici appartient partiellement au niveau suivant.",
+      "Ce que tu sais maintenant que tu ne savais pas à J0 de ce cycle — c'est ta croissance réelle.",
+      "Partage une partie de ce que tu as intégré — la sagesse devient collective dans le partage.",
+      "La décantation de ce cycle produit une clarté qui n'aurait pas pu venir plus tôt.",
+      "Le sage parle moins non par manque de connaissance, mais parce qu'il comprend la puissance du silence.",
+      "Remarque ce qui est maintenant évident pour toi qui ne l'était pas avant — c'est la mesure du chemin."
+    ],
+    lectures:[
+      "Les leçons apprises en profondeur deviennent disponibles autrement dans le prochain cycle — l'intégration les transforme.",
+      "L'intégration n'est pas une fin — elle est la digestion qui rend le prochain cycle possible et plus riche.",
+      "La décantation dans la zone spirale produit une clarté qui arrive exactement quand il faut — pas avant."
+    ],
+    poeme:"Je suis à la jonction de deux cercles\nLà où ce cycle se referme\nEt déjà partiellement\nJ'appartiens\nÀ ce qui commence."
+  },
+  {
+    n:12, nom:"Transcendance", motOrdre:"Union", dynamique:"Accomplissement", passage:"Le Passage", symbol:"◉",
+    tension:"Dissolution de l'ego et vertige du passage. Crainte de perdre ce qui a été construit dans ce cycle.",
+    resolution:"Ce qui s'accomplit ne disparaît pas — il devient la fondation vivante du cycle suivant.",
+    mantra:"Je m'unifie. Le passage est accompli.",
+    conseils:[
+      "Tu es dans la zone spirale (j.397–432). Honore ce cycle complété — il devient fondation.",
+      "Le passage se fait en lâchant prise, non en s'accrochant à ce qui se dissout naturellement.",
+      "Rien ne se perd dans ce passage — tout se transforme à un niveau supérieur.",
+      "La spirale se referme ici pour s'ouvrir ailleurs, à un niveau supérieur du même axe.",
+      "Ce qui s'accomplit dans ce cycle devient le sol fertile du prochain commencement.",
+      "Tu es à la frontière entre deux cycles — accueille cette double appartenance sans résistance."
+    ],
+    lectures:[
+      "Ce qui se dissout n'est que la forme — l'essence traverse et se recompose dans une nouvelle configuration.",
+      "La spirale ne se referme pas — elle s'élève. Chaque accomplissement ouvre vers plus de profondeur.",
+      "Ce que j'ai vécu dans ce cycle devient le sol fertile du prochain commencement, exactement comme prévu."
+    ],
+    poeme:"Je suis l'accomplissement\nQui se retourne vers ce qui commence\nDans cet espace de clôture\nJe contiens déjà\nLe premier souffle du suivant."
+  }
+];
+
+/* ─── 14. Données AXES ─────────────────────────────────────────────────── */
+const AXES = [
+  { n:1,  nom:"Éveil",            cycles:"0–2",   description:"Naissance de la conscience",    theme:"Premier contact avec sa propre nature profonde." },
+  { n:2,  nom:"Purification",     cycles:"3–5",   description:"Libération et nettoyage",       theme:"Identification et dissolution des couches inauthentiques." },
+  { n:3,  nom:"Alignement",       cycles:"6–8",   description:"Harmonisation intérieure",      theme:"Mise en cohérence de l'être avec ses valeurs essentielles." },
+  { n:4,  nom:"Ancrage",          cycles:"9–11",  description:"Enracinement et stabilité",     theme:"Construction d'une fondation intérieure inébranlable." },
+  { n:5,  nom:"Ouverture du Cœur",cycles:"12–14", description:"Amour et compassion",           theme:"Expansion de la capacité à aimer et à recevoir l'amour." },
+  { n:6,  nom:"Transformation",   cycles:"15–17", description:"Mutation et lâcher-prise",      theme:"Passage conscient à travers les grandes métamorphoses." },
+  { n:7,  nom:"Intuition",        cycles:"18–20", description:"Ouverture du troisième œil",    theme:"Développement de la perception subtile et de la vision intérieure." },
+  { n:8,  nom:"Pouvoir Personnel",cycles:"21–23", description:"Affirmation et rayonnement",    theme:"Incarnation pleine et assumée de sa propre lumière." },
+  { n:9,  nom:"Unification",      cycles:"24–26", description:"Connexion à l'unité",           theme:"Dissolution des séparations et expérience de la totalité." },
+  { n:10, nom:"Service",          cycles:"27–29", description:"Contribution et partage",       theme:"Expression du don au service de l'ensemble." },
+  { n:11, nom:"Maîtrise",         cycles:"30–32", description:"Sagesse et intégration",        theme:"Synthèse de tous les apprentissages dans une expression fluide." },
+  { n:12, nom:"Rayonnement",      cycles:"33–35", description:"Incarnation de la lumière",     theme:"Manifestation de la conscience développée dans chaque acte de vie." }
+];
+
+/* ─── 15. Saison ───────────────────────────────────────────────────────── */
+function getSeason(date) {
+  const m = date.getMonth();
+  const d = date.getDate();
+  if ((m===2&&d>=20)||m===3||m===4||(m===5&&d<21))
+    return { name:"Printemps", icon:"🌱", energy:"Élan croissant — le cycle se déploie dans un mouvement naturellement ascendant." };
+  if ((m===5&&d>=21)||m===6||m===7||(m===8&&d<22))
+    return { name:"Été",       icon:"☀️", energy:"Intensité maximale — le cycle s'exprime dans toute sa puissance et son éclat." };
+  if ((m===8&&d>=22)||m===9||m===10||(m===11&&d<21))
+    return { name:"Automne",   icon:"🍂", energy:"Retour vers l'intérieur — le cycle intègre et lâche avec une sagesse naturelle." };
+  return { name:"Hiver", icon:"❄️", energy:"Gestation silencieuse — la force se construit dans le secret et la profondeur." };
+}
+
+/* ─── 16. Calcul ───────────────────────────────────────────────────────── */
+function calculate(j0Str) {
+  const j0 = new Date(j0Str + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  const msDay = 86400000;
+  const N = Math.floor((today - j0) / msDay);
+  if (N < 0) return null;
+
+  const GRAND = 15552;
+  const CYCLE = 432;
+
+  const grandCycleNum = Math.floor(N / GRAND);
+  const dayInGrand    = N % GRAND;
+  const cycleNum      = Math.floor(dayInGrand / CYCLE);
+  const dayInCycle    = dayInGrand % CYCLE;        // 0-431
+  const phaseIdx      = Math.min(Math.floor(dayInCycle / 36), 11);
+  const dayInPhase    = (dayInCycle % 36) + 1;     // 1-36
+
+  const isSpiral   = dayInCycle >= 360;
+  const spiralDay  = isSpiral ? dayInCycle - 359 : null;
+
+  const subPhase = dayInPhase <= 12 ? "Émergence" : dayInPhase <= 24 ? "Expansion" : "Intégration";
+  const axeIdx   = Math.min(Math.floor(cycleNum / 3), 11);
+
+  const lectureIdx = Math.min(Math.floor((dayInPhase - 1) / 12), 2);
+  const conseilIdx = Math.floor((dayInPhase - 1) / 6) % 6;
+
+  // J+288
+  const cycleStartN = (grandCycleNum * GRAND) + (cycleNum * CYCLE);
+  const j288N       = cycleStartN + 288;
+  const j288Date    = new Date(j0.getTime() + j288N * msDay);
+  const daysToJ288  = Math.round((j288Date - today) / msDay);
+
+  const cycleProgress = Math.round(((dayInCycle + 1) / CYCLE) * 100);
+  const phaseProgress = Math.round((dayInPhase / 36) * 100);
+
+  const j0Season    = getSeason(j0);
+  const todaySeason = getSeason(today);
+
+  const todayStr = today.toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+  const j288Str  = j288Date.toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+
+  return {
+    N, grandCycleNum, cycleNum, dayInCycle: dayInCycle+1,
+    phaseIdx, dayInPhase, isSpiral, spiralDay, subPhase, axeIdx,
+    lectureIdx, conseilIdx, daysToJ288, j288Past: daysToJ288<0,
+    cycleProgress, phaseProgress, j0Season, todaySeason,
+    todayStr, j288Str
+  };
+}
+
+/* ─── 17. Rendu Calculateur ────────────────────────────────────────────── */
+function runCalc() {
+  const j0 = document.getElementById('calc-j0').value;
+  if (!j0) return;
+  const r = calculate(j0);
+  if (!r) { alert('La date J0 doit être dans le passé.'); return; }
+
+  const phase = PHASES[r.phaseIdx];
+
+  document.getElementById('calc-grid').innerHTML = `
+    <div class="result-card"><div class="rc-lbl">Phase</div><div class="rc-val">${r.phaseIdx+1} — ${phase.nom}</div></div>
+    <div class="result-card"><div class="rc-lbl">Jour dans la phase</div><div class="rc-val">${r.dayInPhase} / 36</div></div>
+    <div class="result-card"><div class="rc-lbl">Sous-phase</div><div class="rc-val">${r.subPhase}</div></div>
+    <div class="result-card"><div class="rc-lbl">Cycle</div><div class="rc-val">${r.cycleNum+1} / 36</div></div>
+    <div class="result-card"><div class="rc-lbl">Jour dans le cycle</div><div class="rc-val">${r.dayInCycle} / 432</div></div>
+    <div class="result-card"><div class="rc-lbl">Axe</div><div class="rc-val">${AXES[r.axeIdx].nom}</div></div>
+  `;
+
+  document.getElementById('calc-progress').innerHTML = `
+    <div class="progress-wrap">
+      <div class="progress-lbl"><span>Progression du cycle</span><span>${r.cycleProgress}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${r.cycleProgress}%"></div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-lbl"><span>Progression de la phase</span><span>${r.phaseProgress}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${r.phaseProgress}%"></div></div>
+    </div>
+  `;
+
+  const pivHtml = r.j288Past
+    ? `<div class="pivot-badge">✓ J+288 dépassé il y a ${Math.abs(r.daysToJ288)} jours (${r.j288Str}) — Phase intégrative</div>`
+    : `<div class="pivot-badge">⬆ J+288 dans ${r.daysToJ288} jours (${r.j288Str}) — Pivot à venir</div>`;
+
+  const spirHtml = r.isSpiral
+    ? `<div class="spiral-badge">✦ Zone Spirale · Jour ${r.spiralDay}/72</div>` : '';
+
+  document.getElementById('calc-pivot').innerHTML = spirHtml + pivHtml;
+  document.getElementById('calc-result').classList.add('visible');
+}
+
+/* ─── 17b. Rendu Lecture Personnalisée ─────────────────────────────────── */
+function runReading() {
+  const j0  = document.getElementById('read-j0').value;
+  const nom = document.getElementById('read-name').value.trim();
+  if (!j0) return;
+  const r = calculate(j0);
+  if (!r) { alert('La date J0 doit être dans le passé.'); return; }
+
+  const phase = PHASES[r.phaseIdx];
+  const axe   = AXES[r.axeIdx];
+  const prenom = nom ? `${nom}, ` : "";
+
+  const spirHtml = r.isSpiral
+    ? `<div class="spiral-badge">✦ Zone Spirale — Jour ${r.spiralDay}/72 (phases 11–12 au-delà du cercle de 360°)</div>`
+    : '';
+
+  const pivHtml = r.j288Past
+    ? `<div class="pivot-badge">✓ J+288 accompli il y a ${Math.abs(r.daysToJ288)} jours — Tu es en phase intégrative (phase ${r.phaseIdx+1}/12)</div>`
+    : `<div class="pivot-badge">◈ J+288 dans ${r.daysToJ288} jours le ${r.j288Str} — Pivot de transformation à venir</div>`;
+
+  const container = document.getElementById('reading-result');
+  container.innerHTML = `
+    <div style="text-align:center;margin-bottom:28px;">
+      <h3 style="font-family:var(--font-head);font-size:1.4rem;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:6px;">
+        ${prenom}ta lecture du jour
+      </h3>
+      <p style="color:var(--muted);font-size:.85rem;">${r.todayStr}</p>
+    </div>
+
+    ${spirHtml}${pivHtml}
+
+    <div class="result-grid">
+      <div class="result-card"><div class="rc-lbl">Phase</div><div class="rc-val">${r.phaseIdx+1} — ${phase.nom}</div></div>
+      <div class="result-card"><div class="rc-lbl">Jour / Phase</div><div class="rc-val">J.${r.dayInPhase} sur 36</div></div>
+      <div class="result-card"><div class="rc-lbl">Sous-phase</div><div class="rc-val">${r.subPhase}</div></div>
+      <div class="result-card"><div class="rc-lbl">Cycle</div><div class="rc-val">Cycle ${r.cycleNum+1}/36</div></div>
+      <div class="result-card"><div class="rc-lbl">Axe de maturation</div><div class="rc-val">${axe.nom}</div></div>
+      <div class="result-card"><div class="rc-lbl">Saison actuelle</div><div class="rc-val">${r.todaySeason.icon} ${r.todaySeason.name}</div></div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-lbl"><span>Cycle complet</span><span>${r.cycleProgress}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${r.cycleProgress}%"></div></div>
+    </div>
+    <div class="progress-wrap" style="margin-bottom:28px;">
+      <div class="progress-lbl"><span>Phase ${r.phaseIdx+1} — ${phase.nom}</span><span>${r.phaseProgress}%</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${r.phaseProgress}%"></div></div>
+    </div>
+
+    <div class="reading-block tension-block">
+      <div class="rb-title">⚡ Tension du cycle</div>
+      <div class="rb-body">${phase.tension}</div>
+    </div>
+
+    <div class="reading-block" style="border-color:var(--border-g)">
+      <div class="rb-title" style="color:var(--green)">✓ Résolution</div>
+      <div class="rb-body">${phase.resolution}</div>
+    </div>
+
+    <div class="reading-block mantra-block">
+      <div class="rb-title">✦ Mantra</div>
+      <div class="rb-body" style="font-family:var(--font-head);font-size:1.1rem;background:var(--rainbow-diag);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;padding:8px 0;">
+        « ${phase.mantra} »
+      </div>
+    </div>
+
+    <div class="reading-block conseil-block">
+      <div class="rb-title">◈ Conseil du jour (jours ${(r.conseilIdx*6)+1}–${Math.min((r.conseilIdx+1)*6,36)})</div>
+      <div class="rb-body">${phase.conseils[r.conseilIdx]}</div>
+    </div>
+
+    <div class="reading-block lecture-block">
+      <div class="rb-title">◎ Lecture du jour (jours ${(r.lectureIdx*12)+1}–${Math.min((r.lectureIdx+1)*12,36)})</div>
+      <div class="rb-body">${phase.lectures[r.lectureIdx]}</div>
+    </div>
+
+    <div class="reading-block poem-block">
+      <div class="rb-title">☽ Poème de la phase ${r.phaseIdx+1} — ${phase.nom}</div>
+      <div class="rb-body poem-body">${phase.poeme}</div>
+    </div>
+
+    <div class="reading-block" style="border-color:var(--border-gold);background:linear-gradient(135deg,rgba(254,252,232,.9),rgba(255,251,235,.9));">
+      <div class="rb-title" style="color:var(--amber)">⊗ Axe de maturation : ${axe.nom} (cycles ${axe.cycles})</div>
+      <div class="rb-body">
+        <strong style="color:var(--text-head);">${axe.description}</strong><br>
+        <span style="color:var(--muted)">${axe.theme}</span>
+      </div>
+    </div>
+
+    <div class="season-row">
+      <div class="season-tag">
+        <div class="st-lbl">Saison de J0 (pression de fond)</div>
+        <div>${r.j0Season.icon} ${r.j0Season.name} — ${r.j0Season.energy}</div>
+      </div>
+      <div class="season-tag">
+        <div class="st-lbl">Saison actuelle</div>
+        <div>${r.todaySeason.icon} ${r.todaySeason.name} — ${r.todaySeason.energy}</div>
+      </div>
+    </div>
+  `;
+
+  container.classList.add('visible');
+  setTimeout(() => container.scrollIntoView({behavior:'smooth', block:'start'}), 100);
+}
+
+/* ─── 18. Init ─────────────────────────────────────────────────────────── */
+
+// Populate phases table
+const tbody = document.getElementById('phases-tbody');
+PHASES.forEach(p => {
+  const isSpiral = p.n >= 11;
+  const row = document.createElement('tr');
+  row.innerHTML = `
+    <td>${isSpiral ? `<span class="spiral-cell">${p.n} ✦</span>` : p.n}</td>
+    <td>
+      <span class="${isSpiral ? 'phase-badge badge-gold' : 'phase-badge badge-green'}">${p.nom}</span>
+    </td>
+    <td class="${isSpiral ? 'spiral-cell' : ''}">${p.motOrdre}</td>
+    <td style="color:var(--muted)">${p.dynamique}</td>
+    <td style="color:var(--muted);font-style:italic">${p.passage}</td>
+    <td class="${isSpiral ? 'spiral-cell' : ''}">
+      ${((p.n-1)*36+1)}–${p.n*36}
+      ${isSpiral ? ' <span style="font-size:.65rem;opacity:.6">(spirale)</span>' : ''}
+    </td>
+  `;
+  tbody.appendChild(row);
+});
+
+// Populate axes grid
+const axesGrid = document.getElementById('axes-grid');
+AXES.forEach(a => {
+  const div = document.createElement('div');
+  div.className = 'axe-card';
+  div.innerHTML = `
+    <div class="axe-n">Axe ${a.n} · Cycles ${a.cycles}</div>
+    <div class="axe-name">${a.nom}</div>
+    <div class="axe-desc">${a.description}</div>
+    <div class="axe-theme">${a.theme}</div>
+  `;
+  axesGrid.appendChild(div);
+});
+
+// Navigation scroll
+function navScroll(id) {
+  document.getElementById(id).scrollIntoView({behavior:'smooth'});
+}
+
+// Navigation active highlight
+const navBtns = document.querySelectorAll('.nav-btn');
+const sections = ['s1','s2','s3'].map(id => document.getElementById(id));
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const idx = sections.indexOf(e.target);
+      navBtns.forEach((b,i) => b.classList.toggle('active', i===idx));
+    }
+  });
+}, { threshold: 0.1 });
+
+sections.forEach(s => obs.observe(s));
+
+// Sync J0 inputs between calculator and reader
+document.getElementById('calc-j0').addEventListener('change', e => {
+  document.getElementById('read-j0').value = e.target.value;
+});
+
+document.getElementById('read-j0').addEventListener('change', e => {
+  document.getElementById('calc-j0').value = e.target.value;
+});
+
+</script>
+</body>
+</html>

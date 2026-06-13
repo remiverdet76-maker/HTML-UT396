@@ -1,0 +1,15 @@
+# Claude Code
+.claude/
+
+# Netlify
+.netlify/
+
+# Dossiers non publiés
+sample final/
+Documents UT396/
+Image 396/
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini

@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sphère OmCv — Les 42 Ratios</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+/* ═══ 1 — Variables ═══ */
+:root {
+  --n6:#B45FDB; --n7:#5B8EF0; --n8:#38BDF8;
+  --n9:#34D399; --n10:#FBBF24; --n11:#FB923C; --n12:#F87171;
+  --bg:#FFFBF5; --text:#2D1B3D;
+  --card:rgba(255,255,255,0.72);
+  --shadow:rgba(100,50,150,0.13);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Raleway',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* ═══ 2 — Orbes de fond ═══ */
+.bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:0.20;animation:floatOrb 14s ease-in-out infinite;}
+.orb:nth-child(1){width:480px;height:480px;background:var(--n6);top:-12%;left:-8%;animation-delay:0s;}
+.orb:nth-child(2){width:380px;height:380px;background:var(--n8);top:15%;right:-10%;animation-delay:-4s;}
+.orb:nth-child(3){width:320px;height:320px;background:var(--n10);bottom:5%;left:15%;animation-delay:-7s;}
+.orb:nth-child(4){width:260px;height:260px;background:var(--n12);bottom:-6%;right:8%;animation-delay:-10s;}
+.orb:nth-child(5){width:220px;height:220px;background:var(--n9);top:45%;left:38%;animation-delay:-3s;}
+@keyframes floatOrb{0%,100%{transform:translate(0,0) scale(1);}33%{transform:translate(28px,-18px) scale(1.06);}66%{transform:translate(-18px,26px) scale(0.94);}}
+
+/* ═══ 3 — Wrapper & Header ═══ */
+.wrapper{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:44px 16px 64px;}
+header{text-align:center;margin-bottom:52px;}
+.title-sphere{
+  font-family:'Cinzel',serif;font-size:clamp(1.7rem,5vw,3rem);font-weight:900;letter-spacing:3px;
+  background:linear-gradient(110deg,var(--n6),var(--n7),var(--n8),var(--n9),var(--n10),var(--n11),var(--n12));
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 5s linear infinite;margin-bottom:10px;
+}
+@keyframes shimmer{0%{background-position:0% center;}100%{background-position:200% center;}}
+.subtitle{font-size:0.82rem;font-weight:300;color:#9B72C0;letter-spacing:4px;text-transform:uppercase;}
+
+/* ═══ 4 — Table card wrapper ═══ */
+.tbl-wrap{
+  background:var(--card);backdrop-filter:blur(24px);
+  border-radius:26px;margin-bottom:42px;overflow:hidden;
+  box-shadow:0 8px 48px var(--shadow),inset 0 1px 0 rgba(255,255,255,0.85);
+  border:1px solid rgba(255,255,255,0.65);
+  transition:transform 0.35s ease,box-shadow 0.35s ease;
+}
+.tbl-wrap:hover{transform:translateY(-4px);box-shadow:0 18px 64px var(--shadow);}
+
+/* ═══ 5 — Table base ═══ */
+table{width:100%;border-collapse:separate;border-spacing:0 3px;padding:0 18px 18px;}
+caption{
+  font-family:'Cinzel',serif;font-size:1rem;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:24px 18px 14px;text-align:left;caption-side:top;
+}
+.cap1{color:var(--n11);} .cap2{color:var(--n7);}
+
+/* ═══ 6 — Thead ═══ */
+thead th{
+  font-family:'Cinzel',serif;font-size:0.68rem;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;color:#9B72C0;
+  padding:10px 14px;text-align:left;
+  background:rgba(200,170,240,0.12);
+}
+thead th:first-child{border-radius:10px 0 0 10px;}
+thead th:last-child{border-radius:0 10px 10px 0;}
+
+/* ═══ 7 — Tbody rows ═══ */
+tbody tr:not(.frow){transition:filter 0.2s,transform 0.2s;cursor:default;}
+tbody tr:not(.frow):hover{filter:brightness(1.05);transform:translateX(4px);}
+td{padding:11px 14px;font-size:0.84rem;vertical-align:middle;}
+td:first-child{border-radius:10px 0 0 10px;}
+td:last-child{border-radius:0 10px 10px 0;}
+
+/* ═══ 8 — Formula row ═══ */
+.frow td{
+  font-family:'Cinzel',serif;font-size:0.85rem;color:#8A55BB;
+  background:rgba(180,95,219,0.08) !important;
+  border:1px dashed rgba(180,95,219,0.25);
+  border-radius:10px !important;
+  text-align:center;padding:12px 18px;letter-spacing:1px;
+}
+
+/* ═══ 9 — Badges & Tags ═══ */
+.nb{
+  display:inline-block;padding:4px 13px;border-radius:20px;
+  font-family:'Cinzel',serif;font-weight:700;font-size:0.92rem;
+  color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.18);
+  box-shadow:0 2px 8px rgba(0,0,0,0.12);white-space:nowrap;
+}
+.rt{
+  display:inline-block;padding:3px 10px;border-radius:8px;
+  font-weight:600;font-size:0.82rem;margin:2px 0;
+  background:rgba(255,255,255,0.7);box-shadow:0 1px 5px rgba(0,0,0,0.08);white-space:nowrap;
+}
+.id{font-size:0.77rem;font-style:italic;color:#8A5CAA;font-weight:300;}
+
+/* ═══ Row colors — nodes ═══ */
+.rn6{background:linear-gradient(90deg,rgba(180,95,219,.12),rgba(255,255,255,.38));}
+.rn7{background:linear-gradient(90deg,rgba(91,142,240,.12),rgba(255,255,255,.38));}
+.rn8{background:linear-gradient(90deg,rgba(56,189,248,.12),rgba(255,255,255,.38));}
+.rn9{background:linear-gradient(90deg,rgba(52,211,153,.12),rgba(255,255,255,.38));}
+.rn10{background:linear-gradient(90deg,rgba(251,191,36,.12),rgba(255,255,255,.38));}
+.rn11{background:linear-gradient(90deg,rgba(251,146,60,.12),rgba(255,255,255,.38));}
+.rn12{background:linear-gradient(90deg,rgba(248,113,113,.12),rgba(255,255,255,.38));}
+
+/* ═══ Row colors — ratio pairs ═══ */
+.r67{background:linear-gradient(90deg,rgba(180,95,219,.08),rgba(91,142,240,.08),rgba(255,255,255,.28));}
+.r68{background:linear-gradient(90deg,rgba(180,95,219,.08),rgba(56,189,248,.08),rgba(255,255,255,.28));}
+.r69{background:linear-gradient(90deg,rgba(180,95,219,.08),rgba(52,211,153,.08),rgba(255,255,255,.28));}
+.r610{background:linear-gradient(90deg,rgba(180,95,219,.08),rgba(251,191,36,.08),rgba(255,255,255,.28));}
+.r611{background:linear-gradient(90deg,rgba(180,95,219,.08),rgba(251,146,60,.08),rgba(255,255,255,.28));}
+.r612{background:linear-gradient(90deg,rgba(180,95,219,.08),rgba(248,113,113,.08),rgba(255,255,255,.28));}
+.r78{background:linear-gradient(90deg,rgba(91,142,240,.08),rgba(56,189,248,.08),rgba(255,255,255,.28));}
+.r79{background:linear-gradient(90deg,rgba(91,142,240,.08),rgba(52,211,153,.08),rgba(255,255,255,.28));}
+.r710{background:linear-gradient(90deg,rgba(91,142,240,.08),rgba(251,191,36,.08),rgba(255,255,255,.28));}
+.r711{background:linear-gradient(90deg,rgba(91,142,240,.08),rgba(251,146,60,.08),rgba(255,255,255,.28));}
+.r712{background:linear-gradient(90deg,rgba(91,142,240,.08),rgba(248,113,113,.08),rgba(255,255,255,.28));}
+.r89{background:linear-gradient(90deg,rgba(56,189,248,.08),rgba(52,211,153,.08),rgba(255,255,255,.28));}
+.r810{background:linear-gradient(90deg,rgba(56,189,248,.08),rgba(251,191,36,.08),rgba(255,255,255,.28));}
+.r811{background:linear-gradient(90deg,rgba(56,189,248,.08),rgba(251,146,60,.08),rgba(255,255,255,.28));}
+.r812{background:linear-gradient(90deg,rgba(56,189,248,.08),rgba(248,113,113,.08),rgba(255,255,255,.28));}
+.r910{background:linear-gradient(90deg,rgba(52,211,153,.08),rgba(251,191,36,.08),rgba(255,255,255,.28));}
+.r911{background:linear-gradient(90deg,rgba(52,211,153,.08),rgba(251,146,60,.08),rgba(255,255,255,.28));}
+.r912{background:linear-gradient(90deg,rgba(52,211,153,.08),rgba(248,113,113,.08),rgba(255,255,255,.28));}
+.r1011{background:linear-gradient(90deg,rgba(251,191,36,.10),rgba(251,146,60,.13),rgba(255,255,255,.28));}
+.r1012{background:linear-gradient(90deg,rgba(251,191,36,.08),rgba(248,113,113,.08),rgba(255,255,255,.28));}
+.r1112{background:linear-gradient(90deg,rgba(251,146,60,.08),rgba(248,113,113,.08),rgba(255,255,255,.28));}
+.omcv{box-shadow:inset 4px 0 0 var(--n11);}
+
+/* ═══ RESPONSIVE MOBILE ═══ */
+@media(max-width:660px){
+  table{padding:0 10px 14px;border-spacing:0 6px;}
+  caption{padding:18px 10px 10px;font-size:0.88rem;}
+  thead{display:none;}
+  table,tbody,tr,td{display:block;width:100%;}
+  tr:not(.frow){
+    border-radius:14px;overflow:hidden;
+    margin-bottom:2px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.05);
+  }
+  td{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 13px;font-size:0.80rem;
+    border-bottom:1px solid rgba(180,95,219,0.08);
+    border-radius:0 !important;
+  }
+  td::before{
+    content:attr(data-label);
+    font-family:'Cinzel',serif;font-size:0.62rem;
+    font-weight:600;letter-spacing:1px;text-transform:uppercase;
+    color:#9B72C0;margin-right:10px;flex-shrink:0;min-width:75px;
+  }
+  td:last-child{border-bottom:none;}
+  .frow td{display:block;text-align:center;font-size:0.76rem;border-radius:10px !important;}
+  .frow td::before{display:none;}
+  .tbl-wrap{border-radius:18px;margin-bottom:28px;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb"></div><div class="orb"></div>
+  <div class="orb"></div><div class="orb"></div><div class="orb"></div>
+</div>
+
+<div class="wrapper">
+
+  <header>
+    <div class="title-sphere">⬡ Sphère OmCv</div>
+    <div class="subtitle">Les 7 Nœuds · Les 42 Ratios · Unité 36 · Réduction 9</div>
+  </header>
+
+  <!-- TABLE 1 — NŒUDS -->
+  <div class="tbl-wrap">
+    <table>
+      <caption class="cap1">▲ Les 7 Nœuds — N × 36</caption>
+      <thead>
+        <tr>
+          <th>N</th><th>Valeur</th><th>Réduction</th><th>Identité</th><th>Rôle Omcha</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="frow"><td colspan="5">OmCv = N₁ / N₂ &nbsp;·&nbsp; Unité = 36 &nbsp;·&nbsp; Tout multiple de 36 réduit à 9</td></tr>
+        <tr class="rn6">
+          <td data-label="N"><span class="nb" style="background:var(--n6)">6</span></td>
+          <td data-label="Valeur"><strong>216</strong></td>
+          <td data-label="Réduction">2+1+6 = <strong>9</strong></td>
+          <td data-label="Identité">6³</td>
+          <td data-label="Rôle">Cube fondamental</td>
+        </tr>
+        <tr class="rn7">
+          <td data-label="N"><span class="nb" style="background:var(--n7)">7</span></td>
+          <td data-label="Valeur"><strong>252</strong></td>
+          <td data-label="Réduction">2+5+2 = <strong>9</strong></td>
+          <td data-label="Identité">7 × 36</td>
+          <td data-label="Rôle">Pont harmonique</td>
+        </tr>
+        <tr class="rn8">
+          <td data-label="N"><span class="nb" style="background:var(--n8)">8</span></td>
+          <td data-label="Valeur"><strong>288</strong></td>
+          <td data-label="Réduction">2+8+8 = 18 → <strong>9</strong></td>
+          <td data-label="Identité">2 × 144</td>
+          <td data-label="Rôle">Double octave de 144</td>
+        </tr>
+        <tr class="rn9">
+          <td data-label="N"><span class="nb" style="background:var(--n9)">9</span></td>
+          <td data-label="Valeur"><strong>324</strong></td>
+          <td data-label="Réduction">3+2+4 = <strong>9</strong></td>
+          <td data-label="Identité">18²</td>
+          <td data-label="Rôle">Carré de 18</td>
+        </tr>
+        <tr class="rn10">
+          <td data-label="N"><span class="nb" style="background:var(--n10)">10</span></td>
+          <td data-label="Valeur"><strong>360</strong></td>
+          <td data-label="Réduction">3+6+0 = <strong>9</strong></td>
+          <td data-label="Identité">Sphère complète</td>
+          <td data-label="Rôle">Base — Sphère</td>
+        </tr>
+        <tr class="rn11">
+          <td data-label="N"><span class="nb" style="background:var(--n11)">11</span></td>
+          <td data-label="Valeur"><strong>396</strong></td>
+          <td data-label="Réduction">3+9+6 = 18 → <strong>9</strong></td>
+          <td data-label="Identité">(360 + 432) / 2</td>
+          <td data-label="Rôle">Centre Stable ⭐</td>
+        </tr>
+        <tr class="rn12">
+          <td data-label="N"><span class="nb" style="background:var(--n12)">12</span></td>
+          <td data-label="Valeur"><strong>432</strong></td>
+          <td data-label="Réduction">4+3+2 = <strong>9</strong></td>
+          <td data-label="Identité">2 × 216</td>
+          <td data-label="Rôle">Cosmique — Octave de 216</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TABLE 2 — RATIOS -->
+  <div class="tbl-wrap">
+    <table>
+      <caption class="cap2">◈ Les 42 OmCv — 21 Paires × 2 Directions</caption>
+      <thead>
+        <tr>
+          <th>Nœud A</th><th>Nœud B</th>
+          <th>A → B (contraction)</th><th>B → A (expansion)</th>
+          <th>Identité</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="r67">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n6)">216</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n7)">252</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n6)">6/7 ≈ 0,857</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n7)">7/6 ≈ 1,167</span></td>
+          <td data-label="Identité" class="id">Septième naturelle</td>
+        </tr>
+        <tr class="r68">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n6)">216</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n8)">288</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n6)">6/8 = 3/4</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n8)">8/6 = 4/3</span></td>
+          <td data-label="Identité" class="id">🎵 Quarte juste</td>
+        </tr>
+        <tr class="r69">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n6)">216</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n9)">324</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n6)">6/9 = 2/3</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n9)">9/6 = 3/2</span></td>
+          <td data-label="Identité" class="id">🎵 Quinte juste</td>
+        </tr>
+        <tr class="r610">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n6)">216</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n10)">360</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n6)">6/10 = 3/5</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n10)">10/6 = 5/3</span></td>
+          <td data-label="Identité" class="id">Sixte majeure</td>
+        </tr>
+        <tr class="r611">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n6)">216</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n11)">396</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n6)">6/11 ≈ 0,545</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n11)">11/6 ≈ 1,833</span></td>
+          <td data-label="Identité" class="id">Cube → Centre</td>
+        </tr>
+        <tr class="r612">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n6)">216</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n12)">432</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n6)">6/12 = 1/2</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n12)">12/6 = 2</span></td>
+          <td data-label="Identité" class="id">🎵 Octave pure</td>
+        </tr>
+        <tr class="r78">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n7)">252</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n8)">288</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n7)">7/8 = 0,875</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n8)">8/7 ≈ 1,143</span></td>
+          <td data-label="Identité" class="id">Seconde étendue</td>
+        </tr>
+        <tr class="r79">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n7)">252</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n9)">324</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n7)">7/9 ≈ 0,778</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n9)">9/7 ≈ 1,286</span></td>
+          <td data-label="Identité" class="id">Tierce neutre</td>
+        </tr>
+        <tr class="r710">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n7)">252</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n10)">360</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n7)">7/10 = 0,7</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n10)">10/7 ≈ 1,429</span></td>
+          <td data-label="Identité" class="id">Triton naturel</td>
+        </tr>
+        <tr class="r711">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n7)">252</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n11)">396</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n7)">7/11 ≈ 0,636</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n11)">11/7 ≈ 1,571</span></td>
+          <td data-label="Identité" class="id">Pont → Centre</td>
+        </tr>
+        <tr class="r712">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n7)">252</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n12)">432</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n7)">7/12 ≈ 0,583</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n12)">12/7 ≈ 1,714</span></td>
+          <td data-label="Identité" class="id">Pont → Cosmique</td>
+        </tr>
+        <tr class="r89">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n8)">288</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n9)">324</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n8)">8/9 ≈ 0,889</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n9)">9/8 = 1,125</span></td>
+          <td data-label="Identité" class="id">Ton entier</td>
+        </tr>
+        <tr class="r810">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n8)">288</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n10)">360</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n8)">8/10 = 4/5</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n10)">10/8 = 5/4</span></td>
+          <td data-label="Identité" class="id">🎵 Tierce majeure</td>
+        </tr>
+        <tr class="r811">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n8)">288</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n11)">396</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n8)">8/11 ≈ 0,727</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n11)">11/8 = 1,375</span></td>
+          <td data-label="Identité" class="id">Harmonique 11</td>
+        </tr>
+        <tr class="r812">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n8)">288</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n12)">432</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n8)">8/12 = 2/3</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n12)">12/8 = 3/2</span></td>
+          <td data-label="Identité" class="id">🎵 Quinte juste</td>
+        </tr>
+        <tr class="r910">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n9)">324</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n10)">360</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n9)">9/10 = 0,9</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n10)">10/9 ≈ 1,111</span></td>
+          <td data-label="Identité" class="id">Ton mineur</td>
+        </tr>
+        <tr class="r911">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n9)">324</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n11)">396</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n9)">9/11 ≈ 0,818</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n11)">11/9 ≈ 1,222</span></td>
+          <td data-label="Identité" class="id">Tierce large</td>
+        </tr>
+        <tr class="r912">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n9)">324</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n12)">432</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n9)">9/12 = 3/4</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n12)">12/9 = 4/3</span></td>
+          <td data-label="Identité" class="id">🎵 Quarte juste</td>
+        </tr>
+        <tr class="r1011 omcv">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n10)">360</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n11)">396</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n10);font-weight:700">10/11 ≈ 0,909</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n11);font-weight:700">11/10 = 1,1</span></td>
+          <td data-label="Identité" class="id">⭐ OmCv Sphère ↔ Centre</td>
+        </tr>
+        <tr class="r1012 omcv">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n10)">360</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n12)">432</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n10);font-weight:700">10/12 = 5/6</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n12);font-weight:700">12/10 = 6/5</span></td>
+          <td data-label="Identité" class="id">⭐ OmCv Sphère ↔ Cosmique</td>
+        </tr>
+        <tr class="r1112 omcv">
+          <td data-label="Nœud A"><span class="nb" style="background:var(--n11)">396</span></td>
+          <td data-label="Nœud B"><span class="nb" style="background:var(--n12)">432</span></td>
+          <td data-label="A→B"><span class="rt" style="color:var(--n11);font-weight:700">11/12 ≈ 0,917</span></td>
+          <td data-label="B→A"><span class="rt" style="color:var(--n12);font-weight:700">12/11 ≈ 1,091</span></td>
+          <td data-label="Identité" class="id">⭐ OmCv Centre ↔ Cosmique</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

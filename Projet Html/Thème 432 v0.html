@@ -1,0 +1,389 @@
+
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Thème 432 - Outil interactif : J0, Table 36, Horloge & Fiche imprimable</title>
+<style>
+  :root{
+    --bg:#071021; --card:#0f1720; --muted:#9fb0c8; --text:#eaf4ff; --gold:#d6b24a; --accent:#6fd3c7;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#04101a,#071021);color:var(--text);padding:20px}
+  header{max-width:1100px;margin:0 auto 14px}
+  h1{margin:0;font-size:1.4rem}
+  p.lead{color:var(--muted);margin:6px 0 0}
+  main{max-width:1100px;margin:18px auto;display:grid;grid-template-columns:360px 1fr;gap:14px}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.03);padding:12px;border-radius:10px}
+  label{display:block;color:var(--muted);font-size:0.9rem;margin-bottom:6px}
+  input[type="date"], select{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+  button{padding:10px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+  button.primary{background:linear-gradient(90deg,var(--gold),#f0d77a);color:#071018}
+  button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  .small{font-size:0.9rem;color:var(--muted)}
+  .readout p{margin:6px 0}
+  .table-wrap{overflow:auto;border-radius:8px;margin-top:10px}
+  table{width:100%;border-collapse:collapse;font-size:0.9rem}
+  th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left}
+  th{color:var(--gold);font-weight:700}
+  tr.alt td{background:rgba(255,255,255,0.01)}
+  tr.gold td{background:linear-gradient(90deg, rgba(214,178,74,0.06), rgba(214,178,74,0.02));color:#071018}
+  #clock{background:transparent;border-radius:50%;display:block}
+  footer{max-width:1100px;margin:18px auto;color:var(--muted);font-size:0.9rem;text-align:center}
+  @media(max-width:980px){main{grid-template-columns:1fr} .left-col{order:2}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Thème 432 - Outil interactif</h1>
+  <p class="lead">Calculateur J0 (J0 = date de naissance − 288 jours), table complète des 36 micro-énergies, horloge 432 animée et génération de fiche imprimable.</p>
+</header>
+
+<main>
+  <aside class="card left-col" aria-label="Contrôles">
+    <label for="birth">Date de naissance (physique)</label>
+    <input id="birth" type="date" />
+    <div style="height:8px"></div>
+    <button class="primary" id="calc-j0">Calculer J0 (−288j)</button>
+    <div style="height:12px"></div>
+    <label for="j0">Ou saisir J0 (libre)</label>
+    <input id="j0" type="date" />
+    <div style="height:8px"></div>
+    <button class="ghost" id="apply-j0">Appliquer J0</button>
+    <div style="height:12px"></div>
+    <div class="small">Options</div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="ghost" id="btn-reset">Réinitialiser</button>
+      <button class="ghost" id="btn-sample">Exemple</button>
+    </div>
+    <div style="height:12px"></div>
+    <div class="card" style="padding:10px">
+      <div class="small"><strong>Horloge 432</strong></div>
+      <canvas id="clock" width="300" height="300"></canvas>
+      <div class="small" style="margin-top:8px">Trois points : micro / jour / cycle - mouvement continu synchronisé sur J0.</div>
+    </div>
+  </aside>
+
+  <section class="card" aria-label="Résultats">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2 style="margin:0;font-size:1.05rem">Lecture basée sur J0</h2>
+        <div class="small">Lecture indépendante du calendrier grégorien - J0 = naissance − 288 jours par convention.</div>
+      </div>
+      <div>
+        <button class="primary" id="gen-fiche">Générer fiche imprimable</button>
+      </div>
+    </div>
+
+    <div class="readout" id="readout" style="margin-top:12px">
+      <p><strong>J0 :</strong> -</p>
+      <p><strong>Jours depuis J0 :</strong> -</p>
+      <p><strong>Jour dans cycle (1-432) :</strong> -</p>
+      <p><strong>Cycle canonique (1-108) :</strong> -</p>
+      <p><strong>Micro (1-9) :</strong> -</p>
+      <p><strong>État respiratoire :</strong> -</p>
+      <p><strong>Axe (1-36) :</strong> -</p>
+      <p><strong>Cycle précédent / suivant :</strong> -</p>
+    </div>
+
+    <div style="height:12px"></div>
+
+    <div class="small"><strong>Analyse synthétique</strong></div>
+    <div id="analysis" class="small" style="margin-top:8px">Aucune donnée appliquée.</div>
+
+    <div style="height:12px"></div>
+
+    <div class="small"><strong>Table complète - 36 micro-énergies</strong></div>
+    <div class="table-wrap" style="margin-top:8px">
+      <table id="table36" aria-label="Table 36 micro energies">
+        <thead>
+          <tr><th>#</th><th>Micro</th><th>État</th><th>Tonalité corporelle</th><th>Tension</th><th>Action recommandée</th></tr>
+        </thead>
+        <tbody>
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div>Outil interactif - utilise J0 pour obtenir une lecture personnelle et exploitable. Les fiches imprimables sont optimisées pour usage quotidien.</div>
+</footer>
+
+<script>
+/* ---------- Données de base ---------- */
+const energies = [
+  {id:1,name:'Mobilité',tone:'mouvement, communication'},
+  {id:2,name:'Relation',tone:'échange affectif, harmonie'},
+  {id:3,name:'Matière',tone:'incarnation, sécurité'},
+  {id:4,name:'Action',tone:'impulsion, courage'},
+  {id:5,name:'Expansion',tone:'vision, croissance'},
+  {id:6,name:'Structure',tone:'limite, discipline'},
+  {id:7,name:'Innovation',tone:'rupture, originalité'},
+  {id:8,name:'Sensibilité',tone:'rêve, intuition'},
+  {id:9,name:'Transformation',tone:'profondeur, régénération'}
+];
+const stateOrder = [
+  {key:'11/10',label:'Expansion douce',desc:'Ouverture progressive, activation contrôlée'},
+  {key:'12/10',label:'Expansion maximale',desc:'Pic d’extériorisation, intensité'},
+  {key:'10/11',label:'Contraction douce',desc:'Retour intérieur, consolidation'},
+  {key:'10/12',label:'Contraction maximale',desc:'Incubation, profondeur'}
+];
+
+/* ---------- Helpers date ---------- */
+function parseDate(v){ if(!v) return null; const d=new Date(v+'T00:00:00'); return isNaN(d)?null:d; }
+function formatDate(d){ if(!d) return '-'; return d.toISOString().slice(0,10); }
+function addDays(d,days){ const x=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate())); x.setUTCDate(x.getUTCDate()+days); return x; }
+function daysBetween(a,b){ const ms = Date.UTC(b.getUTCFullYear(),b.getUTCMonth(),b.getUTCDate()) - Date.UTC(a.getUTCFullYear(),a.getUTCMonth(),a.getUTCDate()); return Math.floor(ms / (24*3600*1000)); }
+
+/* ---------- Calculs cycle ---------- */
+function computeFromJ0(j0, ref=new Date()){
+  const daysSince = daysBetween(j0, ref);
+  const dayIndex = daysSince;
+  const dayInCycle = ((dayIndex % 432) + 432) % 432 + 1; // 1..432
+  const cycleIndex = Math.floor(dayIndex / 432) + 1;
+  const cycle108 = ((cycleIndex - 1) % 108) + 1;
+  const micro = ((dayInCycle - 1) % 9) + 1;
+  const state = stateOrder[(dayInCycle - 1) % 4];
+  const axis = ((cycle108 - 1) % 36) + 1;
+  const axisPos = Math.floor((cycle108 - 1) / 36) + 1; // 1..3
+  const prevCycle = cycle108 === 1 ? 108 : cycle108 - 1;
+  const nextCycle = cycle108 === 108 ? 1 : cycle108 + 1;
+  const prevAxis = axis === 1 ? 36 : axis - 1;
+  const nextAxis = axis === 36 ? 1 : axis + 1;
+  return {daysSince,dayIndex,dayInCycle,cycleIndex,cycle108,micro,state,axis,axisPos,prevCycle,nextCycle,prevAxis,nextAxis};
+}
+
+/* ---------- UI wiring ---------- */
+const birthEl = document.getElementById('birth');
+const j0El = document.getElementById('j0');
+const btnCalc = document.getElementById('calc-j0');
+const btnApply = document.getElementById('apply-j0');
+const btnReset = document.getElementById('btn-reset');
+const btnSample = document.getElementById('btn-sample');
+const readout = document.getElementById('readout');
+const analysisEl = document.getElementById('analysis');
+const tableBody = document.querySelector('#table36 tbody');
+const genFiche = document.getElementById('gen-fiche');
+
+let currentJ0 = null;
+let lastComp = null;
+
+btnCalc.addEventListener('click', ()=>{
+  const b = parseDate(birthEl.value);
+  if(!b){ alert('Saisis une date de naissance valide.'); return; }
+  const j0 = addDays(b, -288);
+  j0El.value = j0.toISOString().slice(0,10);
+  applyJ0(j0);
+});
+btnApply.addEventListener('click', ()=>{
+  const j0 = parseDate(j0El.value);
+  if(!j0){ alert('Saisis un J0 valide.'); return; }
+  applyJ0(j0);
+});
+btnReset.addEventListener('click', ()=>{
+  birthEl.value=''; j0El.value=''; currentJ0=null; lastComp=null;
+  readout.innerHTML = defaultReadout();
+  analysisEl.innerHTML = 'Aucune donnée appliquée.';
+  syncClock({micro:1,dayInCycle:1,cycle108:1});
+});
+btnSample.addEventListener('click', ()=>{
+  const sample = new Date(); sample.setUTCFullYear(sample.getUTCFullYear()-28); sample.setUTCMonth(5); sample.setUTCDate(21);
+  birthEl.value = sample.toISOString().slice(0,10);
+  btnCalc.click();
+});
+
+function defaultReadout(){
+  return `<p><strong>J0 :</strong> -</p>
+    <p><strong>Jours depuis J0 :</strong> -</p>
+    <p><strong>Jour dans cycle (1-432) :</strong> -</p>
+    <p><strong>Cycle canonique (1-108) :</strong> -</p>
+    <p><strong>Micro (1-9) :</strong> -</p>
+    <p><strong>État respiratoire :</strong> -</p>
+    <p><strong>Axe (1-36) :</strong> -</p>
+    <p><strong>Cycle précédent / suivant :</strong> -</p>`;
+}
+
+function applyJ0(j0){
+  currentJ0 = j0;
+  const comp = computeFromJ0(j0, new Date());
+  lastComp = comp;
+  readout.innerHTML = `<p><strong>J0 :</strong> ${formatDate(j0)}</p>
+    <p><strong>Jours depuis J0 :</strong> ${comp.daysSince}</p>
+    <p><strong>Jour dans cycle (1-432) :</strong> ${comp.dayInCycle}</p>
+    <p><strong>Cycle canonique (1-108) :</strong> ${comp.cycle108}</p>
+    <p><strong>Micro (1-9) :</strong> ${comp.micro} - ${energies[comp.micro-1].name}</p>
+    <p><strong>État respiratoire :</strong> ${comp.state.key} - ${comp.state.label}</p>
+    <p><strong>Axe (1-36) :</strong> ${comp.axis} (position ${comp.axisPos})</p>
+    <p><strong>Cycle précédent / suivant :</strong> ${comp.prevCycle} / ${comp.nextCycle}</p>`;
+  const analysis = generateAnalysis(j0, comp);
+  analysisEl.innerHTML = `<strong>${analysis.header}</strong><div style="height:8px"></div>
+    <div>${analysis.summary}</div>
+    <div style="height:8px"></div>
+    <div><strong>Tensions</strong><ul>${analysis.tensions.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+    <div style="height:8px"></div>
+    <div><strong>Points à travailler</strong><ul>${analysis.work.map(t=>`<li>${t}</li>`).join('')}</ul></div>`;
+  syncClock(comp);
+}
+
+/* ---------- Analysis generator (anchored, concise) ---------- */
+function generateAnalysis(j0, comp){
+  const e = energies[comp.micro-1];
+  const s = comp.state;
+  const header = `Lecture J0 = ${formatDate(j0)} - jour ${comp.daysSince}`;
+  const summary = `Micro ${comp.micro} (${e.name}) - état ${s.key} (${s.label}). Axe ${comp.axis} - position ${comp.axisPos}.`;
+  const tensions = [];
+  const work = [];
+  // base by state
+  if(s.key === '11/10' || s.key === '12/10'){
+    tensions.push('Tendance à l’extériorisation ; risque de dispersion si non structuré.');
+    work.push('Structurer l’élan par micro-objectifs et pauses planifiées.');
+  } else {
+    tensions.push('Tendance à l’intériorisation ; risque de retrait excessif.');
+    work.push('Pratiquer des partages progressifs et routines d’ouverture.');
+  }
+  // by energy
+  switch(comp.micro){
+    case 1: tensions.push('Flux mental rapide.'); work.push('Exercices de concentration courts.'); break;
+    case 2: tensions.push('Sensibilité relationnelle.'); work.push('Clarifier limites relationnelles.'); break;
+    case 3: tensions.push('Besoin d’ancrage.'); work.push('Rituels corporels matin/soir.'); break;
+    case 4: tensions.push('Impulsivité possible.'); work.push('Pause avant action.'); break;
+    case 5: tensions.push('Surexpansion d’idées.'); work.push('Tester à petite échelle.'); break;
+    case 6: tensions.push('Rigidité structurelle.'); work.push('Assouplir les routines.'); break;
+    case 7: tensions.push('Besoin de liberté.'); work.push('Prototyper sans tout casser.'); break;
+    case 8: tensions.push('Flou des frontières.'); work.push('Clarifier engagements.'); break;
+    case 9: tensions.push('Rencontres avec l’ombre.'); work.push('Rituels d’intégration, accompagnement si besoin.'); break;
+  }
+  return {header,summary,tensions,work};
+}
+
+/* ---------- Build table 36 ---------- */
+function buildTable36(){
+  const tbody = tableBody;
+  tbody.innerHTML = '';
+  let idx = 1;
+  for(let stateIdx=0; stateIdx<4; stateIdx++){
+    for(let micro=1; micro<=9; micro++){
+      const e = energies[micro-1];
+      const s = stateOrder[stateIdx];
+      const tr = document.createElement('tr');
+      if(idx%6===0) tr.classList.add('gold'); else if(idx%2===0) tr.classList.add('alt');
+      const tension = sampleTension(micro, s.key);
+      const action = sampleAction(micro, s.key);
+      tr.innerHTML = `<td>${idx}</td>
+        <td>${micro} - ${e.name}</td>
+        <td>${s.key} (${s.label})</td>
+        <td>${e.tone}</td>
+        <td>${tension}</td>
+        <td>${action}</td>`;
+      tbody.appendChild(tr);
+      idx++;
+    }
+  }
+}
+function sampleTension(micro, stateKey){
+  const base = (stateKey==='11/10'||stateKey==='12/10') ? 'Extériorisation, risque de dispersion' : 'Intériorisation, risque de retrait';
+  const mod = ['mobilité','relation','matière','action','expansion','structure','innovation','sensibilité','transformation'][micro-1];
+  return `${base} - ${mod}`;
+}
+function sampleAction(micro, stateKey){
+  const act = ['échauffement, marche','écoute active','routines d’ancrage','pause avant action','tester idées','organiser, lister','prototyper','journaling, méditation','rituel d’intégration'][micro-1];
+  return act;
+}
+
+/* ---------- Horloge 432 (canvas) ---------- */
+const canvas = document.getElementById('clock');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height, CX = W/2, CY = H/2, R = Math.min(W,H)/2 - 12;
+let clockState = {microAngle:0,dayAngle:0,cycleAngle:0,last:Date.now()};
+
+function drawClock(){
+  ctx.clearRect(0,0,W,H);
+  // background ring
+  ctx.save(); ctx.translate(CX,CY);
+  const g = ctx.createRadialGradient(0,0,10,0,0,R);
+  g.addColorStop(0,'rgba(111,211,199,0.06)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0,0,R+6,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  // points
+  drawPoint(clockState.microAngle, '#6fd3c7', R*0.92, 6);
+  drawPoint(clockState.dayAngle, '#d6b24a', R*0.7, 9);
+  drawPoint(clockState.cycleAngle, '#ffffff', R*0.5, 12);
+  // center
+  ctx.beginPath(); ctx.fillStyle='rgba(214,178,74,0.06)'; ctx.arc(CX,CY,6,0,Math.PI*2); ctx.fill();
+}
+function drawPoint(angle,color,rad,size){
+  const x = CX + Math.cos(angle) * rad;
+  const y = CY + Math.sin(angle) * rad;
+  ctx.beginPath(); ctx.fillStyle = color; ctx.shadowColor = color; ctx.shadowBlur = 14; ctx.arc(x,y,size,0,Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+}
+function syncClock(comp){
+  // comp.micro 1..9 ; dayInCycle 1..432 ; cycle108 1..108
+  clockState.microAngle = ((comp.micro - 1) / 9) * Math.PI * 2;
+  clockState.dayAngle = ((comp.dayInCycle - 1) / 432) * Math.PI * 2;
+  clockState.cycleAngle = ((comp.cycle108 - 1) / 108) * Math.PI * 2;
+  clockState.last = Date.now();
+}
+function animate(){
+  const now = Date.now();
+  const dt = (now - clockState.last) / 1000;
+  // very slow continuous drift to show motion
+  clockState.microAngle += dt * (Math.PI*2) / (9 * 24 * 3600);
+  clockState.dayAngle += dt * (Math.PI*2) / (432 * 24 * 3600);
+  clockState.cycleAngle += dt * (Math.PI*2) / (108 * 432 * 24 * 3600);
+  clockState.last = now;
+  drawClock();
+  requestAnimationFrame(animate);
+}
+syncClock({micro:1,dayInCycle:1,cycle108:1});
+requestAnimationFrame(animate);
+
+/* ---------- Fiche imprimable ---------- */
+genFiche.addEventListener('click', ()=>{
+  if(!currentJ0 || !lastComp){ alert('Applique d’abord un J0 (onglet gauche).'); return; }
+  const comp = lastComp;
+  const e = energies[comp.micro-1];
+  const s = comp.state;
+  const analysis = generateAnalysis(currentJ0, comp);
+  const fiche = `
+  <html><head><meta charset="utf-8"/><title>Fiche Thème 432</title>
+  <style>body{font-family:Arial,Helvetica,sans-serif;color:#071018;padding:18px}h1{color:#d6b24a}h2{color:#6fd3c7}.small{color:#333}</style>
+  </head><body>
+  <h1>Fiche personnelle - Thème 432</h1>
+  <p><strong>J0 :</strong> ${formatDate(currentJ0)} - <strong>Jours depuis J0 :</strong> ${comp.daysSince}</p>
+  <p><strong>Micro :</strong> ${comp.micro} - ${e.name} - <strong>État :</strong> ${s.key} (${s.label})</p>
+  <h2>Résumé</h2><p>${analysis.summary}</p>
+  <h2>Tensions principales</h2><ul>${analysis.tensions.map(t=>`<li>${t}</li>`).join('')}</ul>
+  <h2>Points à travailler (prioritaires)</h2><ul>${analysis.work.map(t=>`<li>${t}</li>`).join('')}</ul>
+  <h2>Checklist quotidienne</h2>
+  <ol>
+    <li>Matin : 10 min d'échauffement ou marche</li>
+    <li>Midi : pause 10 min, respiration 6/6</li>
+    <li>Soir : journal (3 apprentissages), rituel de fermeture</li>
+    <li>Hebdo : revoir objectifs, ajuster priorités</li>
+  </ol>
+  <p class="small">Axe ${comp.axis} - position ${comp.axisPos} - cycle ${comp.cycle108}</p>
+  <p class="small">Imprime cette page pour l'avoir sous la main.</p>
+  </body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(fiche);
+  w.document.close();
+});
+
+/* ---------- Init ---------- */
+buildTable36();
+readout.innerHTML = defaultReadout();
+analysisEl.innerHTML = 'Aucune donnée appliquée.';
+
+/* Accessibility: keyboard 1..3 shortcuts */
+window.addEventListener('keydown', (e)=>{
+  if(e.key==='1') btnCalc.click();
+  if(e.key==='2') btnApply.click();
+  if(e.key==='3') genFiche.click();
+});
+</script>
+</body>
+</html>
+

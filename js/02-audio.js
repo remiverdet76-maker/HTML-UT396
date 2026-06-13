@@ -1,0 +1,240 @@
+/* ═══════════════════════════════════════════
+   02-audio.js — Moteur audio, FX chain, Flow
+   ═══════════════════════════════════════════ */
+
+const swapTimers = {};
+let nodes = {}, masterGain = null, analyser = null;
+
+let limiter = null;
+let eqLow = null, eqMid = null, eqHigh = null;
+let masterDelay = null, masterReverb = null;
+let chorus = null, compressor = null;
+const LFO_STATE = {on:false, rate:.25, depth:.08, _t:0};
+let _fadeDur = 2;
+let metaAngle = 0, masterRAF = null;
+
+// ── Oscillateurs ─────────────────────────────────────────────
+function buildOsc(id, freq, vol, pan) {
+  const p = new Tone.Panner(pan);
+  const o = new Tone.Oscillator({ frequency: safeF(freq), type: 'sine' });
+  const g = new Tone.Gain(0);
+  o.connect(p); p.connect(g); g.connect(masterGain);
+  o.start();
+  if (!mutedOscs[id] && vol > 0) {
+    const now = Tone.now();
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(0, now);
+    g.gain.setTargetAtTime(vol, now, FADE / 5);
+  }
+  return { o, g, p };
+}
+
+function tuneOsc(id, freq) {
+  const node = nodes[id]; if (!node) return;
+  try {
+    const f = safeF(freq), now = Tone.now();
+    node.o.frequency.cancelScheduledValues(now);
+    node.o.frequency.setValueAtTime(node.o.frequency.value, now);
+    node.o.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
+  } catch(e) {}
+}
+
+function releaseOsc(node) {
+  try {
+    const now = Tone.now();
+    node.g.gain.cancelScheduledValues(now);
+    node.g.gain.setValueAtTime(node.g.gain.value, now);
+    node.g.gain.setTargetAtTime(0, now, FADE / 5);
+    node.o.stop(now + FADE + 0.1);
+  } catch(e) {}
+  setTimeout(() => {
+    ['o','g','p'].forEach(k => { try { node[k].dispose?.(); } catch(e){} });
+  }, (FADE + 0.4) * 1000);
+}
+
+function swapPingala(i) {
+  if (!flowing || !masterGain) return;
+  const { pingala } = PAIRS[i];
+  if (nodes[pingala.id]) releaseOsc(nodes[pingala.id]);
+  nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+  setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
+  updatePairUI(i);
+}
+function swapIda(i) {
+  if (!flowing || !masterGain) return;
+  const { ida } = PAIRS[i];
+  if (nodes[ida.id]) releaseOsc(nodes[ida.id]);
+  nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+  updatePairUI(i);
+}
+function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
+function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] = setTimeout(() => swapIda(i), 380); }
+
+function safeRamp(gainParam, target, duration) {
+  const now = Tone.now();
+  gainParam.cancelScheduledValues(now);
+  gainParam.setValueAtTime(gainParam.value, now);
+  gainParam.setTargetAtTime(target, now, Math.max(0.01, duration / 5));
+}
+
+// ── FX Chain (créée une seule fois) ──────────────────────────
+function initFXChain() {
+  if (eqLow) return;
+  eqLow       = new Tone.Filter({ type: 'lowshelf',  frequency: 200,  Q: 1, gain: 0 });
+  eqMid       = new Tone.Filter({ type: 'peaking',   frequency: 1000, Q: 1, gain: 0 });
+  eqHigh      = new Tone.Filter({ type: 'highshelf', frequency: 5000, Q: 1, gain: 0 });
+  chorus      = new Tone.Chorus({ frequency: 0.8, delayTime: 3.5, depth: 0, wet: 1 }).start();
+  compressor  = new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.02, release: 0.25 });
+  masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
+  masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
+  limiter      = new Tone.Limiter(-1.5).toDestination();
+  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterDelay, masterReverb, limiter);
+}
+
+// Espaces de réverbe spatiale
+const REVERB_SPACES = {
+  sec:        { decay: 0.4,  preDelay: 0.01 },
+  grotte:     { decay: 2.8,  preDelay: 0.08 },
+  cathedrale: { decay: 5.5,  preDelay: 0.15 },
+  cosmos:     { decay: 14.0, preDelay: 0.40 }
+};
+async function setReverbSpace(name) {
+  const s = REVERB_SPACES[name]; if (!s || !masterReverb) return;
+  masterReverb.decay = s.decay; masterReverb.preDelay = s.preDelay;
+  try { await masterReverb.generate(); } catch(e) {}
+  const sl = document.getElementById('reverbWet');
+  if (sl && parseFloat(sl.value) < 0.05) { sl.value = 0.32; updateFX('reverbWet', 0.32); }
+}
+
+function setFadeDur(v) {
+  _fadeDur = Math.max(0.5, Math.min(15, parseFloat(v)));
+  const el = document.getElementById('sv-fade'); if (el) el.textContent = _fadeDur.toFixed(1) + 's';
+}
+
+function lfoToggle(on) {
+  LFO_STATE.on = on; LFO_STATE._t = 0;
+  if (!on && masterGain) try { masterGain.gain.setTargetAtTime(masterVol, Tone.now(), 0.1); } catch(e) {}
+}
+function lfoSet(param, v) {
+  LFO_STATE[param] = parseFloat(v);
+  const el = document.getElementById('sv-lfo-' + param); if (el) el.textContent = parseFloat(v).toFixed(2);
+}
+
+function setChorusDepth(v) { if (chorus) try { chorus.depth = parseFloat(v); } catch(e) {} }
+function setChorusRate(v)  { if (chorus) try { chorus.frequency.value = parseFloat(v); } catch(e) {} }
+function setCompThresh(v)  { if (compressor) try { compressor.threshold.value = parseFloat(v); } catch(e) {} }
+function setCompRatio(v)   { if (compressor) try { compressor.ratio.value = parseFloat(v); } catch(e) {} }
+
+function playBell() {
+  try {
+    if (Tone.context.state !== 'running') return;
+    const b = new Tone.Synth({ oscillator:{type:'sine'}, envelope:{attack:.001, decay:3, sustain:.1, release:4} }).toDestination();
+    b.triggerAttackRelease(432, '8n', Tone.now());
+    setTimeout(() => { try { b.dispose(); } catch(e) {} }, 9000);
+  } catch(e) {}
+}
+
+// ── Start / Stop ──────────────────────────────────────────────
+let flowing = false;
+
+async function startFlow() {
+  ui('idle', '✦ Éveil du Metatron…');
+  try {
+    await Tone.start();
+    if (Tone.context.state !== 'running') await Tone.context.resume();
+    initFXChain();
+    analyser   = new Tone.Analyser('waveform', 256);
+    masterGain = new Tone.Gain(0);
+    const _now = Tone.now();
+    masterGain.gain.setValueAtTime(0, _now);
+    masterGain.gain.linearRampToValueAtTime(masterVol, _now + _fadeDur);
+    masterGain.connect(eqLow);
+    masterGain.connect(analyser);
+    flowing = true;
+    PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
+    PAIRS.forEach((_, i) => updateOrbUI(i));
+    ui('live', 'En expansion…');
+  } catch(err) {
+    flowing = false; nodes = {};
+    ui('idle', 'Erreur audio — relancer');
+  }
+}
+
+async function stopFlow() {
+  ui('idle', 'Dissolution…');
+  if (progRunning) stopProgression();
+  Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
+  try {
+    if (masterGain) {
+      const _t = Tone.now();
+      masterGain.gain.cancelScheduledValues(_t);
+      masterGain.gain.setTargetAtTime(0, _t, _fadeDur / 8);
+    }
+  } catch(e) {}
+  const nodesCopy = {...nodes};
+  nodes = {};
+  flowing = false;
+  Object.values(nodesCopy).forEach(n => {
+    if (!n) return;
+    try {
+      const _t = Tone.now();
+      n.g.gain.cancelScheduledValues(_t);
+      n.g.gain.setTargetAtTime(0, _t, 0.05);
+      n.o.stop(_t + 0.3);
+    } catch(e) {}
+    setTimeout(() => { ['o','g','p'].forEach(k => { try { n[k].dispose?.(); } catch(e){} }); }, 500);
+  });
+  setTimeout(() => {
+    [masterGain, analyser].forEach(x => {
+      try { x?.disconnect(); } catch(e){}
+      try { x?.dispose(); } catch(e){}
+    });
+    masterGain = null; analyser = null;
+    PAIRS.forEach((_, i) => updateOrbUI(i));
+    const mc = document.getElementById('vpc-p' + MASTER_IDX);
+    if (mc) mc.style.boxShadow = '';
+    ui('idle', 'Metatron immobile');
+  }, 600);
+}
+
+// ── Master Tick (RAF) ─────────────────────────────────────────
+function masterTick() {
+  masterRAF = requestAnimationFrame(masterTick);
+  metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
+  drawMetatron();
+  if (LFO_STATE.on && masterGain && flowing) {
+    LFO_STATE._t += 0.016;
+    const lv = masterVol * (1 + LFO_STATE.depth * Math.sin(LFO_STATE._t * LFO_STATE.rate * Math.PI * 2));
+    try { masterGain.gain.setTargetAtTime(Math.max(0, lv), Tone.now(), 0.015); } catch(e) {}
+  }
+  if (!flowing || !analyser || document.visibilityState === 'hidden') return;
+  const data = analyser.getValue();
+  let sum = 0, count = 0;
+  for (let k = 0; k < data.length; k += 4) { sum += Math.abs(data[k]); count++; }
+  const e = Math.min(1, sum / count * 7);
+  const mc = document.getElementById('vpc-p' + MASTER_IDX);
+  if (mc) {
+    const g = Math.round(e * 45);
+    const a = (0.12 + e * .48).toFixed(2);
+    mc.style.boxShadow = `0 0 ${g}px rgba(255,160,255,${a}),0 0 ${g*2}px rgba(255,160,255,${(+a*.35).toFixed(2)}),inset 0 0 ${Math.round(g*.5)}px rgba(255,160,255,${(+a*.25).toFixed(2)})`;
+  }
+  PAIRS.forEach((pair, i) => {
+    if (i === MASTER_IDX) return;
+    const vcp = document.getElementById('vpc-p' + i);
+    if (!vcp || mutedOscs[pair.pingala.id]) return;
+    const lvl = Math.min(1, e * 0.65 + 0.12);
+    const alpha = Math.round(lvl * 200).toString(16).padStart(2, '0');
+    vcp.style.boxShadow = `0 0 ${Math.round(lvl*22)}px ${pair.color}${alpha},0 0 ${Math.round(lvl*10)}px ${pair.color}44`;
+  });
+  drawSpectroid();
+}
+
+function ui(state, text) {
+  const dot=document.getElementById('dot'); if(dot) dot.classList.toggle('live', state === 'live');
+  const st=document.getElementById('status'); if(st) st.classList.toggle('live', state === 'live');
+  const stxt=document.getElementById('stxt'); if(stxt) stxt.textContent = text;
+  const bdis = document.getElementById('btn-dis');
+  const bray = document.getElementById('btn-ray');
+  if (bdis) bdis.disabled = (state !== 'live');
+  if (bray) bray.disabled = (state === 'live');
+}

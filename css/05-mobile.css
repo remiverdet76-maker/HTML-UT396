@@ -1,0 +1,99 @@
+/* ═══════════════════════════════════════════
+   05-mobile.css — Mobile smartphone
+   ═══════════════════════════════════════════ */
+
+/* ── Overlay portrait : tourner en paysage ── */
+#rotate-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #02010D;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  pointer-events: none;
+}
+#rotate-icon {
+  font-size: 4.5rem;
+  color: #63E6FF;
+  animation: rotateHint 2.4s ease-in-out infinite;
+  filter: drop-shadow(0 0 20px rgba(99,230,255,.6));
+}
+@keyframes rotateHint {
+  0%,100% { transform: rotate(0deg); }
+  40%,60%  { transform: rotate(90deg); }
+}
+#rotate-msg {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: .95rem;
+  letter-spacing: .16em;
+  color: #63E6FF;
+  text-align: center;
+  line-height: 1.7;
+}
+#rotate-sub {
+  font-family: 'IM Fell English', serif;
+  font-size: .78rem;
+  font-style: italic;
+  color: rgba(200,180,255,.42);
+  text-align: center;
+}
+
+/* Afficher en portrait mobile uniquement */
+@media (max-width: 900px) and (orientation: portrait) {
+  #rotate-overlay { display: flex; }
+}
+
+/* ── Paysage mobile (hauteur ≤ 500px) ───────── */
+@media (max-height: 500px) and (orientation: landscape) {
+
+  /* Nav verticale déjà sur la gauche — réduire */
+  #tab-nav {
+    left: 6px !important;
+    padding: .28rem .26rem !important;
+    gap: .22rem !important;
+    border-radius: 14px !important;
+  }
+  #tab-nav .tnav-btn,
+  .tnav-btn {
+    font-size: .54rem !important;
+    padding: .32rem .6rem !important;
+  }
+
+  /* Flux droit — réduire */
+  #flux-btn {
+    width: 44px !important;
+    height: 90px !important;
+    border-radius: 22px !important;
+  }
+  .flux-icon  { font-size: 1.1rem !important; }
+  .flux-txt   { font-size: .38rem !important; }
+  .flux-state { font-size: .46rem !important; }
+
+  /* Sphères Vesica */
+  .vp-wrap  { width: 108px !important; height: 108px !important; }
+  .vp-p     { width: 63px !important;  height: 63px !important; }
+  .vp-freq  { font-size: 1rem !important; }
+  .vp-center-wrap { width: 115px !important; height: 115px !important; }
+  .ms-freq  { font-size: 1.35rem !important; }
+  .micro-btn { width: 28px !important; height: 28px !important; font-size: .78rem !important; }
+
+  /* Panels plein écran */
+  .pan-left, .pan-right {
+    position: fixed !important;
+    left: 0 !important; right: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+  }
+
+  /* Cacher non-essentiels */
+  #hdr { display: none !important; }
+  #freq-mini { display: none !important; }
+  #infobar   { display: none !important; }
+  #spectroid-bar { height: 44px !important; width: 55vw !important; }
+}

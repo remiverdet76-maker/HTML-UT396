@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jeu - Somme des chiffres (1 à 1296)</title>
+  <style>
+    :root {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+    
+    body {
+      color: #1e293b;
+      line-height: 1.6;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #0f172a;
+      margin-bottom: 30px;
+      font-size: 2rem;
+    }
+    
+    .description {
+      background: #e2e8f0;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      border-left: 4px solid #3b82f6;
+    }
+    
+    .input-section {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .input-section input {
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      border: 2px solid #cbd5e1;
+      border-radius: 8px;
+      width: 200px;
+      text-align: center;
+      transition: border-color 0.3s;
+    }
+    
+    .input-section input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    
+    .input-section button {
+      padding: 12px 30px;
+      font-size: 1.1rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-weight: 600;
+    }
+    
+    .input-section button:hover {
+      background: #2563eb;
+    }
+    
+    .result-section {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .result-header h2 {
+      margin: 0;
+      color: #0f172a;
+    }
+    
+    .sum-badge {
+      background: #3b82f6;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+    
+    .numbers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+    
+    .number-card {
+      background: #f1f5f9;
+      padding: 10px 15px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .stats {
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 2px solid #e2e8f0;
+      font-size: 0.95rem;
+      color: #64748b;
+      text-align: right;
+    }
+    
+    .all-groups {
+      margin-top: 40px;
+    }
+    
+    .group-container {
+      margin-bottom: 25px;
+    }
+    
+    .group-title {
+      background: #3b82f6;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px 8px 0 0;
+      font-weight: bold;
+      margin: 0;
+    }
+    
+    .group-numbers {
+      background: white;
+      padding: 15px;
+      border-radius: 0 0 8px 8px;
+      border: 1px solid #e2e8f0;
+      border-top: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .group-numbers span {
+      background: #f1f5f9;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+    
+    .toggle-all {
+      text-align: center;
+      margin: 20px 0;
+    }
+    
+    .toggle-all button {
+      padding: 10px 20px;
+      background: #64748b;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    
+    .toggle-all button:hover {
+      background: #475569;
+    }
+    
+    .highlight {
+      background: #dbeafe !important;
+      border-color: #3b82f6 !important;
+      color: #1e40af !important;
+      font-weight: 600 !important;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎲 Jeu : Nombres classés par somme de chiffres (1 à 1296)</h1>
+  
+  <div class="description">
+    <p><strong>Règles :</strong> Tous les nombres de 1 à 1296 sont classés selon la somme de leurs chiffres.</p>
+    <p>Entrez un nombre (ex: 432 → 4+3+2=9) pour voir tous les nombres dont la somme des chiffres égale 9.</p>
+  </div>
+  
+  <div class="input-section">
+    <input 
+      type="number" 
+      id="numberInput" 
+      placeholder="Entrez un nombre (1-1296)" 
+      min="1" 
+      max="1296"
+      autocomplete="off"
+    />
+    <button onclick="showGroup()">Afficher la colonne</button>
+    <button onclick="showRandom()" style="background: #10b981;">🎲 Aléatoire</button>
+  </div>
+  
+  <div class="result-section" id="resultSection" style="display: none;">
+    <div class="result-header">
+      <h2>Nombres avec une somme de chiffres égale à <span id="targetSum">0</span></h2>
+      <span class="sum-badge" id="sumBadge">Somme: 0</span>
+    </div>
+    <div class="numbers-grid" id="numbersGrid"></div>
+    <div class="stats" id="stats"></div>
+  </div>
+  
+  <div class="toggle-all">
+    <button onclick="toggleAllGroups()" id="toggleBtn">👁️ Afficher toutes les colonnes</button>
+  </div>
+  
+  <div class="all-groups" id="allGroups" style="display: none;"></div>
+
+  <script>
+    // Pré-calculer tous les groupes
+    const groupes = {};
+    
+    function sommeChiffres(n) {
+      return String(n).split('').reduce((sum, digit) => sum + parseInt(digit, 10), 0);
+    }
+    
+    // Initialiser les groupes
+    for (let i = 1; i <= 1296; i++) {
+      const sum = sommeChiffres(i);
+      if (!groupes[sum]) {
+        groupes[sum] = [];
+      }
+      groupes[sum].push(i);
+    }
+    
+    // Trier chaque groupe
+    for (const sum in groupes) {
+      groupes[sum].sort((a, b) => a - b);
+    }
+    
+    function showGroup() {
+      const input = document.getElementById('numberInput');
+      const num = parseInt(input.value, 10);
+      
+      if (isNaN(num) || num < 1 || num > 1296) {
+        alert('Veuillez entrer un nombre valide entre 1 et 1296');
+        return;
+      }
+      
+      const sum = sommeChiffres(num);
+      const numbers = groupes[sum] || [];
+      
+      displayResults(numbers, sum, num);
+    }
+    
+    function showRandom() {
+      const randomNum = Math.floor(Math.random() * 1296) + 1;
+      document.getElementById('numberInput').value = randomNum;
+      showGroup();
+    }
+    
+    function displayResults(numbers, sum, originalNum = null) {
+      const resultSection = document.getElementById('resultSection');
+      const numbersGrid = document.getElementById('numbersGrid');
+      const sumBadge = document.getElementById('sumBadge');
+      const targetSum = document.getElementById('targetSum');
+      const stats = document.getElementById('stats');
+      
+      // Mettre à jour les infos
+      sumBadge.textContent = `Somme: ${sum}`;
+      targetSum.textContent = sum;
+      
+      // Vider la grille
+      numbersGrid.innerHTML = '';
+      
+      // Afficher chaque nombre
+      numbers.forEach(num => {
+        const card = document.createElement('div');
+        card.className = 'number-card';
+        if (originalNum && num === originalNum) {
+          card.classList.add('highlight');
+        }
+        card.textContent = num;
+        numbersGrid.appendChild(card);
+      });
+      
+      // Stats
+      stats.innerHTML = `<strong>${numbers.length}</strong> nombres trouvés avec une somme de chiffres égale à <strong>${sum}</strong>`;
+      
+      // Afficher la section
+      resultSection.style.display = 'block';
+      
+      // Scroll vers les résultats
+      resultSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    
+    function toggleAllGroups() {
+      const allGroupsDiv = document.getElementById('allGroups');
+      const toggleBtn = document.getElementById('toggleBtn');
+      
+      if (allGroupsDiv.style.display === 'none') {
+        allGroupsDiv.style.display = 'block';
+        toggleBtn.textContent = '👁️‍🗨️ Masquer toutes les colonnes';
+        renderAllGroups();
+      } else {
+        allGroupsDiv.style.display = 'none';
+        toggleBtn.textContent = '👁️ Afficher toutes les colonnes';
+      }
+    }
+    
+    function renderAllGroups() {
+      const allGroupsDiv = document.getElementById('allGroups');
+      
+      if (allGroupsDiv.children.length > 0) return; // Déjà rendu
+      
+      // Trier les sommes
+      const sums = Object.keys(groupes).sort((a, b) => parseInt(a) - parseInt(b));
+      
+      sums.forEach(sum => {
+        const group = groupes[sum];
+        
+        const container = document.createElement('div');
+        container.className = 'group-container';
+        
+        const title = document.createElement('h3');
+        title.className = 'group-title';
+        title.textContent = `Somme = ${sum} (${group.length} nombres)`;
+        container.appendChild(title);
+        
+        const numbersDiv = document.createElement('div');
+        numbersDiv.className = 'group-numbers';
+        
+        group.forEach(num => {
+          const span = document.createElement('span');
+          span.textContent = num;
+          numbersDiv.appendChild(span);
+        });
+        
+        container.appendChild(numbersDiv);
+        allGroupsDiv.appendChild(container);
+      });
+    }
+    
+    // Permettre de valider avec Entrée
+    document.getElementById('numberInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        showGroup();
+      }
+    });
+    
+    // Exemple au chargement
+    window.onload = function() {
+      document.getElementById('numberInput').value = '432';
+    };
+  </script>
+</body>
+</html>

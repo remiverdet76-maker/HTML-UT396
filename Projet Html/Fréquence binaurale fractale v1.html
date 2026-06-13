@@ -1,0 +1,1426 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>UTC36 • Omcha — Clean v2 (J0 UTC + Matrice36 + Horloges + TripleOsc)</title>
+  <style>
+    :root{
+      --bg1:#f7f7f5; --bg2:#eef1f5; --card:#ffffff; --text:#111827; --muted:#64748b;
+      --border:#e5e7eb; --shadow: 0 8px 24px rgba(17,24,39,.08);
+      /* Palette organique (style LOMCHA) */
+      --c1:#4B2E4A; --c2:#24324A; --c3:#6B7C8C; --c4:#4C6B57; --c5:#F3F1EA;
+      --c6:#C9A36A; --c7:#B56A4B; --c8:#8B3E3E; --c9:#4A2B23;
+      /* Couleurs horloges demandées */
+      --violet:#7c3aed; /* UT72 */
+      --blue:#2563eb;   /* UT36 */
+      --green:#16a34a;  /* UT24 */
+      --red:#dc2626;    /* 24h officiel */
+      --orange:#f97316; /* UT18 */
+      --yellow:#facc15; /* UT9 */
+      /* Palette 9 fréquences (Rouge → Violet, centre Noir) */
+      --freq1:#dc2626;  /* rouge */
+      --freq2:#f97316;  /* orange */
+      --freq3:#facc15;  /* jaune */
+      --freq4:#84cc16;  /* vert-lime */
+      --freq5:#000000;  /* NOIR = fréquence centrale */
+      --freq6:#22c55e;  /* vert */
+      --freq7:#06b6d4;  /* cyan */
+      --freq8:#2563eb;  /* bleu */
+      --freq9:#7c3aed;  /* violet */
+      /* Nuances organiques (terre/minéral/végétal) */
+      --ink:#0b1220;
+      --paper:#fbfbf8;
+      --leaf:#4C6B57;
+      --clay:#B56A4B;
+      --sand:#F3F1EA;
+      --stone:#6B7C8C;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background: linear-gradient(180deg,var(--bg1),var(--bg2));
+    }
+    .wrap{max-width:1220px;margin:0 auto;padding:18px}
+    .top{display:flex;gap:12px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+    h1{margin:0;font-size:28px;letter-spacing:-.02em}
+    .sub{color:var(--muted);font-size:13px;margin-top:4px;line-height:1.35}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap}
+    .tabbtn{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.7);
+      padding:10px 14px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:800;
+      font-size:13px;
+    }
+    .tabbtn.active{background:#111827;color:#fff;border-color:#111827}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:22px;box-shadow:var(--shadow)}
+    .pad{padding:16px}
+    .note{
+      background:#fff7ed;border:1px solid #fde68a;border-radius:18px;
+      padding:12px;color:#7c2d12;font-size:12px;line-height:1.35
+    }
+    .grid{display:grid;gap:12px}
+    .g2{grid-template-columns: 1.25fr .75fr}
+    @media (max-width: 980px){ .g2{grid-template-columns:1fr} }
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    input,select,textarea{
+      width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:16px;background:#fff;
+      font-size:14px;outline:none;
+    }
+    input:focus,select:focus,textarea:focus{border-color:#94a3b8;box-shadow: 0 0 0 3px rgba(148,163,184,.25)}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row>.field{flex:1;min-width:220px}
+    .muted{color:var(--muted);font-size:12px;line-height:1.35}
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--border);
+      border-radius:18px;background:#fff;font-weight:900;
+    }
+    .btn{
+      border:1px solid #111827;background:#111827;color:#fff;
+      padding:10px 14px;border-radius:16px;font-weight:900;cursor:pointer;
+      text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
+    }
+    .btn.secondary{background:#fff;color:#111827;border-color:var(--border)}
+    .btn:active{transform: translateY(1px)}
+    .switch{width:46px;height:26px;border-radius:999px;border:1px solid var(--border);background:#e2e8f0;position:relative;cursor:pointer}
+    .knob{width:22px;height:22px;border-radius:999px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);position:absolute;top:1px;left:1px;transition:.2s}
+    .switch.on{background:#111827;border-color:#111827}
+    .switch.on .knob{left:21px}
+    .panel{border:1px solid var(--border);border-radius:18px;background:#f8fafc;padding:12px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 700px){ .two{grid-template-columns:1fr} }
+    .foot{margin-top:10px;color:#64748b;font-size:12px;line-height:1.45}
+    .kbd{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size:12px; background:#0b1220; color:#e5e7eb; padding:2px 6px; border-radius:8px}
+    /* Matrice 36 */
+    .col36bar{display:grid;grid-template-columns: repeat(36, 1fr);overflow:hidden;border-radius:18px;border:1px solid var(--border)}
+    .col36bar>div{padding:8px 0;text-align:center;font-weight:900;font-size:11px;background:#fff}
+    .col36bar>div.center{background:#111827;color:#fff}
+    .col36row{display:grid;grid-template-columns: repeat(36, 1fr);border:1px solid var(--border);border-top:none;border-radius:0 0 18px 18px;overflow:hidden}
+    .col36row>div{padding:10px 6px;text-align:center;background:#fff;border-right:1px solid var(--border);font-size:12px}
+    .col36row>div:last-child{border-right:none}
+    .col36row>div.center{background:#fbfbf8;font-weight:900}
+    /* Horloges */
+    .clockGrid{display:grid;gap:10px;grid-template-columns: repeat(2, 1fr)}
+    @media (max-width: 900px){ .clockGrid{grid-template-columns:1fr} }
+    .clockCard{background:#fff;border:1px solid var(--border);border-radius:18px;padding:12px}
+    .clockTitle{font-weight:900;margin-bottom:6px}
+    .big{font-size:22px;font-weight:1000;letter-spacing:.02em}
+    .dialRow{display:flex;gap:10px;flex-wrap:wrap}
+    .dialBox{min-width:220px}
+    canvas{width:100%;max-width:260px;height:auto;border:1px solid var(--border);border-radius:14px;background:#fff}
+    /* ===== 9 fréquences : UI couleurs organiques ===== */
+    .freqStrip{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;margin-top:10px}
+    .freqChip{border:1px solid var(--border);border-radius:16px;padding:10px 10px;background:var(--paper);box-shadow:0 6px 18px rgba(17,24,39,.06)}
+    .freqDot{width:12px;height:12px;border-radius:999px;display:inline-block;margin-right:8px;vertical-align:middle}
+    .freqName{font-weight:950;font-size:12px;letter-spacing:.02em}
+    .freqHz{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;color:var(--muted);margin-top:6px}
+    .freqChip.center{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .freqChip.center .freqHz{color:#cbd5e1}
+    .freqChip[data-freq='1'] .freqDot{background:var(--freq1)}
+    .freqChip[data-freq='2'] .freqDot{background:var(--freq2)}
+    .freqChip[data-freq='3'] .freqDot{background:var(--freq3)}
+    .freqChip[data-freq='4'] .freqDot{background:var(--freq4)}
+    .freqChip[data-freq='5'] .freqDot{background:var(--freq5)}
+    .freqChip[data-freq='6'] .freqDot{background:var(--freq6)}
+    .freqChip[data-freq='7'] .freqDot{background:var(--freq7)}
+    .freqChip[data-freq='8'] .freqDot{background:var(--freq8)}
+    .freqChip[data-freq='9'] .freqDot{background:var(--freq9)}
+    .oscGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media (max-width: 980px){ .oscGrid{grid-template-columns:1fr} }
+    .oscCard{border:1px solid var(--border);border-radius:20px;background:linear-gradient(180deg,#ffffff,var(--paper));padding:12px}
+    .oscHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .oscTitle{font-weight:1000}
+    .oscTag{font-size:11px;font-weight:950;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:#fff}
+    .oscTag.left{color:var(--leaf)}
+    .oscTag.right{color:var(--blue)}
+    .oscCard[data-freq='1']{--accent:var(--freq1)}
+    .oscCard[data-freq='2']{--accent:var(--freq2)}
+    .oscCard[data-freq='3']{--accent:var(--freq3)}
+    .oscCard[data-freq='4']{--accent:var(--freq4)}
+    .oscCard[data-freq='5']{--accent:var(--freq5)}
+    .oscCard[data-freq='6']{--accent:var(--freq6)}
+    .oscCard[data-freq='7']{--accent:var(--freq7)}
+    .oscCard[data-freq='8']{--accent:var(--freq8)}
+    .oscCard[data-freq='9']{--accent:var(--freq9)}
+    .oscCard input[type='range']{accent-color:var(--accent)}
+    .masterCard{border:1px dashed rgba(100,116,139,.45);border-radius:20px;background:linear-gradient(180deg,#ffffff,#f4f7f2);padding:12px}
+    .recState{display:inline-flex;align-items:center;gap:8px;font-weight:950;font-size:12px}
+    .recDot{width:10px;height:10px;border-radius:999px;background:#94a3b8}
+    .recDot.on{background:#ef4444;box-shadow:0 0 0 5px rgba(239,68,68,.18)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>UTC36 • Omcha — Clean v2</h1>
+      <div class="sub">
+        UT36/432 (36, 72, 360=36×10, 432=36×12, ratio 1,2, 36×10 + 2×36 = 432) + J0 UTC + Matrice 36 + Horloges + TripleOsc.
+        https://onedrive.live.com/personal/9c7251f5819791ad/_layouts/15/doc.aspx?resid=e855a983-f22d-40a8-ab4e-1df95d93e360&cid=9c7251f5819791ad
+        https://acces.ens-lyon.fr/acces/thematiques/biodiversite/enseignement-de-la-biodiversite/mises-au-point/biome
+      </div>
+    </div>
+    <div class="tabs">
+      <button id="tabA" class="tabbtn active">J0 / Lecture 432</button>
+      <button id="tabB" class="tabbtn">Matrice 36</button>
+      <button id="tabC" class="tabbtn">Horloges</button>
+    </div>
+  </div>
+
+  <div style="height:12px"></div>
+
+  <div class="card"><div class="pad">
+    <div class="note"><b>Sécurité :</b> audio expérimental. Casque recommandé (binaural). Volume bas. Stop en cas d’inconfort.</div>
+  </div></div>
+
+  <div style="height:12px"></div>
+
+  <!-- VIEW A -->
+  <div id="viewA" class="grid g2">
+    <!-- Left -->
+    <div class="card"><div class="pad">
+      <div style="font-weight:900;margin-bottom:10px">J0 (UTC) + cycle 432</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Date de naissance</label>
+          <input id="birthDate" type="date">
+        </div>
+        <div class="field">
+          <label>Heure de naissance (locale)</label>
+          <input id="birthTime" type="time" step="60" value="12:00">
+        </div>
+        <div class="field">
+          <label>Décalage UTC à la naissance (ex: +02:00)</label>
+          <input id="birthOffset" type="text" value="+02:00">
+          <div class="muted">Format : +HH:MM ou −HH:MM (conversion local → UTC).</div>
+        </div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div class="panel" style="background:#fff">
+        <div style="font-weight:900;margin-bottom:8px">Résultats</div>
+        <div class="two">
+          <div>
+            <div class="pill"><span class="muted">Naissance UTC</span> <span id="outBirthUTC">—</span></div>
+            <div style="height:8px"></div>
+            <div class="pill"><span class="muted">J0 = naissance − 288j</span> <span id="outJ0UTC">—</span></div>
+          </div>
+          <div>
+            <div class="pill"><span class="muted">Jour 432</span> <span id="outDay432">—</span></div>
+            <div style="height:8px"></div>
+            <div class="pill"><span class="muted">Phase/12 · Jour/36</span> <span id="outPhase36">—</span></div>
+          </div>
+        </div>
+        <div class="foot">
+          J0 = naissance − 288 jours (UTC) https://parlonssciences.ca/sites/default/files/2023-02/chapitre_des_sciences_de_lenviro.pdf · r=432/360=1,2
+          https://onedrive.live.com/personal/9c7251f5819791ad/_layouts/15/doc.aspx?resid=e855a983-f22d-40a8-ab4e-1df95d93e360&cid=9c7251f5819791ad
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="panel">
+        <div style="font-weight:900;margin-bottom:8px">Lecture courte</div>
+        <div class="row">
+          <div class="field">
+            <label>Segment UT36</label>
+            <div class="pill"><span id="outSeg">—</span> <span class="muted" id="outSegHint">—</span></div>
+          </div>
+          <div class="field">
+            <label>Point UT36</label>
+            <div class="pill"><span id="outPt">—</span></div>
+            <div class="muted" id="outPtLabel">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="panel" style="background:#fff">
+        <div style="font-weight:900;margin-bottom:8px">Centre (1..432) + binaural</div>
+        <div class="row">
+          <div class="field">
+            <label>Centre n (1..432)</label>
+            <div class="row" style="align-items:center">
+              <div class="field" style="min-width:200px"><input id="centerN" type="number" min="1" max="432" value="432"></div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div class="muted">Auto</div>
+                <div id="swAutoCenter" class="switch on"><div class="knob"></div></div>
+              </div>
+            </div>
+            <div class="muted">Auto : centre = (jour dans phase /36) × 12.</div>
+          </div>
+          <div class="field">
+            <label>Colonne centre jouée (1..36)</label>
+            <select id="centerCol"></select>
+          </div>
+          <div class="field">
+            <label>Beat binaural (Hz)</label>
+            <input id="beat" type="number" min="0" max="40" step="0.1" value="7">
+          </div>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Binaural</label>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div id="swBinaural" class="switch on"><div class="knob"></div></div>
+              <div class="muted">On/Off</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Mantra</label>
+            <input id="mantra" value="Respire • Observe • Aligne">
+          </div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- Right: Audio -->
+    <div class="card"><div class="pad">
+      <div style="font-weight:900;margin-bottom:10px">Audio (binaural + triple oscillateur)</div>
+
+      <div class="row">
+        <div class="field">
+          <label>Waveform (base)</label>
+          <select id="wave">
+            <option value="sine" selected>Sinus</option>
+            <option value="triangle">Triangle</option>
+            <option value="sawtooth">Saw</option>
+            <option value="square">Carré</option>
+          </select>
+          <div class="muted">Le mode « Dual sinus » force une 2ᵉ sinusoïde par oscillateur (optionnel).</div>
+        </div>
+        <div class="field">
+          <label>Volume (pré‑master)</label>
+          <input id="vol" type="range" min="0" max="0.5" step="0.01" value="0.12">
+          <div class="muted"><span id="volpct">12</span>%</div>
+        </div>
+      </div>
+
+      <div class="panel" style="background:#fff">
+        <div style="font-weight:1000;margin-bottom:8px">Palette 9 fréquences (Rouge → Violet, centre Noir)</div>
+        <div class="muted">Les 9 fréquences sont mappées sur 9 colonnes de la matrice : 3,7,11,15,19,23,27,31,35 (centre=19).</div>
+        <div class="freqStrip" id="freqStrip"></div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div class="panel">
+        <div style="font-weight:1000;margin-bottom:8px">6 oscillateurs binauraux (3 gauche / 3 droite) — filtres + LFO + FX</div>
+        <div class="muted">Chaque oscillateur choisit une fréquence (1..9) et une chaîne : HPF → LPF → (envois Reverb / Ping‑pong).</div>
+        <div style="height:10px"></div>
+        <div class="oscGrid" id="oscGrid"></div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div class="masterCard">
+        <div style="font-weight:1000;margin-bottom:8px">Master (global) — Gain / Reverb / Stereo / WAV</div>
+
+        <div class="row">
+          <div class="field">
+            <label>Gain master</label>
+            <input id="mGain" type="range" min="0" max="1" step="0.01" value="0.85">
+            <div class="muted"><span id="mGainV">85</span>%</div>
+          </div>
+          <div class="field">
+            <label>Reverb master (mix)</label>
+            <input id="mRevMix" type="range" min="0" max="1" step="0.01" value="0.20">
+            <div class="muted"><span id="mRevMixV">0.20</span></div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Reverb master (decay)</label>
+            <input id="mRevDecay" type="range" min="0.2" max="8" step="0.1" value="2.6">
+            <div class="muted"><span id="mRevDecayV">2.6</span> s</div>
+          </div>
+          <div class="field">
+            <label>Stéréo (largeur)</label>
+            <input id="mWidth" type="range" min="0" max="1.5" step="0.01" value="1.0">
+            <div class="muted"><span id="mWidthV">1.00</span></div>
+          </div>
+        </div>
+
+        <div class="row" style="align-items:center;flex-wrap:wrap">
+          <button id="btnRec" class="btn secondary" type="button">⏺ REC</button>
+          <button id="btnRecStop" class="btn secondary" type="button">⏹ STOP</button>
+          <a id="btnWav" class="btn secondary" href="#" download="omcha-master.wav" title="Télécharger le WAV">⬇️ WAV</a>
+          <span class="recState"><span id="recDot" class="recDot"></span><span id="recTxt">prêt</span></span>
+        </div>
+        <div class="muted">Astuce : enregistrement WAV = sortie du bus Master (ce que tu entends).</div>
+      </div>
+
+      <div style="height:10px"></div>
+
+      <div class="row">
+        <button id="btnPlay" class="btn" type="button">▶️ Play</button>
+        <button id="btnStop" class="btn secondary" type="button">⏹ Stop</button>
+      </div>
+
+      <div class="foot">Conseil : centreCol=19 (fréquence centrale noire) · essaie les fréquences 4–6 pour un équilibre doux.</div>
+    </div></div>
+  </div>
+
+  <!-- VIEW B: Matrice -->
+  <div id="viewB" style="display:none">
+    <div class="card"><div class="pad">
+      <div style="font-weight:900;margin-bottom:8px">Matrice 36 colonnes (centre=19)</div>
+      <div class="muted">1–18 contractif · 19 centre · 20–36 expansif.</div>
+      <div style="height:10px"></div>
+      <div class="col36bar" id="bar36"></div>
+      <div class="col36row" id="row36"></div>
+      <div style="height:10px"></div>
+      <div class="panel">
+        <div style="font-weight:900;margin-bottom:8px">Lecture</div>
+        <div class="muted" id="txtM36">—</div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- VIEW C: Horloges -->
+  <div id="viewC" style="display:none">
+    <div class="card"><div class="pad">
+      <div style="font-weight:900;margin-bottom:8px">Horloges (digital + cadrans gradués)</div>
+      <div class="muted">Graduations : UT72 violet, UT36 bleu, UT24 vert, 24h officiel rouge, UT18 orange, UT9 jaune.</div>
+      <div style="height:10px"></div>
+
+      <div class="clockGrid">
+        <div class="clockCard">
+          <div class="clockTitle" style="color:var(--violet)">UT72 — 72 graduations</div>
+          <div class="big" id="d72">—</div>
+        </div>
+        <div class="clockCard">
+          <div class="clockTitle" style="color:var(--blue)">UT36 — 36 graduations</div>
+          <div class="big" id="d36">—</div>
+        </div>
+        <div class="clockCard">
+          <div class="clockTitle" style="color:var(--green)">UT24 — 24 graduations (local)</div>
+          <div class="big" id="d24">—</div>
+        </div>
+        <div class="clockCard">
+          <div class="clockTitle" style="color:var(--red)">24h officiel — 24 graduations (UTC)</div>
+          <div class="big" id="d24u">—</div>
+        </div>
+        <div class="clockCard">
+          <div class="clockTitle" style="color:var(--orange)">UT18 — 18 graduations</div>
+          <div class="big" id="d18">—</div>
+        </div>
+        <div class="clockCard">
+          <div class="clockTitle" style="color:var(--yellow)">UT9 — 9 graduations</div>
+          <div class="big" id="d9">—</div>
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="dialRow">
+        <div class="dialBox">
+          <label style="color:var(--violet)">Cadran UT72</label>
+          <canvas id="c72" width="260" height="260"></canvas>
+        </div>
+        <div class="dialBox">
+          <label style="color:var(--blue)">Cadran UT36</label>
+          <canvas id="c36" width="260" height="260"></canvas>
+        </div>
+        <div class="dialBox">
+          <label style="color:var(--green)">Cadran UT24 (local)</label>
+          <canvas id="c24" width="260" height="260"></canvas>
+        </div>
+      </div>
+
+      <div class="dialRow" style="margin-top:10px">
+        <div class="dialBox">
+          <label style="color:var(--red)">Cadran 24h officiel (UTC)</label>
+          <canvas id="c24u" width="260" height="260"></canvas>
+        </div>
+        <div class="dialBox">
+          <label style="color:var(--orange)">Cadran UT18</label>
+          <canvas id="c18" width="260" height="260"></canvas>
+        </div>
+        <div class="dialBox">
+          <label style="color:var(--yellow)">Cadran UT9</label>
+          <canvas id="c9" width="260" height="260"></canvas>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<script>
+/* ========= BASE ========= */
+const R = 432/360;           // 1.2
+const CENTER_COL = 19;
+const POINTS_36 = {
+  1:'Initialisation',2:'Transition',3:'Stabilisation 432',4:'Ouverture',5:'Dualité',6:'Pont 36',7:'Ancrage',8:'Expansion cognitive',9:'Première spirale',
+  10:'Densité dynamique',11:'Harmoniques internes',12:'Résonance',13:'Décentrement',14:'Vision élargie',15:'Connexions',16:'Émergence',17:'Double densité',18:'Spirale 2',
+  19:'Auto-similarité',20:'Fluidité structurelle',21:'Transparence',22:'Tissage',23:'Maillage',24:'Cohérence',25:'Vision volumique',26:'Harmonie structurelle',27:'Spirale 3',
+  28:'Intégration corporelle',29:'Intégration cognitive',30:'Double ancrage',31:'Vision totale',32:'Maillage complet',33:'Continuité',34:'Maturité',35:'Retour au centre',36:'Fractal complet'
+};
+const $ = (id)=>document.getElementById(id);
+function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function fmt(x){
+  if (!isFinite(x)) return '—';
+  const ax = Math.abs(x);
+  if (ax === 0) return '0';
+  if (ax < 0.001 || ax >= 100000) return x.toExponential(4);
+  return (ax < 10) ? x.toFixed(6) : (ax < 100) ? x.toFixed(4) : x.toFixed(2);
+}
+function colValue(center, col){ return center * Math.pow(R, col - CENTER_COL); }
+
+/* ========= TABS ========= */
+const tabA=$('tabA'), tabB=$('tabB'), tabC=$('tabC');
+const viewA=$('viewA'), viewB=$('viewB'), viewC=$('viewC');
+function show(view){
+  viewA.style.display='none'; viewB.style.display='none'; viewC.style.display='none';
+  tabA.classList.remove('active'); tabB.classList.remove('active'); tabC.classList.remove('active');
+  if(view==='A'){ viewA.style.display='grid'; tabA.classList.add('active'); }
+  if(view==='B'){ viewB.style.display='block'; tabB.classList.add('active'); renderM36(); }
+  if(view==='C'){ viewC.style.display='block'; tabC.classList.add('active'); }
+}
+tabA.addEventListener('click', ()=>show('A'));
+tabB.addEventListener('click', ()=>show('B'));
+tabC.addEventListener('click', ()=>show('C'));
+
+/* ========= J0 UTC ========= */
+const birthDate=$('birthDate'), birthTime=$('birthTime'), birthOffset=$('birthOffset');
+const outBirthUTC=$('outBirthUTC'), outJ0UTC=$('outJ0UTC'), outDay432=$('outDay432'), outPhase36=$('outPhase36');
+const outSeg=$('outSeg'), outSegHint=$('outSegHint'), outPt=$('outPt'), outPtLabel=$('outPtLabel');
+
+function parseOffsetToMinutes(s){
+  const m = /^([+-])(\d{2}):(\d{2})$/.exec((s||'').trim()); // ✅ corrigé
+  if(!m) return null;
+  const sign = (m[1]==='-') ? -1 : 1;
+  return sign*(Number(m[2])*60 + Number(m[3]));
+}
+function formatUTC(d){
+  if(!d) return '—';
+  const yy=d.getUTCFullYear();
+  const mo=pad2(d.getUTCMonth()+1);
+  const da=pad2(d.getUTCDate());
+  const hh=pad2(d.getUTCHours());
+  const mi=pad2(d.getUTCMinutes());
+  return `${da}/${mo}/${yy} ${hh}:${mi} UTC`;
+}
+function daysBetweenUTC(a,b){
+  const ms=24*3600*1000;
+  return Math.floor((b.getTime()-a.getTime())/ms);
+}
+function segmentFromD36(d){
+  if(d<=12) return {name:'Création', hint:'ouvrir / initier / produire'};
+  if(d<=24) return {name:'Transition', hint:'ajuster / relier / clarifier'};
+  return {name:'Amour', hint:'unifier / apaiser / harmoniser'};
+}
+function computeBirthUTC(){
+  if(!birthDate.value) return null;
+  const [yy,mo,da] = birthDate.value.split('-').map(Number);
+  if(!yy||!mo||!da) return null;
+  const [hh,mi] = (birthTime.value||'12:00').split(':').map(Number);
+  const offMin = parseOffsetToMinutes(birthOffset.value);
+  if(offMin===null) return null;
+  // naissance locale -> UTC = local - offset
+  const tLocalAsUTC = Date.UTC(yy, mo-1, da, hh, mi||0, 0);
+  const tUTC = tLocalAsUTC - offMin*60*1000;
+  return new Date(tUTC);
+}
+
+/* ========= Centre + Matrix ========= */
+const centerN=$('centerN'), swAutoCenter=$('swAutoCenter');
+const centerCol=$('centerCol'), beat=$('beat'), swBinaural=$('swBinaural');
+let binaural=true;
+
+function fill36Select(sel, def){
+  sel.innerHTML='';
+  for(let i=1;i<=36;i++){
+    const o=document.createElement('option');
+    o.value=String(i);
+    o.textContent=(i===19)?'19 (centre)':String(i);
+    sel.appendChild(o);
+  }
+  sel.value=String(def);
+}
+fill36Select(centerCol,19);
+
+function syncJ0(){
+  const bUTC = computeBirthUTC();
+  if(!bUTC){
+    outBirthUTC.textContent='—'; outJ0UTC.textContent='—'; outDay432.textContent='—'; outPhase36.textContent='—';
+    outSeg.textContent='—'; outSegHint.textContent='—'; outPt.textContent='—'; outPtLabel.textContent='—';
+    return;
+  }
+  outBirthUTC.textContent = formatUTC(bUTC);
+  // J0 = naissance - 288 jours
+  const j0 = new Date(bUTC.getTime() - 288*24*3600*1000);
+  outJ0UTC.textContent = formatUTC(j0);
+  // cycle 432 basé sur le jour UTC courant
+  const now = new Date();
+  const todayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const ageDays = daysBetweenUTC(j0, todayUTC);
+  const d432 = ((ageDays % 432) + 432) % 432 + 1;
+  const ph = Math.floor((d432-1)/36)+1;
+  const dIn = ((d432-1)%36)+1;
+
+  outDay432.textContent = `${d432}/432`;
+  outPhase36.textContent = `${ph}/12 · ${dIn}/36`;
+
+  const seg = segmentFromD36(dIn);
+  outSeg.textContent = seg.name;
+  outSegHint.textContent = `— ${seg.hint}`;
+  outPt.textContent = `Point ${dIn}`;
+  outPtLabel.textContent = POINTS_36[dIn] || '—';
+
+  if(swAutoCenter.classList.contains('on')){
+    centerN.value = String(Math.round(clamp(dIn*12, 1, 432)));
+  }
+  renderM36();
+  updateAudioTargets();
+}
+
+birthDate.addEventListener('change', syncJ0);
+birthTime.addEventListener('change', syncJ0);
+birthOffset.addEventListener('input', syncJ0);
+swAutoCenter.addEventListener('click', ()=>{ swAutoCenter.classList.toggle('on'); syncJ0(); });
+swBinaural.addEventListener('click', ()=>{
+  binaural=!binaural;
+  swBinaural.classList.toggle('on', binaural);
+  updateAudioTargets();
+});
+
+/* ========= Matrice View ========= */
+const bar36=$('bar36'), row36=$('row36'), txtM36=$('txtM36');
+function buildBar36(){
+  bar36.innerHTML='';
+  for(let i=1;i<=36;i++){
+    const d=document.createElement('div');
+    d.textContent=String(i);
+    if(i===19) d.classList.add('center');
+    bar36.appendChild(d);
+  }
+}
+buildBar36();
+
+function renderM36(){
+  const center = Number(centerN.value);
+  row36.innerHTML='';
+  for(let c=1;c<=36;c++){
+    const v = colValue(center,c);
+    const d=document.createElement('div');
+    d.textContent = fmt(v);
+    if(c===19) d.classList.add('center');
+    row36.appendChild(d);
+  }
+  txtM36.textContent = `val(c)=centre×(432/360)^(c−19) ; centre=${center} ; 1–18 contractif ; 19 centre ; 20–36 expansif.`;
+}
+
+/* ========= Audio ========= */
+const wave=$('wave'), vol=$('vol'), volpct=$('volpct');
+const btnPlay=$('btnPlay'), btnStop=$('btnStop');
+// Master controls
+const mGain=$('mGain'), mRevMix=$('mRevMix'), mRevDecay=$('mRevDecay'), mWidth=$('mWidth');
+const mGainV=$('mGainV'), mRevMixV=$('mRevMixV'), mRevDecayV=$('mRevDecayV'), mWidthV=$('mWidthV');
+const btnRec=$('btnRec'), btnRecStop=$('btnRecStop'), btnWav=$('btnWav');
+const recDot=$('recDot'), recTxt=$('recTxt');
+// UI containers
+const freqStrip=$('freqStrip');
+const oscGrid=$('oscGrid');
+
+// 9 fréquences ↔ 9 couleurs
+// Mapping : 9 colonnes régulières dans la matrice 36 : 3,7,11,15,19,23,27,31,35 (centre=19)
+const FREQ9_COLS = [3,7,11,15,19,23,27,31,35];
+const FREQ9_NAMES = ['Rouge','Orange','Jaune','Vert‑lime','NOIR','Vert','Cyan','Bleu','Violet'];
+function freq9ToCol(i){ return FREQ9_COLS[clamp(i-1,0,8)]; }
+
+// 6 oscillateurs : 3 gauche / 3 droite
+const OSC_DEFS = [
+  {id:'L1', side:'left',  defF:4},
+  {id:'L2', side:'left',  defF:5},
+  {id:'L3', side:'left',  defF:6},
+  {id:'R1', side:'right', defF:4},
+  {id:'R2', side:'right', defF:5},
+  {id:'R3', side:'right', defF:6},
+];
+
+function buildOscUI(){
+  oscGrid.innerHTML='';
+  for(const o of OSC_DEFS){
+    const card=document.createElement('div');
+    card.className='oscCard';
+    card.id=`osc_${o.id}`;
+    card.dataset.side=o.side;
+    card.dataset.freq=String(o.defF);
+    const tagClass = o.side==='left'?'oscTag left':'oscTag right';
+    let opts='';
+    for(let i=1;i<=9;i++){
+      const lab = (i===5)?`5 • ${FREQ9_NAMES[i-1]}`:`${i} • ${FREQ9_NAMES[i-1]}`;
+      opts += `<option value="${i}" ${i===o.defF?'selected':''}>${lab}</option>`;
+    }
+    card.innerHTML = `
+      <div class="oscHead">
+        <div>
+          <div class="oscTitle">Osc ${o.id}</div>
+          <div class="muted">Oreille ${o.side==='left'?'gauche':'droite'} · HPF/LPF + LFO + FX</div>
+        </div>
+        <span class="${tagClass}">${o.side==='left'?'L':'R'} • 3 voix</span>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Fréquence (1..9)</label>
+          <select id="${o.id}_f">${opts}</select>
+          <div class="muted">Colonne matrice : <span id="${o.id}_col">—</span> · Hz : <span id="${o.id}_hz">—</span></div>
+        </div>
+        <div class="field">
+          <label>Volume</label>
+          <input id="${o.id}_vol" type="range" min="0" max="1" step="0.01" value="0.35">
+          <div class="muted"><span id="${o.id}_volV">35</span>%</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Dual sinus</label>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div id="${o.id}_dual" class="switch"><div class="knob"></div></div>
+            <div class="muted">On/Off</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>ΔHz (2ᵉ sinus)</label>
+          <input id="${o.id}_dualDet" type="range" min="0" max="20" step="0.1" value="0.8">
+          <div class="muted"><span id="${o.id}_dualDetV">0.8</span> Hz</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>HPF cutoff</label>
+          <input id="${o.id}_hpf" type="range" min="20" max="4000" step="1" value="80">
+          <div class="muted"><span id="${o.id}_hpfV">80</span> Hz</div>
+        </div>
+        <div class="field">
+          <label>LPF cutoff</label>
+          <input id="${o.id}_lpf" type="range" min="80" max="12000" step="1" value="2200">
+          <div class="muted"><span id="${o.id}_lpfV">2200</span> Hz</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>LFO filtre (rate)</label>
+          <input id="${o.id}_lfoRate" type="range" min="0" max="8" step="0.01" value="0.25">
+          <div class="muted"><span id="${o.id}_lfoRateV">0.25</span> Hz</div>
+        </div>
+        <div class="field">
+          <label>Profondeur (depth)</label>
+          <input id="${o.id}_lfoDepth" type="range" min="0" max="1" step="0.01" value="0.25">
+          <div class="muted"><span id="${o.id}_lfoDepthV">0.25</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Reverb (send)</label>
+          <input id="${o.id}_rev" type="range" min="0" max="1" step="0.01" value="0.15">
+          <div class="muted"><span id="${o.id}_revV">0.15</span></div>
+        </div>
+        <div class="field">
+          <label>Ping‑pong delay (mix)</label>
+          <input id="${o.id}_dlyMix" type="range" min="0" max="1" step="0.01" value="0.10">
+          <div class="muted"><span id="${o.id}_dlyMixV">0.10</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Delay time</label>
+          <input id="${o.id}_dlyTime" type="range" min="0.05" max="0.8" step="0.01" value="0.22">
+          <div class="muted"><span id="${o.id}_dlyTimeV">0.22</span> s</div>
+        </div>
+        <div class="field">
+          <label>Feedback</label>
+          <input id="${o.id}_dlyFb" type="range" min="0" max="0.85" step="0.01" value="0.35">
+          <div class="muted"><span id="${o.id}_dlyFbV">0.35</span></div>
+        </div>
+      </div>
+    `;
+    oscGrid.appendChild(card);
+  }
+}
+
+function syncMasterUI(){
+  volpct.textContent = String(Math.round(Number(vol.value)*100));
+  mGainV.textContent = String(Math.round(Number(mGain.value)*100));
+  mRevMixV.textContent = String(Number(mRevMix.value).toFixed(2));
+  mRevDecayV.textContent = String(Number(mRevDecay.value).toFixed(1));
+  mWidthV.textContent = String(Number(mWidth.value).toFixed(2));
+}
+// compat : l'ancien init appelait syncSliders()
+function syncSliders(){ syncMasterUI(); }
+
+function syncOscUI(oscId){
+  const v = (id)=>$(id);
+  v(`${oscId}_volV`).textContent = String(Math.round(Number(v(`${oscId}_vol`).value)*100));
+  v(`${oscId}_dualDetV`).textContent = String(Number(v(`${oscId}_dualDet`).value).toFixed(1));
+  v(`${oscId}_hpfV`).textContent = String(Math.round(Number(v(`${oscId}_hpf`).value)));
+  v(`${oscId}_lpfV`).textContent = String(Math.round(Number(v(`${oscId}_lpf`).value)));
+  v(`${oscId}_lfoRateV`).textContent = String(Number(v(`${oscId}_lfoRate`).value).toFixed(2));
+  v(`${oscId}_lfoDepthV`).textContent = String(Number(v(`${oscId}_lfoDepth`).value).toFixed(2));
+  v(`${oscId}_revV`).textContent = String(Number(v(`${oscId}_rev`).value).toFixed(2));
+  v(`${oscId}_dlyMixV`).textContent = String(Number(v(`${oscId}_dlyMix`).value).toFixed(2));
+  v(`${oscId}_dlyTimeV`).textContent = String(Number(v(`${oscId}_dlyTime`).value).toFixed(2));
+  v(`${oscId}_dlyFbV`).textContent = String(Number(v(`${oscId}_dlyFb`).value).toFixed(2));
+}
+
+function currentMatrixValues(){
+  const center = Number(centerN.value);
+  const vals={};
+  for(let c=1;c<=36;c++) vals[c]=colValue(center,c);
+  return vals;
+}
+
+function updateFreqStrip(){
+  const vals = currentMatrixValues();
+  freqStrip.innerHTML='';
+  for(let i=1;i<=9;i++){
+    const col = freq9ToCol(i);
+    const hz = vals[col];
+    const d=document.createElement('div');
+    d.className='freqChip' + (i===5?' center':'');
+    d.dataset.freq=String(i);
+    d.innerHTML = `
+      <div class="freqName"><span class="freqDot"></span>F${i} • ${FREQ9_NAMES[i-1]}</div>
+      <div class="freqHz">col ${col} · ${fmt(hz)} Hz</div>
+    `;
+    freqStrip.appendChild(d);
+  }
+}
+
+buildOscUI();
+
+for(const o of OSC_DEFS){
+  const sw = $(`${o.id}_dual`);
+  sw.addEventListener('click', ()=>{ sw.classList.toggle('on'); updateAudioTargets(); });
+
+  const watch = [`${o.id}_f`, `${o.id}_vol`, `${o.id}_dualDet`, `${o.id}_hpf`, `${o.id}_lpf`,
+                 `${o.id}_lfoRate`, `${o.id}_lfoDepth`, `${o.id}_rev`,
+                 `${o.id}_dlyMix`, `${o.id}_dlyTime`, `${o.id}_dlyFb`];
+
+  watch.forEach(id=>{
+    const el = $(id);
+    const ev = (el && el.tagName==='SELECT') ? 'change' : 'input';
+    el && el.addEventListener(ev, ()=>{
+      $(`osc_${o.id}`).dataset.freq = String(Number($(`${o.id}_f`).value));
+      syncOscUI(o.id);
+      updateAudioTargets();
+    });
+  });
+
+  syncOscUI(o.id);
+}
+
+/* ===== Audio engine ===== */
+let audioCtx=null;
+let nodes=[];
+let recData=null;
+let recUrl=null;
+let handles={};
+
+function addNode(n){ nodes.push(n); return n; }
+
+function stopAudio(){
+  try{
+    if(recData && recData.recording){ stopRecording(); }
+    nodes.forEach(n=>{ try{n.disconnect && n.disconnect();}catch(e){} });
+    nodes=[];
+    if(audioCtx){ audioCtx.close(); audioCtx=null; }
+  }catch(e){}
+}
+
+function makeImpulse(ctx, seconds, decay){
+  const sr = ctx.sampleRate;
+  const len = Math.max(1, Math.floor(sr*seconds));
+  const buf = ctx.createBuffer(2, len, sr);
+  for(let ch=0; ch<2; ch++){
+    const data = buf.getChannelData(ch);
+    for(let i=0;i<len;i++){
+      const t = i/len;
+      data[i] = (Math.random()*2-1) * Math.pow(1-t, decay);
+    }
+  }
+  return buf;
+}
+
+function createPingPong(ctx){
+  const input = addNode(ctx.createGain());
+  const wet = addNode(ctx.createGain());
+  const dry = addNode(ctx.createGain());
+  const out = addNode(ctx.createGain());
+  const split = addNode(ctx.createChannelSplitter(2));
+  const merge = addNode(ctx.createChannelMerger(2));
+  const dL = addNode(ctx.createDelay(1.0));
+  const dR = addNode(ctx.createDelay(1.0));
+  const fbL = addNode(ctx.createGain());
+  const fbR = addNode(ctx.createGain());
+
+  input.connect(dry);
+  input.connect(wet);
+  wet.connect(split);
+  split.connect(dL,0);
+  split.connect(dR,1);
+
+  dL.connect(fbL); fbL.connect(dR);
+  dR.connect(fbR); fbR.connect(dL);
+
+  dL.connect(merge,0,0);
+  dR.connect(merge,0,1);
+
+  const sum = addNode(ctx.createGain());
+  dry.connect(sum);
+  merge.connect(sum);
+  sum.connect(out);
+
+  return {input, out, dL, dR, fbL, fbR, dry, wet};
+}
+
+function monoToStereo(ctx, mono, side){
+  const merger = addNode(ctx.createChannelMerger(2));
+  const z = addNode(ctx.createGain()); z.gain.value=0;
+  if(side==='L'){
+    mono.connect(merger,0,0);
+    z.connect(merger,0,1);
+  } else {
+    z.connect(merger,0,0);
+    mono.connect(merger,0,1);
+  }
+  return merger;
+}
+
+function createStereoWidth(ctx){
+  const input = addNode(ctx.createGain());
+  const split = addNode(ctx.createChannelSplitter(2));
+  const merge = addNode(ctx.createChannelMerger(2));
+  const gL = addNode(ctx.createGain());
+  const gR = addNode(ctx.createGain());
+
+  input.connect(split);
+  split.connect(gL,0);
+  split.connect(gR,1);
+
+  const mid = addNode(ctx.createGain());
+  const side = addNode(ctx.createGain());
+  const invR = addNode(ctx.createGain()); invR.gain.value=-1;
+
+  gL.connect(mid); gR.connect(mid); mid.gain.value=0.5;
+  gR.connect(invR); gL.connect(side); invR.connect(side); side.gain.value=0.5;
+
+  const sideGain = addNode(ctx.createGain());
+  side.connect(sideGain);
+
+  const outL = addNode(ctx.createGain());
+  const outR = addNode(ctx.createGain());
+
+  mid.connect(outL); sideGain.connect(outL);
+  mid.connect(outR);
+  const invSide = addNode(ctx.createGain()); invSide.gain.value=-1;
+  sideGain.connect(invSide); invSide.connect(outR);
+
+  outL.connect(merge,0,0);
+  outR.connect(merge,0,1);
+
+  return {input, out:merge, sideGain};
+}
+
+function startAudio(){
+  stopAudio();
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  audioCtx = new AudioContext();
+
+  const preMaster = addNode(audioCtx.createGain());
+  preMaster.gain.value = clamp(Number(vol.value)||0, 0, 0.5);
+
+  const widthNode = createStereoWidth(audioCtx);
+  widthNode.sideGain.gain.value = clamp(Number(mWidth.value)||1, 0, 1.5);
+  preMaster.connect(widthNode.input);
+
+  const masterGain = addNode(audioCtx.createGain());
+  masterGain.gain.value = clamp(Number(mGain.value)||0.85, 0, 1);
+
+  // Master reverb (wet/dry)
+  const revIn = addNode(audioCtx.createGain());
+  const revWet = addNode(audioCtx.createGain());
+  const revDry = addNode(audioCtx.createGain());
+  const convolver = addNode(audioCtx.createConvolver());
+  convolver.buffer = makeImpulse(audioCtx, Math.max(0.2, Number(mRevDecay.value)||2.6), 2.8);
+
+  const revMix = clamp(Number(mRevMix.value)||0, 0, 1);
+  revWet.gain.value = revMix;
+  revDry.gain.value = 1 - revMix;
+
+  widthNode.out.connect(revDry);
+  widthNode.out.connect(revIn);
+  revIn.connect(convolver);
+  convolver.connect(revWet);
+
+  const masterSum = addNode(audioCtx.createGain());
+  revDry.connect(masterSum);
+  revWet.connect(masterSum);
+
+  masterSum.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+
+  // Tap for WAV recording
+  const tap = addNode(audioCtx.createGain());
+  masterGain.connect(tap);
+
+  // Binaural carrier existant -> preMaster
+  const vals = currentMatrixValues();
+  const fc = vals[Number(centerCol.value)];
+  const b = clamp(Number(beat.value)||0, 0, 40);
+
+  const carrierGain = addNode(audioCtx.createGain());
+  carrierGain.gain.value = 0.55;
+  carrierGain.connect(preMaster);
+
+  const makeCarrier = (hz, side)=>{
+    const osc = addNode(audioCtx.createOscillator());
+    osc.type='sine';
+    osc.frequency.value = Math.max(0.1, hz);
+    const g = addNode(audioCtx.createGain()); g.gain.value=0.6;
+    osc.connect(g);
+    monoToStereo(audioCtx, g, side).connect(carrierGain);
+    osc.start();
+  };
+
+  if(binaural && b>0){
+    makeCarrier(fc - b/2, 'L');
+    makeCarrier(fc + b/2, 'R');
+  } else {
+    const osc = addNode(audioCtx.createOscillator());
+    osc.type='sine'; osc.frequency.value=Math.max(0.1, fc);
+    const g = addNode(audioCtx.createGain()); g.gain.value=0.6;
+    osc.connect(g);
+    const pan = addNode(audioCtx.createStereoPanner()); pan.pan.value=0;
+    g.connect(pan); pan.connect(carrierGain);
+    osc.start();
+  }
+
+  // Shared reverb bus for oscillators
+  const oRevIn = addNode(audioCtx.createGain());
+  const oConvolver = addNode(audioCtx.createConvolver());
+  oConvolver.buffer = makeImpulse(audioCtx, Math.max(0.2, Number(mRevDecay.value)||2.6), 2.6);
+  const oRevOut = addNode(audioCtx.createGain()); oRevOut.gain.value=1.0;
+  oRevIn.connect(oConvolver); oConvolver.connect(oRevOut); oRevOut.connect(preMaster);
+
+  handles = {
+    tap, preMaster, masterGain, widthNode,
+    convolver, oConvolver, oRevIn,
+    revWet, revDry,
+    voices:{}
+  };
+
+  const baseType = wave.value || 'sine';
+
+  for(const o of OSC_DEFS){
+    const v = {};
+    const fIdx = Number($(`${o.id}_f`).value);
+    const col = freq9ToCol(fIdx);
+    const hz = vals[col];
+
+    v.oscA = addNode(audioCtx.createOscillator());
+    v.oscA.type = baseType;
+    v.oscA.frequency.value = hz;
+
+    v.gA = addNode(audioCtx.createGain()); v.gA.gain.value=0.85;
+
+    v.oscB = addNode(audioCtx.createOscillator());
+    v.oscB.type='sine';
+    v.oscB.frequency.value = hz + (Number($(`${o.id}_dualDet`).value)||0);
+
+    v.gB = addNode(audioCtx.createGain());
+
+    v.vol = addNode(audioCtx.createGain());
+    v.vol.gain.value = clamp(Number($(`${o.id}_vol`).value)||0, 0, 1);
+
+    v.hpf = addNode(audioCtx.createBiquadFilter());
+    v.hpf.type='highpass';
+    v.hpf.frequency.value=Number($(`${o.id}_hpf`).value)||80;
+    v.hpf.Q.value=0.7;
+
+    v.lpf = addNode(audioCtx.createBiquadFilter());
+    v.lpf.type='lowpass';
+    v.lpf.frequency.value=Number($(`${o.id}_lpf`).value)||2200;
+    v.lpf.Q.value=0.9;
+
+    // LFO -> LPF cutoff
+    v.lfo = addNode(audioCtx.createOscillator());
+    v.lfo.type='sine';
+    v.lfo.frequency.value=Number($(`${o.id}_lfoRate`).value)||0.25;
+
+    v.lfoGain = addNode(audioCtx.createGain());
+    const depth = clamp(Number($(`${o.id}_lfoDepth`).value)||0, 0, 1);
+    v.lfoGain.gain.value = depth * v.lpf.frequency.value * 0.9;
+    v.lfo.connect(v.lfoGain);
+    v.lfoGain.connect(v.lpf.frequency);
+
+    const sum = addNode(audioCtx.createGain());
+    v.oscA.connect(v.gA); v.gA.connect(sum);
+    v.oscB.connect(v.gB); v.gB.connect(sum);
+
+    sum.connect(v.vol);
+    v.vol.connect(v.hpf);
+    v.hpf.connect(v.lpf);
+
+    // ping-pong per voice
+    v.ping = createPingPong(audioCtx);
+    const stereo = monoToStereo(audioCtx, v.lpf, o.side==='left'?'L':'R');
+
+    const dMix = clamp(Number($(`${o.id}_dlyMix`).value)||0,0,1);
+    v.ping.dry.gain.value = 1-dMix;
+    v.ping.wet.gain.value = dMix;
+
+    const dt = Number($(`${o.id}_dlyTime`).value)||0.22;
+    v.ping.dL.delayTime.value = dt;
+    v.ping.dR.delayTime.value = dt;
+
+    const fb = clamp(Number($(`${o.id}_dlyFb`).value)||0,0,0.85);
+    v.ping.fbL.gain.value=fb;
+    v.ping.fbR.gain.value=fb;
+
+    stereo.connect(v.ping.input);
+    v.ping.out.connect(preMaster);
+
+    // reverb send per voice
+    v.revSend = addNode(audioCtx.createGain());
+    v.revSend.gain.value = clamp(Number($(`${o.id}_rev`).value)||0,0,1);
+    stereo.connect(v.revSend);
+    v.revSend.connect(oRevIn);
+
+    const dualOn = $(`${o.id}_dual`).classList.contains('on');
+    v.gB.gain.value = dualOn ? 0.7 : 0.0;
+
+    v.oscA.start();
+    v.oscB.start();
+    v.lfo.start();
+
+    handles.voices[o.id]=v;
+  }
+
+  // ramp-in
+  const now = audioCtx.currentTime;
+  preMaster.gain.setValueAtTime(0.0001, now);
+  preMaster.gain.exponentialRampToValueAtTime(clamp(Number(vol.value)||0.12, 0.001, 0.5), now+0.6);
+
+  updateFreqStrip();
+}
+
+function updateAudioTargets(){
+  updateFreqStrip();
+  if(!audioCtx || !handles.voices) return;
+  try{
+    const vals = currentMatrixValues();
+    const now = audioCtx.currentTime;
+
+    // global
+    handles.preMaster.gain.setTargetAtTime(clamp(Number(vol.value)||0,0,0.5), now, 0.12);
+    handles.masterGain.gain.setTargetAtTime(clamp(Number(mGain.value)||0.85,0,1), now, 0.12);
+    handles.widthNode.sideGain.gain.setTargetAtTime(clamp(Number(mWidth.value)||1,0,1.5), now, 0.15);
+
+    // master reverb mix live
+    const mix = clamp(Number(mRevMix.value)||0,0,1);
+    handles.revWet && handles.revWet.gain.setTargetAtTime(mix, now, 0.2);
+    handles.revDry && handles.revDry.gain.setTargetAtTime(1-mix, now, 0.2);
+
+    // per voice
+    for(const o of OSC_DEFS){
+      const v = handles.voices[o.id];
+      if(!v) continue;
+
+      const fIdx = Number($(`${o.id}_f`).value);
+      const col = freq9ToCol(fIdx);
+      const hz = vals[col];
+
+      $(`${o.id}_col`).textContent = String(col);
+      $(`${o.id}_hz`).textContent = fmt(hz);
+      $(`osc_${o.id}`).dataset.freq = String(fIdx);
+
+      v.oscA.type = wave.value || 'sine';
+      v.oscA.frequency.setTargetAtTime(hz, now, 0.05);
+
+      const det = Number($(`${o.id}_dualDet`).value)||0;
+      v.oscB.frequency.setTargetAtTime(hz+det, now, 0.05);
+
+      const dualOn = $(`${o.id}_dual`).classList.contains('on');
+      v.gB.gain.setTargetAtTime(dualOn?0.7:0.0, now, 0.08);
+
+      v.vol.gain.setTargetAtTime(clamp(Number($(`${o.id}_vol`).value)||0,0,1), now, 0.12);
+      v.hpf.frequency.setTargetAtTime(Number($(`${o.id}_hpf`).value)||80, now, 0.15);
+      v.lpf.frequency.setTargetAtTime(Number($(`${o.id}_lpf`).value)||2200, now, 0.15);
+
+      const depth = clamp(Number($(`${o.id}_lfoDepth`).value)||0,0,1);
+      const base = Number($(`${o.id}_lpf`).value)||2200;
+      v.lfo.frequency.setTargetAtTime(Number($(`${o.id}_lfoRate`).value)||0.25, now, 0.2);
+      v.lfoGain.gain.setTargetAtTime(depth*base*0.9, now, 0.25);
+
+      v.revSend.gain.setTargetAtTime(clamp(Number($(`${o.id}_rev`).value)||0,0,1), now, 0.2);
+
+      const dMix = clamp(Number($(`${o.id}_dlyMix`).value)||0,0,1);
+      v.ping.dry.gain.setTargetAtTime(1-dMix, now, 0.2);
+      v.ping.wet.gain.setTargetAtTime(dMix, now, 0.2);
+
+      const dt = Number($(`${o.id}_dlyTime`).value)||0.22;
+      v.ping.dL.delayTime.setTargetAtTime(dt, now, 0.2);
+      v.ping.dR.delayTime.setTargetAtTime(dt, now, 0.2);
+
+      const fb = clamp(Number($(`${o.id}_dlyFb`).value)||0,0,0.85);
+      v.ping.fbL.gain.setTargetAtTime(fb, now, 0.2);
+      v.ping.fbR.gain.setTargetAtTime(fb, now, 0.2);
+    }
+  }catch(e){}
+}
+
+/* ===== WAV recording (PCM -> WAV) ===== */
+function startRecording(){
+  if(!audioCtx || !handles.tap) return;
+  if(recData && recData.recording) return;
+  if(recUrl){ URL.revokeObjectURL(recUrl); recUrl=null; }
+
+  const sp = addNode(audioCtx.createScriptProcessor(4096, 2, 2));
+  const sink = addNode(audioCtx.createGain()); sink.gain.value=0;
+  sp.connect(sink); sink.connect(audioCtx.destination);
+  handles.tap.connect(sp);
+
+  recData = {recording:true,left:[],right:[],length:0,sampleRate:audioCtx.sampleRate,node:sp};
+  sp.onaudioprocess = (e)=>{
+    if(!recData || !recData.recording) return;
+    const l=e.inputBuffer.getChannelData(0);
+    const r=e.inputBuffer.getChannelData(1);
+    recData.left.push(new Float32Array(l));
+    recData.right.push(new Float32Array(r));
+    recData.length += l.length;
+  };
+
+  recDot.classList.add('on');
+  recTxt.textContent='enregistrement…';
+}
+
+function stopRecording(){
+  if(!recData || !recData.recording) return;
+  recData.recording=false;
+  try{ handles.tap.disconnect(recData.node); }catch(e){}
+
+  const wavBlob = encodeWAV(recData.left, recData.right, recData.length, recData.sampleRate);
+  recUrl = URL.createObjectURL(wavBlob);
+
+  btnWav.href = recUrl;
+  btnWav.download = 'omcha-master.wav';
+
+  recDot.classList.remove('on');
+  recTxt.textContent='WAV prêt';
+}
+
+function encodeWAV(leftChunks,rightChunks,length,sampleRate){
+  const interleaved=new Float32Array(length*2);
+  let off=0;
+  for(let i=0;i<leftChunks.length;i++){
+    const L=leftChunks[i], R=rightChunks[i];
+    for(let j=0;j<L.length;j++){
+      interleaved[off++]=L[j];
+      interleaved[off++]=R[j];
+    }
+  }
+  const bytesPerSample=2;
+  const blockAlign=2*bytesPerSample;
+  const byteRate=sampleRate*blockAlign;
+  const dataSize=interleaved.length*bytesPerSample;
+
+  const buffer=new ArrayBuffer(44+dataSize);
+  const view=new DataView(buffer);
+  const ws=(o,s)=>{ for(let i=0;i<s.length;i++) view.setUint8(o+i,s.charCodeAt(i)); };
+
+  ws(0,'RIFF'); view.setUint32(4,36+dataSize,true); ws(8,'WAVE');
+  ws(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true);
+  view.setUint16(22,2,true); view.setUint32(24,sampleRate,true);
+  view.setUint32(28,byteRate,true); view.setUint16(32,blockAlign,true);
+  view.setUint16(34,16,true); ws(36,'data'); view.setUint32(40,dataSize,true);
+
+  let idx=44;
+  for(let i=0;i<interleaved.length;i++){
+    let s=Math.max(-1,Math.min(1,interleaved[i]));
+    view.setInt16(idx, s<0 ? s*0x8000 : s*0x7FFF, true);
+    idx+=2;
+  }
+  return new Blob([view],{type:'audio/wav'});
+}
+
+/* events */
+btnPlay.addEventListener('click', startAudio);
+btnStop.addEventListener('click', stopAudio);
+
+vol.addEventListener('input', ()=>{ syncMasterUI(); updateAudioTargets(); });
+wave.addEventListener('change', updateAudioTargets);
+beat.addEventListener('input', updateAudioTargets);
+centerN.addEventListener('input', ()=>{ renderM36(); updateAudioTargets(); });
+centerCol.addEventListener('change', updateAudioTargets);
+
+mGain.addEventListener('input', ()=>{ syncMasterUI(); updateAudioTargets(); });
+mWidth.addEventListener('input', ()=>{ syncMasterUI(); updateAudioTargets(); });
+mRevMix.addEventListener('input', ()=>{ syncMasterUI(); updateAudioTargets(); });
+
+mRevDecay.addEventListener('input', ()=>{
+  syncMasterUI();
+  if(audioCtx && handles){
+    try{
+      const d = Math.max(0.2, Number(mRevDecay.value)||2.6);
+      handles.convolver && (handles.convolver.buffer = makeImpulse(audioCtx, d, 2.8));
+      handles.oConvolver && (handles.oConvolver.buffer = makeImpulse(audioCtx, d, 2.6));
+    }catch(e){}
+  }
+  updateAudioTargets();
+});
+
+btnRec.addEventListener('click', startRecording);
+btnRecStop.addEventListener('click', stopRecording);
+
+btnWav.addEventListener('click', (e)=>{
+  if(!btnWav.href || btnWav.href==='#'){
+    e.preventDefault();
+    recTxt.textContent='démarre REC puis STOP';
+  }
+});
+
+/* ========= HORLOGES ========= */
+const d72=$('d72'), d36=$('d36'), d24=$('d24'), d24u=$('d24u'), d18=$('d18'), d9=$('d9');
+const c72=$('c72'), c36=$('c36'), c24=$('c24'), c24u=$('c24u'), c18=$('c18'), c9=$('c9');
+
+function fracLocalDay(now){
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0,0,0,0);
+  return (now.getTime() - start.getTime()) / 86400000;
+}
+function fracUTCDay(now){
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0,0,0,0);
+  return (now.getTime() - start) / 86400000;
+}
+function toHMS(f, H, M, S){
+  const total = f * (H*M*S);
+  const h = Math.floor(total / (M*S));
+  const rem1 = total - h*(M*S);
+  const m = Math.floor(rem1 / S);
+  const s = Math.floor(rem1 - m*S);
+  return {h, m, s, H, M, S};
+}
+function fmtHMS(o){ return `${pad2(o.h)}:${pad2(o.m)}:${pad2(o.s)}`; }
+function cssVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+function drawDial(canvas, o, title, ticks, color){
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2;
+  const Rr=Math.min(w,h)*0.42;
+
+  // face
+  ctx.beginPath();
+  ctx.arc(cx,cy,Rr,0,Math.PI*2);
+  ctx.strokeStyle='#111827';
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  // ticks
+  for(let i=0;i<ticks;i++){
+    const a = (i/ticks)*Math.PI*2 - Math.PI/2;
+    const major = (ticks===72) ? (i%6===0)
+                : (ticks===36) ? (i%3===0)
+                : (ticks===24) ? (i%2===0)
+                : (ticks===18) ? (i%3===0)
+                : true;
+    const r1 = Rr*(major ? 0.86 : 0.92);
+    const r2 = Rr*0.98;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r1, cy+Math.sin(a)*r1);
+    ctx.lineTo(cx+Math.cos(a)*r2, cy+Math.sin(a)*r2);
+    ctx.strokeStyle = major ? color : '#cbd5e1';
+    ctx.lineWidth = major ? 2 : 1;
+    ctx.stroke();
+  }
+
+  // hands
+  const ah = (o.h/o.H)*Math.PI*2 - Math.PI/2;
+  const am = (o.m/o.M)*Math.PI*2 - Math.PI/2;
+  const as = (o.s/o.S)*Math.PI*2 - Math.PI/2;
+
+  ctx.lineCap='round';
+
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+Math.cos(ah)*Rr*0.55, cy+Math.sin(ah)*Rr*0.55);
+  ctx.strokeStyle='#111827';
+  ctx.lineWidth=5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+Math.cos(am)*Rr*0.75, cy+Math.sin(am)*Rr*0.75);
+  ctx.strokeStyle='#24324A';
+  ctx.lineWidth=3.5;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(cx,cy);
+  ctx.lineTo(cx+Math.cos(as)*Rr*0.85, cy+Math.sin(as)*Rr*0.85);
+  ctx.strokeStyle=color;
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(cx,cy,5,0,Math.PI*2);
+  ctx.fillStyle='#111827';
+  ctx.fill();
+
+  ctx.fillStyle='#111827';
+  ctx.font='700 12px ui-sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(title, cx, cy+Rr+18);
+}
+
+function tickClocks(){
+  const now = new Date();
+  const fL = clamp(fracLocalDay(now), 0, 0.999999999);
+  const fU = clamp(fracUTCDay(now), 0, 0.999999999);
+
+  // Découpes :
+  const o9   = toHMS(fL,  9, 60, 18);
+  const o18  = toHMS(fL, 18, 60, 36);
+  const o24  = toHMS(fL, 24, 60, 60);
+  const o24u = toHMS(fU, 24, 60, 60);
+  const o36  = toHMS(fL, 36, 60, 72);
+  const o72  = toHMS(fL, 72, 60, 144);
+
+  d9.textContent   = fmtHMS(o9);
+  d18.textContent  = fmtHMS(o18);
+  d24.textContent  = fmtHMS(o24);
+  d24u.textContent = fmtHMS(o24u);
+  d36.textContent  = fmtHMS(o36);
+  d72.textContent  = fmtHMS(o72);
+
+  drawDial(c72,  o72,  'UT72', 72, cssVar('--violet'));
+  drawDial(c36,  o36,  'UT36', 36, cssVar('--blue'));
+  drawDial(c24,  o24,  'UT24', 24, cssVar('--green'));
+  drawDial(c24u, o24u, '24h',  24, cssVar('--red'));
+  drawDial(c18,  o18,  'UT18', 18, cssVar('--orange'));
+  drawDial(c9,   o9,   'UT9',   9, cssVar('--yellow'));
+}
+
+/* ========= INIT ========= */
+syncSliders();
+renderM36();
+show('A');
+setInterval(tickClocks, 250);
+tickClocks();
+// init J0 outputs immediately if defaults present
+syncJ0();
+</script>
+</body>
+</html>

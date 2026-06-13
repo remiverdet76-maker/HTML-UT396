@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>432 Projet par Re#Mi - Matrice Cyan/Indigo</title>
+  <style>
+    :root {
+      /* Palette Cyan / Indigo */
+      --bg: #050b14;
+      --bg2: #0f172a;
+      --fg: #e2e8f0;
+      --soft: #94a3b8;
+      --muted: rgba(148,163,184,0.78);
+      --accent: #00e5ff; /* Cyan brillant */
+      --accent-dark: #008b99;
+      --indigo: #4b0082;
+      --indigo-light: #8b5cf6;
+      --earth: #1e1b4b;
+      --stroke: rgba(0, 229, 255, 0.15);
+      --card: rgba(15, 23, 42, 0.6);
+      --shadow: 0 0 48px rgba(0, 0, 0, 0.5);
+      --radius: 22px;
+    }
+    
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    
+    body {
+      font-family: "Georgia", "Palatino Linotype", serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(0, 229, 255, 0.12), transparent 45%),
+        radial-gradient(circle at 85% 5%, rgba(139, 92, 246, 0.12), transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(0, 229, 255, 0.08), transparent 60%),
+        radial-gradient(circle at 50% 30%, var(--bg2), var(--bg) 80%);
+      background-color: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+    }
+    
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 72px 20px 90px; }
+    header { text-align: center; margin-bottom: 18px; }
+
+    /* TITRE */
+    h1 {
+      margin: 0 0 8px;
+      font-weight: 400;
+      letter-spacing: .06em;
+      color: var(--accent);
+      font-size: 44px;
+      text-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+    }
+    .tagline {
+      margin: 0 auto 10px;
+      max-width: 900px;
+      color: var(--fg);
+      letter-spacing: .04em;
+      font-size: 15px;
+      line-height: 1.8;
+      font-style: italic;
+    }
+    .sub {
+      max-width: 900px; margin: 0 auto;
+      color: var(--soft);
+      line-height: 1.85; font-size: 15px;
+    }
+
+    /* LOGO CENTRAL */
+    .heroRow {
+      margin: 34px auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mandala {
+      width: min(340px, 82vw);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(0,229,255,.1), transparent 30%),
+        conic-gradient(from 18deg, rgba(0,229,255,.15), rgba(139,92,246,.15), rgba(0,229,255,.15));
+      box-shadow:
+        inset 0 0 95px rgba(0,0,0,.60),
+        inset 0 0 36px rgba(0,229,255,.2),
+        0 0 74px rgba(0,229,255,.1);
+      border: 1px solid var(--stroke);
+    }
+    .mandala:after {
+      content: "";
+      position: absolute;
+      inset: 32px;
+      border-radius: 50%;
+      background: rgba(5, 11, 20, 0.7);
+      box-shadow: inset 0 0 60px rgba(0,0,0,.8);
+      border: 1px solid rgba(139,92,246,0.3);
+      z-index: 1;
+    }
+    .treeWrap {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .treeSvg {
+      width: 84%; height: 84%;
+      filter: drop-shadow(0 0 12px rgba(0,229,255,.3));
+      opacity: .98;
+    }
+
+    /* Tabs + Cards */
+    .tabs { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 22px 0 14px; }
+    .tab {
+      padding: 10px 16px; border-radius: 999px;
+      background: rgba(0,229,255,.05);
+      border: 1px solid rgba(0,229,255,.2);
+      color: var(--soft);
+      cursor: pointer;
+      user-select: none;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      font-size: 11px;
+      transition: all 0.3s;
+    }
+    .tab:hover { background: rgba(0,229,255,.1); }
+    .tab.active { background: rgba(0,229,255,.2); border-color: var(--accent); color: #fff; box-shadow: 0 0 15px rgba(0,229,255,0.2); }
+    .tabcontent { display: none; }
+    .tabcontent.active { display: block; animation: fadeIn 0.5s ease; }
+    @keyframes fadeIn { from{opacity:0; transform:translateY(5px)} to{opacity:1; transform:translateY(0)} }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 34px;
+      margin: 18px 0;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    h2 { margin: 0 0 14px; font-weight: 400; letter-spacing: .05em; color: var(--accent); font-size: 28px; }
+    h3 { margin: 26px 0 10px; font-weight: 400; letter-spacing: .04em; color: var(--indigo-light); font-size: 20px; }
+    h4 { margin: 18px 0 8px; font-weight: 400; letter-spacing: .05em; color: var(--accent-dark); font-size: 14px; text-transform: uppercase; }
+    p { margin: 10px 0; line-height: 1.85; color: var(--soft); }
+    .muted { color: var(--muted); }
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media(max-width:900px) { .grid2 { grid-template-columns: 1fr; } }
+
+    label { display: block; color: var(--soft); font-size: 13px; letter-spacing: .04em; margin-top: 10px; }
+    input {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.3);
+      border: 1px solid rgba(0,229,255,.2);
+      color: var(--fg);
+      outline: none;
+      font-family: inherit;
+      font-size: 14px;
+    }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0,229,255,0.2); }
+    input[type="radio"] { width: auto; margin: 0 8px 0 0; accent-color: var(--accent); }
+    .choiceRow { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0 18px; }
+    .choice {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 12px; border-radius: 999px;
+      background: rgba(0,229,255,.05);
+      border: 1px solid rgba(0,229,255,.2);
+      color: var(--soft); font-size: 13px;
+    }
+
+    .btnrow { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 24px; }
+    button {
+      padding: 10px 18px; border-radius: 999px;
+      border: 1px solid rgba(0,229,255,.3);
+      background: rgba(0,0,0,.3);
+      color: var(--fg);
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      font-size: 11px;
+      transition: 0.3s;
+    }
+    button:hover { background: rgba(0,229,255,.15); border-color: var(--accent); }
+    .primary { 
+      border: 1px solid var(--accent); 
+      background: linear-gradient(135deg, rgba(0,229,255,.2), rgba(139,92,246,.3)); 
+      color: #fff; font-weight: bold;
+      box-shadow: 0 0 15px rgba(0,229,255,0.2);
+    }
+
+    .pill {
+      display: inline-flex; gap: 8px; align-items: center;
+      padding: 6px 12px; border-radius: 999px;
+      border: 1px solid rgba(0,229,255,.3);
+      background: rgba(0,229,255,.08);
+      color: var(--accent);
+      font-size: 12px;
+      margin: 6px 8px 0 0;
+    }
+    hr { border: none; border-top: 1px solid var(--stroke); margin: 26px 0; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 14px; }
+    th, td { border-bottom: 1px solid rgba(255,255,255,.05); padding: 12px 10px; text-align: left; vertical-align: top; }
+    th { color: var(--indigo-light); font-weight: 400; letter-spacing: .06em; text-transform: uppercase; font-size: 11px; }
+    
+    .matrixTable {
+      border-collapse: separate; border-spacing: 0;
+      overflow: hidden;
+      border: 1px solid rgba(0,229,255,.2);
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(15,23,42,.9), rgba(5,11,20,.95));
+      color: var(--fg);
+      box-shadow: 0 0 30px rgba(0,0,0,.4);
+    }
+    .matrixTable th {
+      color: var(--accent);
+      background: rgba(0,229,255,.05);
+      border-bottom: 1px solid rgba(0,229,255,.1);
+      width: 25%;
+    }
+    .matrixTable td {
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      color: var(--soft);
+    }
+    .matrixTable tr:last-child td, .matrixTable tr:last-child th { border-bottom: none; }
+    
+    .readingBlock {
+      margin-top: 24px; padding: 24px;
+      border-radius: 18px;
+      background: rgba(0,0,0,.2);
+      border: 1px solid var(--stroke);
+    }
+    
+    .poemStone {
+      margin-top: 18px; padding: 20px 24px;
+      border-left: 3px solid var(--accent);
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(15,23,42,.8), rgba(0,0,0,.6));
+      color: var(--indigo-light);
+      font-style: italic;
+      line-height: 1.8;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+    }
+    .poemStone span { display: block; }
+    
+    .dailyList { display: grid; gap: 12px; margin: 14px 0 0; padding: 0; list-style: none; }
+    .dailyList li {
+      padding: 14px 18px; border-radius: 14px;
+      background: rgba(139,92,246,.05);
+      border: 1px solid rgba(139,92,246,.2);
+      color: var(--fg);
+      position: relative;
+      padding-left: 35px;
+    }
+    .dailyList li::before {
+      content: "✦";
+      position: absolute; left: 14px; top: 14px;
+      color: var(--accent);
+    }
+
+    details {
+      border: 1px solid var(--stroke);
+      border-radius: 16px; padding: 14px 16px;
+      background: rgba(0,0,0,.2);
+      margin: 10px 0;
+    }
+    summary {
+      cursor: pointer; color: var(--accent);
+      letter-spacing: .06em; text-transform: uppercase; font-size: 12px;
+      outline: none;
+    }
+
+    .ringWrap { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-top: 10px; margin-bottom: 20px; }
+    .ring {
+      width: 82px; height: 82px; border-radius: 50%;
+      background: conic-gradient(var(--accent) var(--p), rgba(255,255,255,.05) 0);
+      box-shadow: 0 0 15px rgba(0,229,255,0.1);
+      position: relative;
+    }
+    .ring:after {
+      content: ""; position: absolute; inset: 6px; border-radius: 50%;
+      background: var(--bg);
+    }
+    .ringLabel {
+      position: relative; margin-left: -102px; width: 82px; text-align: center;
+      font-size: 13px; color: var(--fg); font-weight: bold;
+      z-index: 2;
+    }
+
+    .timeline-box {
+      display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;
+    }
+    .timeline-item {
+      flex: 1; min-width: 150px;
+      padding: 12px; border-radius: 12px;
+      background: rgba(0,0,0,0.3); border: 1px solid var(--stroke);
+      text-align: center; font-size: 13px;
+    }
+    .timeline-item.current {
+      background: rgba(0,229,255,0.1); border-color: var(--accent);
+      color: var(--accent); font-weight: bold;
+    }
+
+    footer { text-align: center; color: var(--muted); font-size: 13px; padding: 52px 0 12px; }
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <header>
+    <h1>432 Projet par Re#Mi</h1>
+    <p class="tagline">" L'âme sans-cible se perd dans l'infini "</p>
+
+    <p class="sub">
+      Une lecture organique du temps intérieur, structurée par <strong>432 jours</strong>, <strong>12 phases</strong> et <strong>12 axes</strong>.<br>
+      Ce système situe l'instant présent sans prédiction ni influence astrale. Il assemble J0, cycles et géométrie temporelle en une matrice pure.
+    </p>
+
+    <!-- LOGO CENTRAL -->
+    <div class="heroRow">
+      <div class="mandala">
+        <div class="treeWrap">
+          <svg class="treeSvg" viewBox="0 0 240 240">
+            <defs>
+              <linearGradient id="treeLine" x1="54" y1="190" x2="186" y2="42" gradientUnits="userSpaceOnUse">
+                <stop offset="0" stop-color="#4b0082"/>
+                <stop offset="0.5" stop-color="#8b5cf6"/>
+                <stop offset="1" stop-color="#00e5ff"/>
+              </linearGradient>
+            </defs>
+            <circle cx="120" cy="120" r="94" fill="none" stroke="rgba(0,229,255,0.2)" stroke-width="1"/>
+            <circle cx="120" cy="120" r="72" fill="none" stroke="rgba(139,92,246,0.3)" stroke-width="1"/>
+            <circle cx="120" cy="120" r="44" fill="none" stroke="rgba(0,229,255,0.4)" stroke-width="1"/>
+            <g fill="none" stroke="url(#treeLine)" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M120 182 C116 160 116 142 120 124 C124 142 124 160 120 182" stroke-width="3"/>
+              <path d="M120 126 C108 114 92 103 72 92 M120 126 C132 114 148 103 168 92" stroke-width="2"/>
+              <path d="M120 126 C120 106 120 88 120 62" stroke-width="2"/>
+              <path d="M120 116 C112 102 104 90 92 78 M120 116 C128 102 136 90 148 78" stroke-width="1.5"/>
+            </g>
+            <g fill="#00e5ff">
+              <circle cx="120" cy="62" r="3"/>
+              <circle cx="72" cy="92" r="2.5"/>
+              <circle cx="168" cy="92" r="2.5"/>
+            </g>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="comprendre">Comprendre la Matrice</div>
+      <div class="tab" data-tab="calculer">Calculer mon Thème</div>
+      <div class="tab" data-tab="lire">Lecture du Présent</div>
+    </div>
+  </header>
+
+  <!-- COMPRENDRE -->
+  <div id="tab-comprendre" class="tabcontent active">
+    
+    <div class="card">
+      <h2>L'Architecture Numérique</h2>
+      <p>
+        <strong>432 jours</strong> forment un cycle complet de maturation.<br>
+        <strong>36 cycles</strong> composent une spirale de vie (15 552 jours ≈ 42,6 ans).<br>
+        Chaque cycle se déploie en <strong>12 phases de 36 jours</strong>.
+      </p>
+      
+      <div class="grid2" style="margin-top:14px">
+        <div>
+          <h3>Les Constantes J0 et J+288</h3>
+          <p>
+            <span class="pill">J0</span>
+            <strong>Point d'Origine (Naissance spirituelle)</strong> = Naissance physique − 288 jours. Le point zéro de la matrice.
+          </p>
+          <p>
+            <span class="pill">J+288</span>
+            <strong>L'Incarnation (Naissance physique)</strong> = J0 + 288 jours. Point de matérialisation dans la réalité.
+          </p>
+        </div>
+        <div>
+          <h3>La Structure Interne d'une Phase (36j)</h3>
+          <p>La beauté d'une phase de 36 jours réside dans son découpage naturel en trois temps de 12 jours :</p>
+          <ul style="color:var(--soft); font-size:14px; line-height:1.6; padding-left:20px;">
+            <li><strong>Jours 1 à 12 :</strong> Intégrer la dynamique et initier l'action.</li>
+            <li><strong>Jours 13 à 24 :</strong> Revenir au centre, terminer les projets, faire le tri.</li>
+            <li><strong>Jours 25 à 36 :</strong> Repos, préparation au cycle suivant en douceur. Rangement mental, physique et émotionnel.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Les 12 Phases Temporelles (36 jours chacune)</h2>
+      <table id="phasesTable"></table>
+    </div>
+
+    <div class="card">
+      <h2>Les 12 Axes (3 cycles de 432j par Axe)</h2>
+      <table id="axesTable"></table>
+    </div>
+  </div>
+
+  <!-- CALCULER -->
+  <div id="tab-calculer" class="tabcontent">
+    <div class="card">
+      <h2>Générer le Thème 432</h2>
+      <p class="muted">Entre une date de naissance pour obtenir ton J0 automatiquement, ou saisis directement un J0 personnel.</p>
+
+      <div class="choiceRow">
+        <label class="choice"><input type="radio" name="inputMode" value="birth" checked> Date de naissance</label>
+        <label class="choice"><input type="radio" name="inputMode" value="j0"> J0 personnel</label>
+      </div>
+
+      <div class="grid2">
+        <div id="birthField">
+          <label>Date de naissance (J+288)</label>
+          <input type="date" id="birthDate" />
+        </div>
+        <div id="j0Field">
+          <label>Point d'Origine (J0)</label>
+          <input type="date" id="j0Date" />
+        </div>
+      </div>
+
+      <div class="btnrow">
+        <button type="button" onclick="fillExample()">Préremplir exemple</button>
+        <button type="button" onclick="resetAll()">Réinitialiser</button>
+        <button type="button" class="primary" onclick="generate()">Générer ma lecture</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIRE -->
+  <div id="tab-lire" class="tabcontent">
+    <div class="card" id="result">
+      <h2>Lecture Matrice 432</h2>
+      <p class="muted">Remplis tes informations dans l'onglet <em>Calculer</em> pour découvrir ta géométrie temporelle actuelle.</p>
+    </div>
+  </div>
+
+  <footer>Cycle sacré de 432 — Spirale vivante d’incarnation</footer>
+</div>
+
+<script>
+  // ================================
+  // OUTILS TEMPS 432
+  // ================================
+  function addDays(date, days){ return new Date(date.getTime() + days*86400000); }
+  function diffDays(a,b){ return Math.floor((a.getTime() - b.getTime()) / 86400000); }
+  function normMod(n, m){ return ((n % m) + m) % m; }
+
+  function escapeHtml(s){
+    return String(s ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  // ================================
+  // BASES DE DONNÉES (Sans Astrologie)
+  // ================================
+  const PHASES = [
+    {n:1, nom:"Éveil", mot:"Naissance", dynamique:"Ouverture", 
+      essence:"Une poussée de vie. Le germe sort du silence. Tu redeviens disponible à toi.",
+      obstacles:"Fuir dans l’excitation, vouloir tout lancer d’un coup, confondre vitesse et fondation.",
+      surmonter:"Commencer par un acte petit, mais vrai. Poser l'intention sans chercher le résultat immédiat."
+    },
+    {n:2, nom:"Élan", mot:"Énergie", dynamique:"Élan", 
+      essence:"L’énergie se met en mouvement et cherche une forme stable. On nourrit ce qui est né.",
+      obstacles:"Se disperser dans plusieurs directions, forcer par la seule volonté et s'épuiser.",
+      surmonter:"Installer un rythme simple. La régularité douce prime sur l’intensité brutale."
+    },
+    {n:3, nom:"Expansion", mot:"Croissance", dynamique:"Expansion",
+      essence:"La vie s’étend, apprend et relie. On choisit ce qui nourrit vraiment le système.",
+      obstacles:"Accumuler trop de projets sans racine, zapping mental, parler au lieu d'incarner.",
+      surmonter:"Clarifier ce qui vaut d’être développé. Relier les idées avant de les matérialiser."
+    },
+    {n:4, nom:"Ancrage", mot:"Stabilité", dynamique:"Enracinement",
+      essence:"On donne un sol à la croissance. Création d'un foyer intérieur et sécurité du système.",
+      obstacles:"Se refermer par peur de l'extérieur, dépendre des autres pour se sentir valide.",
+      surmonter:"Stabiliser le quotidien. Revenir aux routines de base qui nourrissent l'énergie."
+    },
+    {n:5, nom:"Expression", mot:"Créativité", dynamique:"Expression",
+      essence:"L'énergie devient visible. Créer sans chercher l’approbation, rayonner sa propre fréquence.",
+      obstacles:"Chercher le regard de validation, surjouer ou à l'inverse se cacher derrière les autres.",
+      surmonter:"Exprimer ta voix authentique sans te trahir. Le geste créatif se suffit à lui-même."
+    },
+    {n:6, nom:"Purification", mot:"Libération", dynamique:"Épuration",
+      essence:"On retire ce qui encombre. Nettoyage mental, physique et énergétique. Simplification.",
+      obstacles:"Auto-critique excessive, contrôle permanent, perfectionnisme qui paralyse l'action.",
+      surmonter:"Désencombrer l'agenda et l'espace. Accepter l'imperfection pour retrouver du souffle."
+    },
+    {n:7, nom:"Vision", mot:"Intuition", dynamique:"Vision",
+      essence:"On voit plus grand. Ajustement des relations, écoute des synchronicités et harmonisation.",
+      obstacles:"Indécision chronique, vouloir plaire à tout le monde au lieu de rester vrai.",
+      surmonter:"Choisir l’harmonie qui respecte ton centre de gravité. Trancher avec douceur."
+    },
+    {n:8, nom:"Transformation", mot:"Métamorphose", dynamique:"Mutation",
+      essence:"Traverser la zone d'ombre, laisser mourir les anciens schémas. Intensité et vérité pure.",
+      obstacles:"Rester collé à la douleur passée, obsession de contrôle face à l'inconnu.",
+      surmonter:"Dire la vérité à soi-même. Laisser tomber l'armure pour permettre la vraie mutation."
+    },
+    {n:9, nom:"Guérison", mot:"Renouveau", dynamique:"Renaissance",
+      essence:"Après la mutation : retour du sens, de l'horizon et du souffle. On réapprend à projeter.",
+      obstacles:"Fuir trop vite dans un positivisme de façade, avoir des idées grandioses sans ancrage.",
+      surmonter:"Retrouver une direction inspirante mais garder les pieds sur terre. Avancer par paliers."
+    },
+    {n:10, nom:"Récolte", mot:"Structuration", dynamique:"Abondance",
+      essence:"On récolte ce qui a été semé. Assumer la responsabilité de ce qui a été matérialisé.",
+      obstacles:"Se durcir face aux responsabilités, rigidité mentale, vouloir tout porter seul.",
+      surmonter:"Mettre en forme de façon pragmatique. Construire et déléguer sans s’écraser sous le poids."
+    },
+    {n:11, nom:"Sagesse", mot:"Intégration", dynamique:"Conscience",
+      essence:"On élargit la vision au collectif. L'expérience individuelle devient une intelligence globale.",
+      obstacles:"Se couper de ses émotions, se croire au-dessus des dynamiques terrestres.",
+      surmonter:"Transformer l’expérience en sagesse utile pour les autres, partager sans imposer."
+    },
+    {n:12, nom:"Transcendance", mot:"Union", dynamique:"Accomplissement",
+      essence:"Clôture du cycle. Revenir à l’unité, dissoudre les certitudes et préparer la nouvelle graine.",
+      obstacles:"Confusion, fuite du réel, volonté de sauver tout le monde en s'oubliant.",
+      surmonter:"Lâcher prise sur l’histoire que l'on se raconte. Accepter la fin pour préparer le J0 suivant."
+    }
+  ];
+
+  const AXES = [
+    { n:1, nom:"L'Éveil Matériel", cycles:"1 à 3", theme:"Naissance de la conscience.",
+      apprentissage:"Découvrir la nature de ton énergie brute et ce qui veut émerger.",
+      posture:"Ouvrir le champ sans se précipiter." },
+    { n:2, nom:"La Purification", cycles:"4 à 6", theme:"Libération et nettoyage.",
+      apprentissage:"Retirer les couches anciennes et les mémoires obsolètes du système.",
+      posture:"Trier et nettoyer sans se juger." },
+    { n:3, nom:"L'Alignement", cycles:"7 à 9", theme:"Harmonisation interne.",
+      apprentissage:"Mettre en cohérence le centre de décision mental et le mouvement physique.",
+      posture:"Dire un grand oui à l’essentiel." },
+    { n:4, nom:"L'Ancrage", cycles:"10 à 12", theme:"Enracinement et solidité.",
+      apprentissage:"Créer une base de sécurité interne qui ne dépend pas des circonstances.",
+      posture:"Se stabiliser sans s'isoler." },
+    { n:5, nom:"L'Ouverture Systémique", cycles:"13 à 15", theme:"Lien et empathie.",
+      apprentissage:"Ouvrir la communication du système vers l'extérieur avec fluidité.",
+      posture:"S’ouvrir tout en posant des limites justes." },
+    { n:6, nom:"La Transformation", cycles:"16 à 18", theme:"Mutation structurelle.",
+      apprentissage:"Laisser mourir l’ancien paradigme de fonctionnement pour renaître.",
+      posture:"Traverser la turbulence sans s’endurcir." },
+    { n:7, nom:"L'Intuition Pure", cycles:"19 à 21", theme:"Guidance intérieure.",
+      apprentissage:"Développer le silence intérieur pour capter le signal au milieu du bruit.",
+      posture:"Observer silencieusement avant d'agir." },
+    { n:8, nom:"Souveraineté", cycles:"22 à 24", theme:"Affirmation et présence.",
+      apprentissage:"Reprendre le plein contrôle de ses choix et assumer ses limites.",
+      posture:"S'affirmer calmement sans écraser l'autre." },
+    { n:9, nom:"L'Unification", cycles:"25 à 27", theme:"Lien fractal.",
+      apprentissage:"Comprendre que ta structure interne se reflète dans ton environnement.",
+      posture:"Unifier tes polarités sans effacer tes contrastes." },
+    { n:10, nom:"Le Service", cycles:"28 à 30", theme:"Contribution.",
+      apprentissage:"Mettre ton système optimisé au service de la trame globale, sans attente.",
+      posture:"Aider le réseau sans se sacrifier soi-même." },
+    { n:11, nom:"La Maîtrise", cycles:"31 à 33", theme:"Sagesse acquise.",
+      apprentissage:"Devenir le point d'équilibre : présence, discernement, recul absolu.",
+      posture:"Appliquer une discipline fluide et douce." },
+    { n:12, nom:"Rayonnement", cycles:"34 à 36", theme:"Incarnation totale.",
+      apprentissage:"Diffuser la fréquence de ce que tu as intégré durant toute la spirale.",
+      posture:"Rayonner naturellement, sans aucun effort de preuve." }
+  ];
+
+  const CYCLE_TIER = [
+    { n:1, titre:"Phase Découverte", texte:"1er cycle de l’axe : L’énergie de cet apprentissage percute le réel. On avance par essai/erreur." },
+    { n:2, titre:"Phase Ajustement", texte:"2ème cycle de l’axe : La compréhension s'affine. On corrige les excès, on stabilise la fréquence." },
+    { n:3, titre:"Phase Intégration", texte:"3ème cycle de l’axe : Maîtrise et incarnation. L'axe est compris et s'applique naturellement." }
+  ];
+
+  const POEM_DUOS = `
+Dans un doute secret se cultive le soleil.
+Quand le jour se lève, nos âmes brillent de merveille.
+---
+Pourtant la nature éphémère souffre en silence.
+Elle ne juge aucun fait et procure abondance.
+---
+Prenez votre souffle et domptez votre esprit,
+Car le vrai mouvement n'a besoin d'aucun bruit.
+---
+En son centre naissant, un cercle se dessine,
+Trame étoilée dévoilant sa racine.
+---
+Aucun être ne résiste à l'horloge du temps,
+Tic-tac c’est ton heure, respire le présent.
+---
+Le rythme oblique la pensée dans une spirale claire,
+Pendant que le centre trouve enfin sa lumière.
+---
+Nous sommes la génération qui vibre libre pour vivre.
+Oublions le cauchemar pour que le cœur se délivre.
+---
+Ton rôle est précieux dans la grande équation.
+Laisse l'onde guider ton unique intuition.
+---
+Des questions nous dépassent là où les livres se ferment,
+L’intuition prend les rênes pour que l'esprit comprenne.
+  `.trim().split(/\n---\n/).map((b, i) => {
+    const [v1="", v2=""] = b.split("\n");
+    return { n: i+1, v1, v2 };
+  });
+
+  // ================================
+  // INITIALISATION DES TABLEAUX
+  // ================================
+  function initTables() {
+    const phasesData = PHASES.map(p => ({
+      "Numéro (1 à 12)": p.n,
+      "Nom de Phase": p.nom,
+      "Dynamique": p.dynamique,
+      "Essence": p.essence
+    }));
+    
+    const axesData = AXES.map(a => ({
+      "Numéro d'Axe": a.n,
+      "Nom de l'Axe": a.nom,
+      "Cycles concernés": a.cycles,
+      "Apprentissage": a.apprentissage
+    }));
+
+    const render = (el, rows) => {
+      if(!el || !rows.length) return;
+      const keys = Object.keys(rows[0]);
+      el.innerHTML = 
+        `<thead><tr>${keys.map(k=>`<th>${k}</th>`).join('')}</tr></thead>` +
+        `<tbody>${rows.map(r=>`<tr>${keys.map(k=>`<td>${r[k]}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    };
+
+    render(document.getElementById('phasesTable'), phasesData);
+    render(document.getElementById('axesTable'), axesData);
+  }
+
+  // ================================
+  // LOGIQUE DE CALCUL ET LECTURE
+  // ================================
+  function getSubPhase(dayInPhase) {
+    if (dayInPhase <= 12) {
+      return { 
+        titre: "Intégration & Initiation (J1 à J12)", 
+        action: "Période d'action : c'est le moment d'implanter la dynamique de la phase dans le réel." 
+      };
+    } else if (dayInPhase <= 24) {
+      return { 
+        titre: "Centrage & Tri (J13 à J24)", 
+        action: "Période d'ajustement : reviens à ton centre, termine les chantiers en cours et fais le tri." 
+      };
+    } else {
+      return { 
+        titre: "Repos & Préparation (J25 à J36)", 
+        action: "Période de clôture : repose-toi en douceur. Range mentalement et physiquement pour préparer le cycle suivant." 
+      };
+    }
+  }
+
+  function getCycleName(cycle36) {
+    const aIdx = Math.floor((cycle36-1)/3) + 1;
+    return `Cycle ${cycle36} (Axe ${aIdx}: ${AXES[aIdx-1].nom})`;
+  }
+
+  function compute432(j0ISO, birthISO, mode) {
+    const j0Utc = new Date(j0ISO + "T00:00:00Z");
+    const birthUtc = birthISO ? new Date(birthISO + "T00:00:00Z") : addDays(j0Utc, 288);
+    const now = new Date();
+    
+    // Tolérance pour jours négatifs
+    const msDiff = now.getTime() - j0Utc.getTime();
+    const daysSinceJ0 = Math.floor(msDiff / 86400000);
+    
+    const day432 = normMod(daysSinceJ0, 432) + 1;
+    const totalCycles = Math.floor(daysSinceJ0 / 432);
+    
+    const cycleIn36 = normMod(totalCycles, 36) + 1;
+    const prevCycle = normMod(totalCycles - 1, 36) + 1;
+    const nextCycle = normMod(totalCycles + 1, 36) + 1;
+
+    const axisIndex = Math.floor((cycleIn36-1) / 3) + 1;
+    const cycleInAxis = ((cycleIn36-1) % 3) + 1;
+    
+    const phaseIndex = Math.floor((day432-1) / 36) + 1;
+    const dayInPhase = ((day432-1) % 36) + 1;
+    
+    const fractalDays = 15552; // 36 * 432
+    const fractalLoop = Math.floor(Math.max(0, daysSinceJ0) / fractalDays) + 1;
+    const dayInFractal = normMod(daysSinceJ0, fractalDays) + 1;
+
+    return { 
+      j0Utc, birthUtc, daysSinceJ0, day432, 
+      cycleIn36, prevCycle, nextCycle, axisIndex, cycleInAxis, 
+      phaseIndex, dayInPhase, fractalLoop, dayInFractal, mode 
+    };
+  }
+
+  function buildReading(state) {
+    const phase = PHASES[state.phaseIndex-1];
+    const axe = AXES[state.axisIndex-1];
+    const tier = CYCLE_TIER[state.cycleInAxis-1];
+    const subPhase = getSubPhase(state.dayInPhase);
+    const poem = POEM_DUOS[normMod(state.daysSinceJ0, POEM_DUOS.length)];
+
+    const fmt = d => new Intl.DateTimeFormat('fr-FR', { timeZone:'UTC' }).format(d);
+    
+    return `
+      <div class="ringWrap">
+        <div class="ring" style="--p:${Math.round((state.dayInPhase/36)*100)}%"></div>
+        <div class="ringLabel">${state.dayInPhase}/36</div>
+        <div class="ring" style="--p:${Math.round((state.day432/432)*100)}%"></div>
+        <div class="ringLabel">${state.day432}/432</div>
+        
+        <span class="pill">Spirale N°${state.fractalLoop}</span>
+        <span class="pill">Jour global : ${state.daysSinceJ0.toLocaleString('fr-FR')}</span>
+      </div>
+
+      <div class="readingBlock">
+        <h3>1. Géométrie du Moment</h3>
+        <table class="matrixTable">
+          <tr><th>Point Zéro (J0)</th><td>${fmt(state.j0Utc)}</td></tr>
+          <tr><th>Incarnation (J+288)</th><td>${fmt(state.birthUtc)}</td></tr>
+          <tr><th>Phase Actuelle (36j)</th>
+              <td><strong>Phase ${phase.n} : ${phase.nom}</strong><br>${phase.essence}</td>
+          </tr>
+          <tr><th>Sous-Phase (12j)</th>
+              <td><strong>${subPhase.titre}</strong><br>${subPhase.action}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="readingBlock">
+        <h3>2. Architecture du Cycle Long (432j)</h3>
+        
+        <div class="timeline-box">
+          <div class="timeline-item">
+            <span class="muted">Cycle Précédent</span><br>
+            ${getCycleName(state.prevCycle)}
+          </div>
+          <div class="timeline-item current">
+            <span>Cycle Actuel (N°${state.cycleIn36}/36)</span><br>
+            Axe ${axe.n} - ${axe.nom}
+          </div>
+          <div class="timeline-item">
+            <span class="muted">Cycle Suivant</span><br>
+            ${getCycleName(state.nextCycle)}
+          </div>
+        </div>
+
+        <table class="matrixTable" style="margin-top:20px;">
+          <tr><th>Thème de l'Axe</th><td>${axe.theme} ${axe.apprentissage}</td></tr>
+          <tr><th>Niveau d'Intégration</th><td><strong>${tier.titre}</strong> : ${tier.texte}</td></tr>
+        </table>
+      </div>
+
+      <div class="readingBlock">
+        <h3>3. Travail Intérieur & Obstacles</h3>
+        <ul class="dailyList">
+          <li><strong>Le Piège (Obstacle de la phase) :</strong> ${phase.obstacles}</li>
+          <li><strong>La Clé (Comment le surmonter) :</strong> ${phase.surmonter}</li>
+          <li><strong>Posture recommandée de l'Axe :</strong> ${axe.posture}</li>
+        </ul>
+
+        <h4>Résonance Poétique</h4>
+        <div class="poemStone">
+          <span>${escapeHtml(poem.v1)}</span>
+          <span>${escapeHtml(poem.v2)}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // ================================
+  // INTERFACE ET GESTION DES ONGLETS
+  // ================================
+  function setActiveTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.tabcontent').forEach(c => c.classList.toggle('active', c.id === `tab-${name}`));
+  }
+  
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => setActiveTab(t.dataset.tab));
+  });
+
+  function updateInputMode() {
+    const mode = document.querySelector('input[name="inputMode"]:checked')?.value || 'birth';
+    document.getElementById('birthField').style.opacity = mode === 'birth' ? '1' : '.3';
+    document.getElementById('j0Field').style.opacity = mode === 'j0' ? '1' : '.3';
+    document.getElementById('birthDate').disabled = mode !== 'birth';
+    document.getElementById('j0Date').disabled = mode !== 'j0';
+  }
+  document.querySelectorAll('input[name="inputMode"]').forEach(el => el.addEventListener('change', updateInputMode));
+
+  function fillExample() {
+    document.getElementById('birthDate').value = '1990-01-01';
+    document.querySelector('input[name="inputMode"][value="birth"]').checked = true;
+    updateInputMode();
+    setActiveTab('calculer');
+  }
+
+  function resetAll() {
+    document.getElementById('birthDate').value = '';
+    document.getElementById('j0Date').value = '';
+    document.getElementById('result').innerHTML = `<h2>Lecture Matrice 432</h2><p class="muted">Remplis tes informations dans l'onglet <em>Calculer</em>...</p>`;
+  }
+
+  function generate() {
+    const mode = document.querySelector('input[name="inputMode"]:checked').value;
+    const birthVal = document.getElementById('birthDate').value;
+    const j0Val = document.getElementById('j0Date').value;
+
+    if (mode === 'birth' && !birthVal) { alert("Veuillez entrer une date de naissance."); return; }
+    if (mode === 'j0' && !j0Val) { alert("Veuillez entrer un J0."); return; }
+
+    try {
+      const j0ISO = mode === 'birth' ? new Date(new Date(birthVal).getTime() - 288*86400000).toISOString().slice(0,10) : j0Val;
+      const state = compute432(j0ISO, mode === 'birth' ? birthVal : null, mode);
+      document.getElementById('result').innerHTML = buildReading(state);
+      setActiveTab('lire');
+    } catch (e) {
+      alert("Erreur de calcul. Veuillez vérifier la date.");
+      console.error(e);
+    }
+  }
+
+  // Init
+  initTables();
+  updateInputMode();
+</script>
+</body>
+</html>
