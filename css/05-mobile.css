@@ -41,13 +41,10 @@
   text-align: center;
 }
 
-/* On force le PORTRAIT : l'overlay « tourner » s'affiche en PAYSAGE. */
-@media (max-width: 900px) and (orientation: landscape) {
-  #rotate-overlay { display: flex; }
-}
-
-/* ═══ Portrait mobile : layout jouable 3/4 (panneau) · 1/4 (onglets) ═══ */
-@media (max-width: 900px) and (orientation: portrait) {
+/* ═══ Smartphone (portrait ET paysage) : layout jouable 3/4 · 1/4 ═══
+   Cible les téléphones dans les deux orientations : largeur faible OU
+   hauteur faible. Le desktop (large ET haut) garde son layout flottant. */
+@media (max-width: 900px), (max-height: 500px) {
 
   /* Onglets : colonne à droite, TOUJOURS visible, ~1/4 de largeur */
   #right-dock {
@@ -91,7 +88,7 @@
     z-index: 80 !important;
   }
 
-  /* Cacher non-essentiels en portrait */
+  /* Cacher non-essentiels sur smartphone */
   #hdr { display: none !important; }
   #freq-mini { display: none !important; }
   #infobar   { display: none !important; }

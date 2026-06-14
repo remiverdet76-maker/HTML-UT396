@@ -210,9 +210,7 @@ function triggerMagicAuto() {
 function toggleFullscreen() {
   const btn = document.getElementById('btn-fs') || document.getElementById('btn-fullscreen');
   if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().then(function(){
-      try { screen.orientation.lock('portrait').catch(function(){}); } catch(e) {}
-    }).catch(function(){});
+    document.documentElement.requestFullscreen().catch(function(){});
     if (btn) btn.textContent = '✕';
   } else {
     if (document.exitFullscreen) document.exitFullscreen();

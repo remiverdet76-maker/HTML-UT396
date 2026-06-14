@@ -312,7 +312,7 @@ function initParts(){
 function drawParts(ctx){
   if(!HP.pa) return;
   // Mobile : plafonne le nombre de particules rendues (CPU → audio stable).
-  const _src=(window.innerWidth<=900&&PARTS.length>90)?PARTS.slice(0,90):PARTS;
+  const _src=((window.innerWidth<=900||window.innerHeight<=500)&&PARTS.length>90)?PARTS.slice(0,90):PARTS;
   const list=[];
   for(const pt of _src){
     pt.theta+=pt.dtheta*V.spd*HP.f;
@@ -409,7 +409,7 @@ function drawMetatron(){
   const cv=document.getElementById('meta-canvas');
   if(!cv) return;
   // Cap du devicePixelRatio (rétina ×3 mobile = CPU brutal → craquement)
-  const _mob=window.innerWidth<=900;
+  const _mob=window.innerWidth<=900||window.innerHeight<=500;
   const dpr=Math.min(window.devicePixelRatio||1, _mob?1.5:2);
   const vw=window.innerWidth,vh=window.innerHeight;
   const nW=Math.round(vw*dpr),nH=Math.round(vh*dpr);

@@ -98,7 +98,28 @@ function initFXChain() {
   masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
   masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
   limiter      = new Tone.Limiter(-1.5).toDestination();
-  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterDelay, masterReverb, limiter);
+  // Réverbe à convolution NON inline par défaut (off) : elle convolue en
+  // permanence sinon = gros coût CPU mobile → underrun BT. On la branche
+  // seulement quand wet > 0 (voir _setReverbActive).
+  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterDelay, limiter);
+}
+
+// Branche/débranche la réverbe selon qu'elle est utilisée (anti-craquement BT).
+let _reverbActive = false;
+function _setReverbActive(on) {
+  if (!masterReverb || !masterDelay || !limiter || on === _reverbActive) return;
+  try {
+    if (on) {
+      masterDelay.disconnect(limiter);
+      masterDelay.connect(masterReverb);
+      masterReverb.connect(limiter);
+    } else {
+      masterDelay.disconnect(masterReverb);
+      try { masterReverb.disconnect(limiter); } catch(e) {}
+      masterDelay.connect(limiter);
+    }
+    _reverbActive = on;
+  } catch(e) {}
 }
 
 // Espaces de réverbe spatiale

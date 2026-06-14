@@ -521,13 +521,11 @@ function init() {
   ui('idle', 'Prêt · Cliquez FLUX ou FBF pour rayonner');
 }
 
-// ── Forçage mode PORTRAIT ────────────────────────────────────────
+// ── Deux orientations supportées (app Android : paysage + portrait) ──
 function _checkOrientation() {
-  const portrait = window.innerHeight >= window.innerWidth;
   const ov = document.getElementById('rotate-overlay');
-  if (!ov) return;
-  ov.style.display = portrait ? 'none' : 'flex';   // overlay visible en PAYSAGE
-  try { screen.orientation.lock('portrait').catch(function(){}); } catch(e) {}
+  if (ov) ov.style.display = 'none';               // plus de blocage d'orientation
+  try { screen.orientation.unlock(); } catch(e) {}
 }
 window.addEventListener('resize', _checkOrientation);
 window.addEventListener('orientationchange', _checkOrientation);

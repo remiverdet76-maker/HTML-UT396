@@ -502,7 +502,7 @@ function updateFX(paramId, value) {
   else if(paramId==='delayTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(masterDelay)masterDelay.delayTime.value=v;}catch(e){} }
   else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelay)masterDelay.feedback.value=v;}catch(e){} }
   else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterDelay)masterDelay.wet.value=v; }
-  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb)masterReverb.wet.value=v; }
+  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb){ _setReverbActive(v>0.001); masterReverb.wet.value=v; } }
 }
 
 // ── updateMasterState ─────────────────────────────────────────────
