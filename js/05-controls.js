@@ -82,28 +82,26 @@ function setRandUseFX(v) { RAND_OPTS.useFX = !!v; }
 
 // ── FX aléatoire (mobile-safe) ──────────────────────────────────────
 function randomizeFX() {
-  const mob = window.innerWidth <= 900 || window.innerHeight <= 500;
-  const delT  = +(0.08 + Math.random() * .9).toFixed(2);
-  const delFB = +(Math.random() * (mob ? .4 : .65)).toFixed(2);
-  const delW  = +(Math.random() * (mob ? .2 : .4)).toFixed(2);
-  const revW  = mob ? 0 : +(Math.random() * .5).toFixed(2);
-  const chrD  = +(Math.random() * (mob ? .4 : .7)).toFixed(2);
-  const eqLF  = Math.round(50  + Math.random() * 300);
-  const eqLG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  const eqMF  = Math.round(300 + Math.random() * 3000);
-  const eqMG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
-  const eqHF  = Math.round(3000 + Math.random() * 9000);
-  const eqHG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
+  // Tout sur mobile (APK) : pas de reverb, delay léger, EQ doux, chorus off
+  const delT  = +(0.15 + Math.random() * .5).toFixed(2);
+  const delFB = +(Math.random() * .3).toFixed(2);
+  const delW  = +(Math.random() * .12).toFixed(2);  // max 12% — évite les saturations
+  const revW  = 0;                                   // reverb toujours off (coût CPU)
+  const eqLF  = Math.round(80  + Math.random() * 200);
+  const eqLG  = Math.round((Math.random() * 6 - 3) * 10) / 10;   // ±3 dB max
+  const eqMF  = Math.round(400 + Math.random() * 2000);
+  const eqMG  = Math.round((Math.random() * 6 - 3) * 10) / 10;
+  const eqHF  = Math.round(4000 + Math.random() * 6000);
+  const eqHG  = Math.round((Math.random() * 6 - 3) * 10) / 10;
   [['eqLowFreq',eqLF],['eqLowGain',eqLG],['eqMidFreq',eqMF],['eqMidGain',eqMG],
    ['eqHighFreq',eqHF],['eqHighGain',eqHG],['delayTime',delT],['delayFeedback',delFB],
    ['delayWet',delW],['reverbWet',revW]].forEach(([id,val]) => {
     const sl = document.getElementById(id); if (sl) sl.value = val;
     if (typeof updateFX === 'function') updateFX(id, val);
   });
+  // Chorus désactivé sur mobile (source principale de craquement)
   if (typeof chorus !== 'undefined' && chorus) {
-    try { chorus.depth = chrD; } catch(e) {}
-    const sl = document.getElementById('chorus-depth'); if (sl) sl.value = chrD;
-    const vd = document.getElementById('chd-val'); if (vd) vd.textContent = chrD.toFixed(2);
+    try { chorus.depth = 0; chorus.wet.value = 0; } catch(e) {}
   }
 }
 

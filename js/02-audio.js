@@ -2,6 +2,9 @@
    02-audio.js — Moteur audio, FX chain, Flow
    ═══════════════════════════════════════════ */
 
+// Contexte audio avec buffer large — réduit les underruns sur Android/BT
+Tone.setContext(new Tone.Context({ latencyHint: 'playback', lookAhead: 0.3 }));
+
 const swapTimers = {};
 let nodes = {}, masterGain = null, analyser = null;
 
@@ -93,7 +96,7 @@ function initFXChain() {
   eqLow       = new Tone.Filter({ type: 'lowshelf',  frequency: 200,  Q: 1, gain: 0 });
   eqMid       = new Tone.Filter({ type: 'peaking',   frequency: 1000, Q: 1, gain: 0 });
   eqHigh      = new Tone.Filter({ type: 'highshelf', frequency: 5000, Q: 1, gain: 0 });
-  chorus      = new Tone.Chorus({ frequency: 0.8, delayTime: 3.5, depth: 0, wet: 1 }).start();
+  chorus      = new Tone.Chorus({ frequency: 0.8, delayTime: 3.5, depth: 0, wet: 0 }).start();
   compressor  = new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.02, release: 0.25 });
   masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
   masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
@@ -196,6 +199,12 @@ async function startFlow() {
   try {
     await Tone.start();
     if (Tone.context.state !== 'running') await Tone.context.resume();
+    // Reprendre l'audio après retour de veille (Android Doze / écran off)
+    document.addEventListener('visibilitychange', function _onVis() {
+      if (document.visibilityState === 'visible' && Tone.context.state !== 'running') {
+        Tone.context.resume();
+      }
+    });
     _startBTKeepalive();
     initFXChain();
     analyser   = new Tone.Analyser('waveform', 256);
