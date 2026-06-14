@@ -54,9 +54,9 @@ function saveState() { clearTimeout(_saveTimer); _saveTimer = setTimeout(_doSave
 function _doSave() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
-      masterFreq, globalDelta, masterVol, activeGeometry,
+      masterFreq, globalDelta, masterVol, activeGeometry, sphereColorIdx: _sphereColorIdx,
       pairs: PAIRS.map(p => ({
-        ri:p.pingala.ri, n:p.pingala.n, volP:p.pingala.vol,
+        ri:p.pingala.ri, n:p.pingala.n, volP:p.pingala.vol, baseFreq:p.pingala.baseFreq,
         delta:p.ida.delta, polarity:p.ida.polarity, volI:p.ida.vol,
         mutedP:!!mutedOscs[p.pingala.id], mutedI:!!mutedOscs[p.ida.id]
       }))
@@ -67,15 +67,17 @@ function loadState() {
   try {
     const s = JSON.parse(localStorage.getItem(LS_KEY));
     if (!s) return;
-    if (s.masterFreq>=36&&s.masterFreq<=864) masterFreq = s.masterFreq;
+    if (s.masterFreq>=36&&s.masterFreq<=432) masterFreq = s.masterFreq;
     if (s.globalDelta>0) globalDelta = s.globalDelta;
     if (s.masterVol>=0&&s.masterVol<=1) masterVol = s.masterVol;
     if (typeof s.activeGeometry==='number') activeGeometry = s.activeGeometry;
+    if (typeof s.sphereColorIdx==='number') _sphereColorIdx = s.sphereColorIdx % SPHERE_COLORS_12.length;
     (s.pairs||[]).forEach((sp,i) => {
       if (!PAIRS[i]) return;
       if (sp.ri>=0&&sp.ri<RATIO_OPTS.length) PAIRS[i].pingala.ri = sp.ri;
       if (!isNaN(sp.n)&&sp.n>=0) PAIRS[i].pingala.n = sp.n;
       if (sp.volP>=0) PAIRS[i].pingala.vol = sp.volP;
+      if (sp.baseFreq>=36&&sp.baseFreq<=432) PAIRS[i].pingala.baseFreq = sp.baseFreq;
       if (sp.delta>0) PAIRS[i].ida.delta = sp.delta;
       if (sp.polarity===1||sp.polarity===-1) PAIRS[i].ida.polarity = sp.polarity;
       if (sp.volI>=0) PAIRS[i].ida.vol = sp.volI;
@@ -257,11 +259,15 @@ function tPanel(panId, btnId) {
   const btn = document.getElementById(btnId);
   if (!pan) return;
 
+  // Désactiver le bouton principal FBF396 quand un panel est ouvert
+  const mainBtn = document.getElementById('bnt-main');
+
   if (_openPanel === panId) {
     pan.classList.remove('open');
     if (btn) btn.classList.remove('on');
     if (panId === 'panUT') stopHorloge432();
     _openPanel = null; _openBtnId = null;
+    if (mainBtn) mainBtn.classList.add('active');
     return;
   }
 
@@ -275,6 +281,7 @@ function tPanel(panId, btnId) {
   pan.classList.add('open');
   if (btn) btn.classList.add('on');
   _openPanel = panId; _openBtnId = btnId;
+  if (mainBtn) mainBtn.classList.remove('active');
   if (panId === 'panUT') startHorloge432();
   if (panId === 'panFX') requestAnimationFrame(()=>initEQ2D(document.getElementById('eq2d-canvas')));
 }
@@ -288,6 +295,8 @@ function closePanel() {
     if (_openPanel === 'panUT') stopHorloge432();
     _openPanel = null; _openBtnId = null;
   }
+  const mainBtn = document.getElementById('bnt-main');
+  if (mainBtn) mainBtn.classList.add('active');
 }
 
 // ── Infobar live ───────────────────────────────────────────────────
@@ -518,8 +527,24 @@ function init() {
   // Infobar tick indépendant (1s)
   setInterval(updateInfobar, 1000);
 
-  ui('idle', 'Prêt · Cliquez FLUX ou FBF pour rayonner');
+  ui('idle', 'Prêt · Touchez la sphère pour rayonner');
 }
+
+// ── Patch affichage sphère — hooks updateDisplay / patchFBFState ──
+// Exécuté après chargement de tous les scripts
+(function patchSphereHooks() {
+  const _uD = window.updateDisplay;
+  const _pF = window.patchFBFState;
+  window.updateDisplay = function() {
+    _uD && _uD();
+    typeof updateSphereDisplay === 'function' && updateSphereDisplay();
+    document.title = 'FBF396 · ' + masterFreq + ' Hz';
+  };
+  window.patchFBFState = function() {
+    _pF && _pF();
+    typeof updateSphereDisplay === 'function' && updateSphereDisplay();
+  };
+})();
 
 // ── Deux orientations supportées (app Android : paysage + portrait) ──
 function _checkOrientation() {

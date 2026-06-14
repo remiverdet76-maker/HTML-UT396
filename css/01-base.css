@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   01-base.css — Layout plein écran, fond flux cosmique
+   01-base.css — Layout plein écran, fond cosmique
    ═══════════════════════════════════════════ */
 
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -16,127 +16,62 @@ body{
 #cosmic-bg{
   position:fixed;inset:0;z-index:-1;
   width:100%;height:100%;object-fit:cover;
-  opacity:0.42;
+  opacity:0.38;
 }
 
-/* Canvas 3D — transparent pour laisser passer l'image de fond */
+/* Canvas 3D */
 #meta-canvas{
   position:fixed;inset:0;width:100%;height:100%;
   display:block;z-index:0;
   background:transparent;
 }
 
-/* Couche sphères */
+/* Couche sphère */
 #sphere-layer{
   position:fixed;inset:0;z-index:10;
   pointer-events:none;
 }
-#sphere-layer .vp-wrap,
-#sphere-layer .vp-center-wrap{
+#sphere-layer #fbf-sphere-wrap {
   pointer-events:all;
 }
 
-/* Dock droit — Flux (haut) + Nav (bas), centrés verticalement */
-#right-dock{
-  position:fixed;
-  right:.8rem;
-  top:50%;transform:translateY(-50%);
-  display:flex;flex-direction:column;align-items:center;
-  gap:.55rem;
-  z-index:100;
+/* ─── Panels latéraux (FX, UT432) ─────── */
+.pan-left{
+  position:fixed;top:0;left:-260px;
+  width:240px;height:calc(100vh - 62px);
+  z-index:80;
+  background:rgba(1,3,6,.95);border:1px solid rgba(0,204,255,.14);
+  border-radius:0;padding:13px;pointer-events:auto;
+  backdrop-filter:blur(14px);display:none;
+  overflow-y:auto;scrollbar-width:none;
 }
-#flux-side{ position:static; }
+.pan-left.open{display:block;left:0;}
+.pan-left::-webkit-scrollbar{display:none;}
 
-/* FBF Hub — bas centre, bouton seul */
-#fbf-hub{
-  position:fixed;
-  bottom:5.5rem;left:50%;transform:translateX(-50%);
-  z-index:20;
-  display:flex;align-items:center;
-}
-
-/* Visualiseur spectral — bas centre, cellule argentée */
-#spectroid-bar{
-  position:fixed;
-  bottom:0;left:50%;transform:translateX(-50%);
-  width:min(680px,88vw);height:80px;
-  z-index:22;
-  background:linear-gradient(135deg,rgba(180,180,200,.12),rgba(220,220,240,.06),rgba(150,160,180,.10));
-  border:1.5px solid rgba(200,210,240,.28);
-  border-bottom:none;
-  border-radius:14px 14px 0 0;
-  backdrop-filter:blur(14px);
-  overflow:hidden;
-  box-shadow:0 -4px 30px rgba(100,120,200,.18),inset 0 1px 0 rgba(255,255,255,.12);
-}
-#spectroid-canvas{width:100%;height:100%;display:block;}
-
-/* Tableau fréquences — bas gauche */
-#freq-mini{
-  position:fixed;
-  bottom:5rem;left:1.2rem;
-  z-index:20;
-  min-width:210px;max-width:240px;
-  background:rgba(8,0,26,.72);
-  border:1px solid rgba(200,100,255,.22);
-  border-radius:12px;
-  padding:.5rem .7rem;
-  backdrop-filter:blur(10px);
-}
-
-/* Navigation — dans #right-dock, colonne verticale */
-#tab-nav{
-  position:static;
-  display:flex;flex-direction:column;
-  gap:.32rem;align-items:stretch;
-}
-
-/* ─── Panels latéraux ────────────────────── */
-.side-panel{
-  position:fixed;top:0;right:-460px;
-  width:440px;height:100vh;
-  z-index:40;
-  background:rgba(8,0,26,.93);
-  border-left:1.5px solid rgba(200,100,255,.3);
+.pan-right{
+  position:fixed;top:0;right:-300px;
+  width:280px;height:calc(100vh - 62px);
+  z-index:80;
+  background:rgba(1,3,6,.96);
+  border-left:1.5px solid rgba(200,100,255,.25);
   backdrop-filter:blur(18px);
-  transition:right .35s cubic-bezier(.4,0,.2,1);
-  display:flex;flex-direction:column;
-  overflow:hidden;
+  transition:right .32s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;scrollbar-width:thin;
+  scrollbar-color:rgba(200,100,255,.25) transparent;
+  padding:14px;
 }
-.side-panel.open{right:0;}
+.pan-right.open{right:0;}
+.pan-right::-webkit-scrollbar{width:3px;}
+.pan-right::-webkit-scrollbar-thumb{background:rgba(200,100,255,.25);border-radius:3px;}
 
-.panel-head{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:1.1rem 1.4rem;
-  border-bottom:1px solid rgba(200,100,255,.2);
-  flex-shrink:0;
+/* Section title dans les panels */
+.pct{
+  font-family:'IM Fell English',serif;
+  font-size:8px;letter-spacing:.28em;text-transform:uppercase;
+  color:#00ccff;opacity:.55;margin-bottom:9px;
 }
-.panel-title{
-  font-family:'Cinzel Decorative',serif;
-  font-size:1.15rem;letter-spacing:.18em;
-  background:linear-gradient(90deg,#FF8EFF,#63E6FF,#86FFC0);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
-.panel-close{
-  width:34px;height:34px;border-radius:50%;
-  background:rgba(255,255,255,.07);
-  border:1.5px solid rgba(255,255,255,.22);
-  color:rgba(245,240,225,.8);font-size:1.1rem;
-  display:flex;align-items:center;justify-content:center;
-  transition:all .2s;
-}
-.panel-close:hover{background:rgba(255,80,80,.18);border-color:rgba(255,120,120,.6);color:#ff9999;}
 
-.panel-body{
-  flex:1;overflow-y:auto;
-  padding:1.2rem 1.4rem;
-  scrollbar-width:thin;
-  scrollbar-color:rgba(200,100,255,.3) transparent;
-}
-.panel-body::-webkit-scrollbar{width:4px;}
-.panel-body::-webkit-scrollbar-thumb{background:rgba(200,100,255,.3);border-radius:4px;}
-
-/* ─── Modal oscillateur ────────────────────── */
+/* ─── Modal oscillateur ────────────────── */
 #osc-modal{
   position:fixed;inset:0;z-index:50;
   display:none;align-items:center;justify-content:center;
@@ -150,7 +85,7 @@ body{
   width:min(560px,92vw);max-height:88vh;
   display:flex;flex-direction:column;
   backdrop-filter:blur(22px);
-  box-shadow:0 0 70px rgba(120,0,255,.4),0 0 120px rgba(0,100,255,.2);
+  box-shadow:0 0 70px rgba(120,0,255,.4);
   overflow:hidden;
 }
 #osc-modal-head{
@@ -178,6 +113,63 @@ body{
 }
 #backdrop.open{display:block;}
 
+/* Bouton fermer modal */
+.panel-close{
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(255,255,255,.22);
+  color:rgba(245,240,225,.8);font-size:1.1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.panel-close:hover{background:rgba(255,80,80,.18);border-color:rgba(255,120,120,.6);color:#ff9999;}
+
+/* HUD minuterie */
+#ses-timer-hud{
+  position:fixed;bottom:75px;left:50%;transform:translateX(-50%);
+  z-index:95;cursor:pointer;
+  width:56px;height:56px;
+  filter:drop-shadow(0 0 10px rgba(200,100,255,.35));
+  transition:opacity .4s;
+}
+#ses-timer-hud.active{animation:hudBreath 4s ease-in-out infinite;}
+#timer-hud-pct{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:'Cinzel Decorative',serif;font-size:.56rem;letter-spacing:.06em;
+  color:#86FFC0;pointer-events:none;
+}
+
+/* Sliders dans pan-left/pan-right (thème général) */
+.sl-row{display:flex;flex-direction:column;gap:3px;padding:5px 2px;}
+.sl-row label{
+  font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(200,180,255,.28);display:flex;justify-content:space-between;
+}
+.sl-row label span{color:rgba(255,200,80,.65);}
+.sl-row input[type=range]{
+  width:100%;height:3px;-webkit-appearance:none;
+  background:rgba(255,255,255,.09);border-radius:3px;cursor:pointer;outline:none;
+}
+.sl-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:13px;height:13px;border-radius:50%;
+  background:rgba(255,200,80,.82);cursor:pointer;
+}
+.sw-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 3px;font-size:.68rem;border-bottom:1px solid rgba(255,255,255,.04);
+  color:rgba(200,180,255,.52);
+}
+.sw{
+  width:30px;height:16px;border-radius:8px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  cursor:pointer;transition:all .18s;
+  -webkit-appearance:none;appearance:none;
+  position:relative;flex-shrink:0;
+}
+.sw:checked{background:rgba(255,200,80,.3);border-color:rgba(255,200,80,.42);}
+.sw::after{content:'';width:10px;height:10px;background:rgba(200,180,255,.75);border-radius:50%;position:absolute;top:2px;left:2px;transition:left .18s;}
+.sw:checked::after{left:16px;}
+
 /* Keyframes */
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
 @keyframes prog-pulse{0%,100%{box-shadow:0 0 8px rgba(255,140,40,.3);}50%{box-shadow:0 0 22px rgba(255,140,40,.7);}}
@@ -185,3 +177,4 @@ body{
 @keyframes magicRotate{0%{background-position:0% 50%;}100%{background-position:100% 50%;}}
 @keyframes fluxPulse{0%,100%{box-shadow:0 0 20px rgba(99,230,255,.4);}50%{box-shadow:0 0 45px rgba(99,230,255,.9),0 0 70px rgba(200,100,255,.4);}}
 @keyframes ut432Glow{0%,100%{text-shadow:0 0 20px currentColor;}50%{text-shadow:0 0 50px currentColor,0 0 80px currentColor;}}
+@keyframes hudBreath{0%,100%{filter:drop-shadow(0 0 8px rgba(200,100,255,.3));}50%{filter:drop-shadow(0 0 20px rgba(200,100,255,.65));}}
