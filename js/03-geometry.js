@@ -311,8 +311,10 @@ function initParts(){
 
 function drawParts(ctx){
   if(!HP.pa) return;
+  // Mobile : plafonne le nombre de particules rendues (CPU → audio stable).
+  const _src=(window.innerWidth<=900&&PARTS.length>90)?PARTS.slice(0,90):PARTS;
   const list=[];
-  for(const pt of PARTS){
+  for(const pt of _src){
     pt.theta+=pt.dtheta*V.spd*HP.f;
     pt.phi+=pt.dphi*V.spd;
     const x=pt.r*Math.sin(pt.phi)*Math.cos(pt.theta);
@@ -397,10 +399,18 @@ function g3dToggleAE(on){
 function g3dSetAESpd(v){AE.spd=v/10;const el=document.getElementById('sv-ae-spd');if(el)el.textContent=AE.spd.toFixed(1)+'×';}
 
 // ── Boucle principale ─────────────────────────────────────────────
+let _lastMeta=0;
 function drawMetatron(){
+  // Cap ~30 fps : morphing lent → invisible à l'œil, mais l'audio récupère
+  // le CPU → zéro underrun, zéro déchirement.
+  const _now=performance.now();
+  if(_now-_lastMeta<32) return;
+  _lastMeta=_now;
   const cv=document.getElementById('meta-canvas');
   if(!cv) return;
-  const dpr=window.devicePixelRatio||1;
+  // Cap du devicePixelRatio (rétina ×3 mobile = CPU brutal → craquement)
+  const _mob=window.innerWidth<=900;
+  const dpr=Math.min(window.devicePixelRatio||1, _mob?1.5:2);
   const vw=window.innerWidth,vh=window.innerHeight;
   const nW=Math.round(vw*dpr),nH=Math.round(vh*dpr);
   if(cv.width!==nW||cv.height!==nH){
@@ -412,12 +422,10 @@ function drawMetatron(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   _gW=vw;_gH=vh;_gCx=vw/2;_gCy=vh/2;
 
-  // Fond cosmique
+  // Canvas transparent : le fond #cosmic-bg (DOM, z-index -1) passe au travers.
+  // On NE re-blitte PLUS l'image 2,2 MB plein écran chaque frame (gain CPU majeur).
   ctx.clearRect(0,0,vw,vh);
-  const bgImg=document.getElementById('cosmic-bg');
-  if(bgImg&&bgImg.complete&&bgImg.naturalWidth>0){ctx.globalAlpha=1;ctx.drawImage(bgImg,0,0,vw,vh);}
   ctx.globalAlpha=1;
-  ctx.fillStyle='rgba(1,3,6,.34)';ctx.fillRect(0,0,vw,vh);
 
   // Mandala
   if(!mandCache) buildMC();

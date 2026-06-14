@@ -211,7 +211,7 @@ function toggleFullscreen() {
   const btn = document.getElementById('btn-fs') || document.getElementById('btn-fullscreen');
   if (!document.fullscreenElement) {
     document.documentElement.requestFullscreen().then(function(){
-      try { screen.orientation.lock('landscape').catch(function(){}); } catch(e) {}
+      try { screen.orientation.lock('portrait').catch(function(){}); } catch(e) {}
     }).catch(function(){});
     if (btn) btn.textContent = '✕';
   } else {
