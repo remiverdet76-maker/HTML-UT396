@@ -76,25 +76,45 @@
   <div id="panel-horloge-body"></div>
 </div>
 
-<!-- Navigation bas d'écran — visible, discret -->
+<!-- Navigation bas d'écran — 2 boutons + tiroir -->
 <nav id="bottom-nav">
-  <button class="bnav active" id="bnt-main" onclick="closePanel()">
+  <button class="bnav active" id="bnt-main" onclick="closePanel();closeMenu()">
     <span class="bnav-icon">◉</span>
     <span class="bnav-lbl">FBF396</span>
   </button>
-  <button class="bnav" id="bnt-fx" onclick="tPanel('panFX','bnt-fx')">
-    <span class="bnav-icon">✦</span>
-    <span class="bnav-lbl">FX</span>
-  </button>
-  <button class="bnav" id="bnt-ut" onclick="tPanel('panUT','bnt-ut')">
-    <span class="bnav-icon">⊙</span>
-    <span class="bnav-lbl">UT432</span>
-  </button>
-  <button class="bnav" onclick="toggleFullscreen()">
-    <span class="bnav-icon" id="btn-fs">⤢</span>
-    <span class="bnav-lbl">Écran</span>
+  <button class="bnav" id="bnt-menu" onclick="toggleMenu()">
+    <span class="bnav-icon">☰</span>
+    <span class="bnav-lbl">Menu</span>
   </button>
 </nav>
+
+<!-- Tiroir menu déroulant -->
+<div id="drop-menu">
+  <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
+    <span class="dmenu-ico">✦</span>FX — Effets sonores
+  </button>
+  <button class="dmenu-item" onclick="tPanel('panUT',null);closeMenu()">
+    <span class="dmenu-ico">⊙</span>UT432 — Horloge solaire
+  </button>
+  <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
+    <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran
+  </button>
+  <div class="dmenu-sep"></div>
+  <div class="dmenu-section">Pages Omcha 432</div>
+  <a class="dmenu-item" href="theme432_omcha_v2.html">
+    <span class="dmenu-ico">◈</span>Thème 432 Omcha v2
+  </a>
+  <a class="dmenu-item" href="OmCv-477-1.html">
+    <span class="dmenu-ico">◈</span>OmCv-477
+  </a>
+  <a class="dmenu-item" href="omcha432-flux.html">
+    <span class="dmenu-ico">◈</span>Omcha 432 Flux
+  </a>
+  <a class="dmenu-item" href="sphere432-maxexp.html">
+    <span class="dmenu-ico">◈</span>Sphère 432 MaxExp
+  </a>
+</div>
+<div id="menu-backdrop" onclick="closeMenu()"></div>
 
 <!-- Modal oscillateur (utilisé par le panel FX et le moteur audio) -->
 <div id="osc-modal">

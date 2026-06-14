@@ -250,6 +250,27 @@ document.addEventListener('fullscreenchange', () => {
   if (btn) btn.textContent = document.fullscreenElement ? '✕' : '⤢';
 });
 
+// ── Menu déroulant ───────────────────────────────────────────────
+function toggleMenu() {
+  const m = document.getElementById('drop-menu');
+  const b = document.getElementById('menu-backdrop');
+  const btn = document.getElementById('bnt-menu');
+  if (!m) return;
+  const open = m.classList.contains('open');
+  m.classList.toggle('open', !open);
+  if (b) b.classList.toggle('open', !open);
+  if (btn) btn.classList.toggle('on', !open);
+  if (!open) closePanel();
+}
+function closeMenu() {
+  const m = document.getElementById('drop-menu');
+  const b = document.getElementById('menu-backdrop');
+  const btn = document.getElementById('bnt-menu');
+  if (m) m.classList.remove('open');
+  if (b) b.classList.remove('open');
+  if (btn) btn.classList.remove('on');
+}
+
 // ── Panel navigation (tab-nav centré) ────────────────────────────
 let _openPanel = null;
 let _openBtnId = null;

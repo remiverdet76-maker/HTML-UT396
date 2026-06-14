@@ -220,5 +220,58 @@
 .micro-top   { top:2px;    left:50%;transform:translateX(-50%); }
 .micro-bot   { bottom:2px; left:50%;transform:translateX(-50%); }
 
+/* ── Tiroir menu déroulant ──────────────── */
+#drop-menu {
+  position: fixed;
+  bottom: 62px; left: 0; right: 0;
+  z-index: 95;
+  background: rgba(2,1,18,.97);
+  border-top: 1.5px solid rgba(200,100,255,.28);
+  border-radius: 20px 20px 0 0;
+  backdrop-filter: blur(22px);
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  padding: 10px 0 8px;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+#drop-menu.open { transform: translateY(0); }
+
+#menu-backdrop {
+  position: fixed; inset: 0; z-index: 94;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(3px);
+  display: none;
+}
+#menu-backdrop.open { display: block; }
+
+.dmenu-item {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; padding: 14px 24px;
+  background: none; border: none;
+  color: rgba(220,200,255,.8);
+  font-family: 'IM Fell English', serif;
+  font-size: 1rem; letter-spacing: .06em;
+  text-decoration: none; cursor: pointer;
+  transition: background .15s; text-align: left;
+}
+.dmenu-item:active { background: rgba(200,100,255,.15); }
+
+.dmenu-ico {
+  color: #00ccff; font-size: 1.1rem;
+  width: 22px; text-align: center; flex-shrink: 0;
+}
+.dmenu-sep {
+  height: 1px; background: rgba(255,255,255,.08);
+  margin: 6px 24px;
+}
+.dmenu-section {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: .48rem; letter-spacing: .28em;
+  text-transform: uppercase;
+  color: rgba(200,170,255,.32);
+  padding: 6px 24px 2px;
+}
+
 /* ── Spectroid éventuel dans panel FX ───── */
 #spectroid-bar { display: none; }
