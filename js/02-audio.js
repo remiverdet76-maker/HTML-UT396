@@ -54,19 +54,27 @@ function releaseOsc(node) {
   }, (FADE + 0.4) * 1000);
 }
 
+// Oscillateurs PERSISTANTS : on ne détruit/recrée jamais en plein jeu.
+// 1re fois → on construit ; ensuite → retune lisse (zéro clic, zéro GC).
 function swapPingala(i) {
   if (!flowing || !masterGain) return;
   const { pingala } = PAIRS[i];
-  if (nodes[pingala.id]) releaseOsc(nodes[pingala.id]);
-  nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+  if (nodes[pingala.id]) {
+    tuneOsc(pingala.id, calcPFreq(i));
+  } else {
+    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+  }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   updatePairUI(i);
 }
 function swapIda(i) {
   if (!flowing || !masterGain) return;
   const { ida } = PAIRS[i];
-  if (nodes[ida.id]) releaseOsc(nodes[ida.id]);
-  nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+  if (nodes[ida.id]) {
+    tuneOsc(ida.id, calcIFreq(i));
+  } else {
+    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+  }
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
@@ -229,12 +237,16 @@ async function stopFlow() {
 }
 
 // ── Master Tick (RAF) ─────────────────────────────────────────
+let _glowFrame = 0;
 function masterTick() {
   masterRAF = requestAnimationFrame(masterTick);
   metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
   drawMetatron();
   // LFO géré nativement par Tone.LFO — aucun traitement JS ici
   if (!flowing || !analyser || document.visibilityState === 'hidden') return;
+  // Throttle des écritures boxShadow (style-recalc) : 1 frame sur 2.
+  // Soulage le thread principal → moins d'underruns audio sur mobile/BT.
+  if ((_glowFrame++ & 1) === 0) { drawSpectroid(); return; }
   const data = analyser.getValue();
   let sum = 0, count = 0;
   for (let k = 0; k < data.length; k += 4) { sum += Math.abs(data[k]); count++; }
