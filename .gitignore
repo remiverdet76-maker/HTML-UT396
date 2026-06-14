@@ -13,3 +13,9 @@ Image 396/
 Thumbs.db
 .DS_Store
 desktop.ini
+
+# Capacitor / Node (générés)
+node_modules/
+www/
+android/
+*.log

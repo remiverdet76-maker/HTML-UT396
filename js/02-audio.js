@@ -211,6 +211,9 @@ async function startFlow() {
     _lfoNode = new Tone.LFO({ frequency: LFO_STATE.rate, min: 1 - LFO_STATE.depth, max: 1 + LFO_STATE.depth, type: 'sine' }).start();
     if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
     flowing = true;
+    // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
+    // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).
+    try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
     ui('live', 'En expansion…');
@@ -222,6 +225,7 @@ async function startFlow() {
 
 async function stopFlow() {
   ui('idle', 'Dissolution…');
+  try { window.Capacitor?.Plugins?.KeepAwake?.allowSleep?.(); } catch(e) {}
   if (progRunning) stopProgression();
   Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
   try {

@@ -1,3 +1,14 @@
 sample final/
 Projet Html/
 .claude/
+
+# Fichiers Capacitor — hors déploiement web
+node_modules/
+www/
+android/
+scripts/
+.github/
+package.json
+package-lock.json
+capacitor.config.json
+CAPACITOR.md
