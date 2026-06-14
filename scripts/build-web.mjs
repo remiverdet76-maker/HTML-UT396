@@ -4,7 +4,10 @@
 import { cpSync, rmSync, mkdirSync, existsSync } from 'node:fs';
 
 const OUT = 'www';
-const ASSETS = ['index.html', 'manifest.json', 'css', 'js', 'img', 'samples'];
+const ASSETS = [
+  'index.html', 'manifest.json', 'css', 'js', 'img', 'samples',
+  'theme432_omcha_v2.html', 'OmCv-477-1.html', 'omcha432-flux.html', 'sphere432-maxexp.html'
+];
 
 if (existsSync(OUT)) rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
