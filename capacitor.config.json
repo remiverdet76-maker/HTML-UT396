@@ -1,6 +1,6 @@
 {
   "appId": "com.omcha.flux",
-  "appName": "Omcha FBF432",
+  "appName": "FBF432",
   "webDir": "www",
   "server": { "androidScheme": "https" },
   "android": { "backgroundColor": "#02010DFF" }
