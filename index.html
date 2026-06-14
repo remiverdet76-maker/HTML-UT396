@@ -93,18 +93,19 @@
 <!-- Panel : Jeu Aléatoire — droite -->
 <div class="pan-right" id="panRand">
   <div class="pct">Jeu Aléatoire</div>
-  <button class="btn-magic-rand" onclick="triggerMagicAuto()">⚄ Randomiser</button>
+  <button class="btn-magic-rand" onclick="triggerMagicAuto()">⚄ Omchaléatoire</button>
 
   <!-- Options aléatoire -->
   <div style="margin:.6rem 0 .3rem;padding:.55rem .65rem;background:rgba(99,230,255,.05);border:1px solid rgba(99,230,255,.14);border-radius:10px;">
     <div style="font-size:.68rem;color:rgba(99,230,255,.65);letter-spacing:.1em;font-style:italic;margin-bottom:.4rem;">OPTIONS ALÉATOIRE</div>
+    <div class="sw-row" style="font-size:.7rem;padding:.1rem 0 .35rem;">Plage fréquence (36–864) <input type="checkbox" class="sw" id="ck-rand-range" onchange="setRandRange(this.checked)"></div>
     <div class="sl-row">
-      <label style="font-size:.7rem;color:rgba(200,170,255,.7);min-width:76px;">Min <span id="rv-fmin" style="color:#63E6FF">54</span> Hz</label>
-      <input type="range" id="sl-fmin" min="54" max="863" value="54" style="flex:1;accent-color:#63E6FF;" oninput="setRandFreqMin(this.value)">
+      <label style="font-size:.7rem;color:rgba(200,170,255,.7);min-width:76px;">Min <span id="rv-fmin" style="color:#63E6FF">36</span> Hz</label>
+      <input type="range" id="sl-fmin" min="36" max="863" value="36" style="flex:1;accent-color:#63E6FF;" oninput="setRandFreqMin(this.value)">
     </div>
     <div class="sl-row">
       <label style="font-size:.7rem;color:rgba(200,170,255,.7);min-width:76px;">Max <span id="rv-fmax" style="color:#63E6FF">864</span> Hz</label>
-      <input type="range" id="sl-fmax" min="55" max="864" value="864" style="flex:1;accent-color:#63E6FF;" oninput="setRandFreqMax(this.value)">
+      <input type="range" id="sl-fmax" min="37" max="864" value="864" style="flex:1;accent-color:#63E6FF;" oninput="setRandFreqMax(this.value)">
     </div>
     <div style="font-size:.66rem;color:rgba(200,170,255,.4);font-style:italic;margin:.15rem 0 .3rem;">Si freq &gt; 432 Hz → volume 20%</div>
     <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.35rem;">

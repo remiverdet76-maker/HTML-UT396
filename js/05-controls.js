@@ -3,9 +3,10 @@
    ═══════════════════════════════════════════ */
 
 // ── Options mode aléatoire ────────────────────────────────────────
-const RAND_OPTS={freqMin:54,freqMax:864,ratioMode:'random',useFX:false};
+const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false};
+function setRandRange(v){RAND_OPTS.rangeOn=!!v;}
 function setRandFreqMin(v){
-  RAND_OPTS.freqMin=Math.max(54,Math.min(RAND_OPTS.freqMax-1,parseInt(v)));
+  RAND_OPTS.freqMin=Math.max(36,Math.min(RAND_OPTS.freqMax-1,parseInt(v)));
   const el=document.getElementById('rv-fmin');if(el)el.textContent=RAND_OPTS.freqMin;
   const sl=document.getElementById('sl-fmin');if(sl)sl.value=RAND_OPTS.freqMin;
 }
@@ -23,11 +24,14 @@ function setRandUseFX(v){RAND_OPTS.useFX=!!v;}
 
 // FX aléatoire — randomise delay, reverb, chorus, EQ
 function randomizeFX(){
+  // Sur mobile (WebView), la réverbe à convolution = le tueur de CPU → craquement.
+  // On la coupe et on modère delay/chorus. Desktop : palette FX complète.
+  const _mob = window.innerWidth<=900 || window.innerHeight<=500;
   const delT=+(0.08+Math.random()*.9).toFixed(2);
-  const delFB=+(Math.random()*.65).toFixed(2);
-  const delW=+(Math.random()*.4).toFixed(2);
-  const revW=+(Math.random()*.6).toFixed(2);
-  const chrD=+(Math.random()*.7).toFixed(2);
+  const delFB=+(Math.random()*(_mob?.4:.65)).toFixed(2);
+  const delW=+(Math.random()*(_mob?.2:.4)).toFixed(2);
+  const revW=_mob?0:+(Math.random()*.6).toFixed(2);
+  const chrD=+(Math.random()*(_mob?.4:.7)).toFixed(2);
   const eqLF=Math.round(50+Math.random()*300);
   const eqLG=Math.round((Math.random()*16-8)*10)/10;
   const eqMF=Math.round(300+Math.random()*3000);
@@ -185,8 +189,11 @@ function fbfToggle() {
 }
 
 function triggerMagicAuto() {
-  const {freqMin,freqMax,ratioMode,useFX}=RAND_OPTS;
-  const newMaster=Math.floor(freqMin+Math.random()*(freqMax-freqMin));
+  const {freqMin,freqMax,ratioMode,useFX,rangeOn}=RAND_OPTS;
+  // Plage active → on confine entre min/max ; sinon plage complète 36–864.
+  const lo = rangeOn ? freqMin : 36;
+  const hi = rangeOn ? freqMax : 864;
+  const newMaster=Math.floor(lo+Math.random()*(hi-lo));
   const isHigh=newMaster>432;
   const volBase=isHigh?.024:.12; // 20% si > 432 Hz
   let ri=Math.floor(Math.random()*RATIO_OPTS.length);
