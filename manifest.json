@@ -2,7 +2,7 @@
   "name": "FBF 432 — Flux Binaural Fractal",
   "short_name": "FBF 432",
   "display": "standalone",
-  "orientation": "landscape",
+  "orientation": "any",
   "background_color": "#02010D",
   "theme_color": "#02010D",
   "start_url": "/",
