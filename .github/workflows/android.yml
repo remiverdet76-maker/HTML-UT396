@@ -29,6 +29,16 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Generate app icons (adaptive round)
+        run: |
+          if [ -f resources/icon.png ]; then
+            npx @capacitor/assets generate --android \
+              --iconBackgroundColor "#02010D" \
+              --iconBackgroundColorDark "#02010D"
+          else
+            echo "⚠️  resources/icon.png absent — icônes Capacitor par défaut utilisées"
+          fi
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
