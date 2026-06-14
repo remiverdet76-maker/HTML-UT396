@@ -1,63 +1,119 @@
 /* ═══════════════════════════════════════════
-   05-controls.js — Contrôles oscillateurs & UI
+   05-controls.js — Contrôles FBF396 & oscillateurs
    ═══════════════════════════════════════════ */
 
-// ── Options mode aléatoire ────────────────────────────────────────
-const RAND_OPTS={freqMin:36,freqMax:864,ratioMode:'random',useFX:false,rangeOn:false};
-function setRandRange(v){RAND_OPTS.rangeOn=!!v;}
-function setRandFreqMin(v){
-  RAND_OPTS.freqMin=Math.max(36,Math.min(RAND_OPTS.freqMax-1,parseInt(v)));
-  const el=document.getElementById('rv-fmin');if(el)el.textContent=RAND_OPTS.freqMin;
-  const sl=document.getElementById('sl-fmin');if(sl)sl.value=RAND_OPTS.freqMin;
-}
-function setRandFreqMax(v){
-  RAND_OPTS.freqMax=Math.min(864,Math.max(RAND_OPTS.freqMin+1,parseInt(v)));
-  const el=document.getElementById('rv-fmax');if(el)el.textContent=RAND_OPTS.freqMax;
-  const sl=document.getElementById('sl-fmax');if(sl)sl.value=RAND_OPTS.freqMax;
-}
-function setRandRatioMode(m,btn){
-  RAND_OPTS.ratioMode=m;
-  document.querySelectorAll('[id^="rrm-"]').forEach(b=>b.classList.remove('active'));
-  if(btn)btn.classList.add('active');
-}
-function setRandUseFX(v){RAND_OPTS.useFX=!!v;}
+// ── Trigger FBF396 — mode full aléatoire binaural ─────────────────
+// Band A (36–108) : oscs 0,1
+// Band B (108–256): oscs 2,3
+// Band C (256–432): oscs 4,5
+// Maître : aléatoire 36–432
+function triggerFBF396() {
+  masterFreq = 36 + Math.floor(Math.random() * 397);
 
-// FX aléatoire — randomise delay, reverb, chorus, EQ
-function randomizeFX(){
-  // Sur mobile (WebView), la réverbe à convolution = le tueur de CPU → craquement.
-  // On la coupe et on modère delay/chorus. Desktop : palette FX complète.
-  const _mob = window.innerWidth<=900 || window.innerHeight<=500;
-  const delT=+(0.08+Math.random()*.9).toFixed(2);
-  const delFB=+(Math.random()*(_mob?.4:.65)).toFixed(2);
-  const delW=+(Math.random()*(_mob?.2:.4)).toFixed(2);
-  const revW=_mob?0:+(Math.random()*.6).toFixed(2);
-  const chrD=+(Math.random()*(_mob?.4:.7)).toFixed(2);
-  const eqLF=Math.round(50+Math.random()*300);
-  const eqLG=Math.round((Math.random()*16-8)*10)/10;
-  const eqMF=Math.round(300+Math.random()*3000);
-  const eqMG=Math.round((Math.random()*16-8)*10)/10;
-  const eqHF=Math.round(3000+Math.random()*9000);
-  const eqHG=Math.round((Math.random()*16-8)*10)/10;
+  PAIRS[0].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
+  PAIRS[1].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
+  PAIRS[2].pingala.baseFreq = 108 + Math.floor(Math.random() * 148);
+  PAIRS[3].pingala.baseFreq = 108 + Math.floor(Math.random() * 148);
+  PAIRS[4].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
+  PAIRS[5].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
+
+  // Reset volumes
+  PAIRS.forEach(p => { p.pingala.vol = .12; p.ida.vol = .12; });
+  PAIRS[MASTER_IDX].pingala.vol = .14; PAIRS[MASTER_IDX].ida.vol = .14;
+
+  if (typeof flowing !== 'undefined' && flowing) {
+    PAIRS.forEach((_, i) => {
+      tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
+      tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
+    });
+  } else {
+    startFlow();
+  }
+
+  // FX aléatoire
+  randomizeFX();
+
+  // Cycle couleur de la sphère
+  _sphereColorIdx = (_sphereColorIdx + 1) % SPHERE_COLORS_12.length;
+
+  updateDisplay();
+  saveState();
+}
+
+// ── Bouton +/− sur la sphère : ±36 Hz maître + ratio aléatoire pour chaque osc ──
+function fbfStep(delta) {
+  masterFreq = Math.max(36, Math.min(432, masterFreq + delta));
+
+  for (let i = 0; i < MASTER_IDX; i++) {
+    const ratio = RATIO_OPTS[Math.floor(Math.random() * RATIO_OPTS.length)].r;
+    PAIRS[i].pingala.baseFreq = Math.max(36, Math.min(432,
+      PAIRS[i].pingala.baseFreq + delta * ratio));
+    if (typeof flowing !== 'undefined' && flowing) {
+      tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
+      tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
+    }
+  }
+  if (typeof flowing !== 'undefined' && flowing) {
+    tuneOsc(PAIRS[MASTER_IDX].pingala.id, masterFreq);
+    tuneOsc(PAIRS[MASTER_IDX].ida.id,     calcIFreq(MASTER_IDX));
+  }
+
+  updateDisplay();
+  saveState();
+}
+
+// ── Options mode aléatoire (pour compatibilité panel FX) ──────────
+const RAND_OPTS = {freqMin:36, freqMax:432, ratioMode:'random', useFX:false, rangeOn:false};
+function setRandRange(v)    { RAND_OPTS.rangeOn = !!v; }
+function setRandFreqMin(v)  {
+  RAND_OPTS.freqMin = Math.max(36, Math.min(RAND_OPTS.freqMax-1, parseInt(v)));
+  const el=document.getElementById('rv-fmin'); if(el) el.textContent=RAND_OPTS.freqMin;
+}
+function setRandFreqMax(v)  {
+  RAND_OPTS.freqMax = Math.min(432, Math.max(RAND_OPTS.freqMin+1, parseInt(v)));
+  const el=document.getElementById('rv-fmax'); if(el) el.textContent=RAND_OPTS.freqMax;
+}
+function setRandRatioMode(m, btn) {
+  RAND_OPTS.ratioMode = m;
+  document.querySelectorAll('[id^="rrm-"]').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+function setRandUseFX(v) { RAND_OPTS.useFX = !!v; }
+
+// ── FX aléatoire (mobile-safe) ──────────────────────────────────────
+function randomizeFX() {
+  const mob = window.innerWidth <= 900 || window.innerHeight <= 500;
+  const delT  = +(0.08 + Math.random() * .9).toFixed(2);
+  const delFB = +(Math.random() * (mob ? .4 : .65)).toFixed(2);
+  const delW  = +(Math.random() * (mob ? .2 : .4)).toFixed(2);
+  const revW  = mob ? 0 : +(Math.random() * .5).toFixed(2);
+  const chrD  = +(Math.random() * (mob ? .4 : .7)).toFixed(2);
+  const eqLF  = Math.round(50  + Math.random() * 300);
+  const eqLG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
+  const eqMF  = Math.round(300 + Math.random() * 3000);
+  const eqMG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
+  const eqHF  = Math.round(3000 + Math.random() * 9000);
+  const eqHG  = Math.round((Math.random() * 16 - 8) * 10) / 10;
   [['eqLowFreq',eqLF],['eqLowGain',eqLG],['eqMidFreq',eqMF],['eqMidGain',eqMG],
    ['eqHighFreq',eqHF],['eqHighGain',eqHG],['delayTime',delT],['delayFeedback',delFB],
-   ['delayWet',delW],['reverbWet',revW]].forEach(([id,val])=>{
-    const sl=document.getElementById(id);if(sl)sl.value=val;
-    if(typeof updateFX==='function')updateFX(id,val);
+   ['delayWet',delW],['reverbWet',revW]].forEach(([id,val]) => {
+    const sl = document.getElementById(id); if (sl) sl.value = val;
+    if (typeof updateFX === 'function') updateFX(id, val);
   });
-  if(typeof chorus!=='undefined'&&chorus){
-    try{chorus.depth=chrD;}catch(e){}
-    const sl=document.getElementById('chorus-depth');if(sl)sl.value=chrD;
-    const vd=document.getElementById('chd-val');if(vd)vd.textContent=chrD.toFixed(2);
-    const ck=document.getElementById('chorus-on');if(ck&&!ck.checked)ck.checked=true;
+  if (typeof chorus !== 'undefined' && chorus) {
+    try { chorus.depth = chrD; } catch(e) {}
+    const sl = document.getElementById('chorus-depth'); if (sl) sl.value = chrD;
+    const vd = document.getElementById('chd-val'); if (vd) vd.textContent = chrD.toFixed(2);
   }
 }
 
+// ── Contrôles individuels oscillateurs ─────────────────────────────
 function setN(i, raw) {
   const n = Math.round(Math.max(0.1, parseFloat(raw)) * 10) / 10;
   if (isNaN(n)) return;
   PAIRS[i].pingala.n = n;
   updatePairUI(i);
-  if (flowing) {
+  if (typeof flowing !== 'undefined' && flowing) {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
     tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
   }
@@ -65,7 +121,7 @@ function setN(i, raw) {
 }
 function setRatio(i, ri) {
   PAIRS[i].pingala.ri = ri;
-  if (flowing) swapPingala(i); else updatePairUI(i);
+  if (typeof flowing !== 'undefined' && flowing) swapPingala(i); else updatePairUI(i);
   saveState();
 }
 function setDelta(i, raw) {
@@ -73,15 +129,14 @@ function setDelta(i, raw) {
   if (isNaN(d)) return;
   PAIRS[i].ida.delta = d;
   updatePairUI(i);
-  if (flowing) swapIDebounced(i);
+  if (typeof flowing !== 'undefined' && flowing) swapIDebounced(i);
   saveState();
 }
 function togglePolarity(i) {
   PAIRS[i].ida.polarity *= -1;
-  if (flowing) swapIda(i); else updatePairUI(i);
+  if (typeof flowing !== 'undefined' && flowing) swapIda(i); else updatePairUI(i);
   saveState();
 }
-
 function toggleMuteP(i) {
   const pid = PAIRS[i].pingala.id;
   mutedOscs[pid] = !mutedOscs[pid];
@@ -94,7 +149,7 @@ function toggleMuteI(i) {
   mutedOscs[iid] = !mutedOscs[iid];
   const node = nodes[iid];
   if (node) safeRamp(node.g.gain, mutedOscs[iid] ? 0 : PAIRS[i].ida.vol, 0.5);
-  updatePairUI(i); updateMasterState(); saveState();
+  updatePairUI(i); if (typeof updateMasterState==='function') updateMasterState(); saveState();
 }
 function setVolP(i, vol) {
   PAIRS[i].pingala.vol = vol;
@@ -112,15 +167,15 @@ function setVolI(i, vol) {
 }
 function setMasterVol(v) {
   masterVol = Math.max(0, Math.min(1, parseFloat(v)));
-  if (masterGain) safeRamp(masterGain.gain, masterVol, 0.3);
+  if (typeof masterGain !== 'undefined' && masterGain) safeRamp(masterGain.gain, masterVol, 0.3);
   const d = document.getElementById('mvol-val');
-  if (d) d.textContent = Math.round(masterVol*100) + '%';
+  if (d) d.textContent = Math.round(masterVol * 100) + '%';
   saveState();
 }
 function setMasterFreq(f) {
-  masterFreq = Math.max(36, Math.min(864, f));
+  masterFreq = Math.max(36, Math.min(432, f));
   updateDisplay();
-  if (flowing) PAIRS.forEach((_, i) => {
+  if (typeof flowing !== 'undefined' && flowing) PAIRS.forEach((_, i) => {
     tuneOsc(PAIRS[i].pingala.id, calcPFreq(i));
     tuneOsc(PAIRS[i].ida.id,     calcIFreq(i));
   });
@@ -137,7 +192,7 @@ function setGlobalDelta(raw) {
   PAIRS.forEach((pair, i) => {
     pair.ida.delta = d;
     updatePairUI(i);
-    if (flowing) tuneOsc(pair.ida.id, calcIFreq(i));
+    if (typeof flowing !== 'undefined' && flowing) tuneOsc(pair.ida.id, calcIFreq(i));
   });
   const ws  = waveState(d);
   const gws = document.getElementById('global-ws');
@@ -150,97 +205,74 @@ function setGlobalDelta(raw) {
 function nDecrement(i) { setN(i, Math.max(0.1, Math.round((PAIRS[i].pingala.n - 0.1)*10)/10)); }
 function nIncrement(i) { setN(i, Math.round((PAIRS[i].pingala.n + 0.1)*10)/10); }
 function nReset(i) {
-  PAIRS[i].pingala.n = (i === MASTER_IDX) ? 1.0 : 0.2 + (i*0.5);
+  PAIRS[i].pingala.n = (i === MASTER_IDX) ? 1.0 : 0.2 + (i * 0.5);
   updatePairUI(i);
-  if (flowing) swapPDebounced(i);
+  if (typeof flowing !== 'undefined' && flowing) swapPDebounced(i);
 }
 function nRandom(i) {
-  PAIRS[i].pingala.n = Math.round((0.1 + Math.random()*5.0)*10)/10;
+  PAIRS[i].pingala.n = Math.round((0.1 + Math.random() * 5.0) * 10) / 10;
   updatePairUI(i);
-  if (flowing) swapPDebounced(i);
+  if (typeof flowing !== 'undefined' && flowing) swapPDebounced(i);
 }
 
 function masterStep(delta) {
-  setMasterFreq(Math.max(36, Math.min(864, masterFreq + delta)));
+  setMasterFreq(Math.max(36, Math.min(432, masterFreq + delta)));
 }
 function onMasterInput(raw) {
   const v = parseInt(raw);
-  if (isNaN(v) || v < 36 || v > 864) return;
+  if (isNaN(v) || v < 36 || v > 432) return;
   masterFreq = v;
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = v;
-  document.title = 'FBF ' + v;
+  document.title = 'FBF396 · ' + v;
   PAIRS.forEach((pair, i) => {
-    const pF = Math.max(36, Math.min(864, v * RATIO_OPTS[pair.pingala.ri].r * pair.pingala.n));
-    const iF = Math.max(36, Math.min(864, pF + pair.ida.polarity * pair.ida.delta));
-    if (flowing) { tuneOsc(pair.pingala.id, pF); tuneOsc(pair.ida.id, iF); }
-    const pf  = document.getElementById('pfreq-'+i); if (pf)  pf.textContent  = fmtFreq(pF);
-    const iff = document.getElementById('ifreq-'+i); if (iff) iff.textContent = fmtFreq(iF);
-    const vpf = document.getElementById('vp-pf-'+i); if (vpf) vpf.textContent = fmtShort(pF);
+    if (typeof flowing !== 'undefined' && flowing) {
+      tuneOsc(pair.pingala.id, calcPFreq(i));
+      tuneOsc(pair.ida.id, calcIFreq(i));
+    }
   });
+  updateSphereDisplay && updateSphereDisplay();
 }
 function onMasterChange(raw) {
-  const v = Math.max(36, Math.min(864, parseInt(raw)));
+  const v = Math.max(36, Math.min(432, parseInt(raw)));
   if (!isNaN(v)) setMasterFreq(v);
 }
 
-// FBF toggle — Rayonner / Dissoudre
+// FBF toggle flux
 function fbfToggle() {
-  if (flowing) stopFlow(); else startFlow();
+  if (typeof flowing !== 'undefined' && flowing) stopFlow(); else startFlow();
 }
 
-function triggerMagicAuto() {
-  const {freqMin,freqMax,ratioMode,useFX,rangeOn}=RAND_OPTS;
-  // Plage active → on confine entre min/max ; sinon plage complète 36–864.
-  const lo = rangeOn ? freqMin : 36;
-  const hi = rangeOn ? freqMax : 864;
-  const newMaster=Math.floor(lo+Math.random()*(hi-lo));
-  const isHigh=newMaster>432;
-  const volBase=isHigh?.024:.12; // 20% si > 432 Hz
-  let ri=Math.floor(Math.random()*RATIO_OPTS.length);
-  let baseN=0.2;
-  PAIRS.forEach((pair,idx)=>{
-    if(ratioMode==='random') ri=Math.floor(Math.random()*RATIO_OPTS.length);
-    else if(ratioMode==='harmonic') ri=idx%RATIO_OPTS.length;
-    pair.pingala.ri=ri;
-    pair.pingala.vol=volBase;
-    pair.ida.vol=volBase;
-    if(idx===MASTER_IDX){pair.pingala.n=1.0;}
-    else{pair.pingala.n=Math.round(baseN*10)/10;baseN+=0.4+Math.random()*.8;}
-    pair.ida.delta=1.8;
-  });
-  setMasterFreq(newMaster);
-  setGlobalDelta(1.8);
-  if(useFX)randomizeFX();
-  if(!flowing)startFlow();
-}
+// Alias pour compatibilité panel FX / raccourci clavier
+function triggerMagicAuto() { triggerFBF396(); }
 
 function toggleFullscreen() {
-  const btn = document.getElementById('btn-fs') || document.getElementById('btn-fullscreen');
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(function(){});
-    if (btn) btn.textContent = '✕';
+  const el = document.documentElement;
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
   } else {
-    if (document.exitFullscreen) document.exitFullscreen();
-    try { screen.orientation.unlock(); } catch(e) {}
-    if (btn) btn.textContent = '⛶';
+    (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
   }
 }
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('btn-fs');
+  if (btn) btn.textContent = document.fullscreenElement ? '✕' : '⤢';
+});
 
 function resetAll() {
-  if (flowing) return;
+  if (typeof flowing !== 'undefined' && flowing) return;
   masterFreq = 252; globalDelta = 1.8; masterVol = 0.8;
   PAIRS.forEach((p, i) => {
     p.pingala.ri = i % RATIO_OPTS.length;
-    p.pingala.n  = (i === MASTER_IDX) ? 1.0 : 0.2 + (i*0.5);
-    p.pingala.vol = .12;
-    p.ida.delta   = 1.8;
-    p.ida.polarity = 1;
-    p.ida.vol     = .12;
-    mutedOscs[p.pingala.id] = false;
-    mutedOscs[p.ida.id]     = false;
+    p.pingala.n  = (i === MASTER_IDX) ? 1.0 : 0.2 + (i * 0.5);
+    p.pingala.vol = .12; p.ida.delta = 1.8; p.ida.polarity = 1; p.ida.vol = .12;
+    mutedOscs[p.pingala.id] = false; mutedOscs[p.ida.id] = false;
   });
-  PAIRS[MASTER_IDX].pingala.vol = .14;
-  PAIRS[MASTER_IDX].ida.vol     = .14;
+  PAIRS[MASTER_IDX].pingala.vol = .14; PAIRS[MASTER_IDX].ida.vol = .14;
+  // Réinitialise baseFreq aux valeurs de bande par défaut
+  PAIRS[0].pingala.baseFreq = 63;  PAIRS[1].pingala.baseFreq = 81;
+  PAIRS[2].pingala.baseFreq = 162; PAIRS[3].pingala.baseFreq = 192;
+  PAIRS[4].pingala.baseFreq = 288; PAIRS[5].pingala.baseFreq = 324;
+  PAIRS[6].pingala.baseFreq = 252;
   try { localStorage.removeItem(LS_KEY); } catch(e) {}
   const mvs = document.getElementById('mvol-slider'); if (mvs) mvs.value = 0.8;
   const mvv = document.getElementById('mvol-val');    if (mvv) mvv.textContent = '80%';

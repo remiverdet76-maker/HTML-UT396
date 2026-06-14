@@ -172,6 +172,7 @@ function patchFBFState() {
   if (fIcon) fIcon.textContent = flowing ? '◉' : '◎';
   if (fSt)  fSt.textContent   = flowing ? 'ON'  : 'OFF';
   if (fTxt) fTxt.style.color  = flowing ? '#63E6FF' : '';
+  typeof updateSphereDisplay === 'function' && updateSphereDisplay();
 }
 
 // ── Spectroid bar ─────────────────────────────────────────────────
@@ -530,11 +531,12 @@ function updateDisplay() {
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = masterFreq;
   const mi  = document.getElementById('master-input');
   if (mi && document.activeElement!==mi) mi.value = masterFreq;
-  document.title = 'FBF '+masterFreq;
+  document.title = 'FBF396 · ' + masterFreq + ' Hz';
   PAIRS.forEach((_,i) => updatePairUI(i));
   updateMasterState();
   patchRandomTable();
   patchFBFHz();
+  typeof updateSphereDisplay === 'function' && updateSphereDisplay();
 }
 
 // ── updatePairUI ──────────────────────────────────────────────────

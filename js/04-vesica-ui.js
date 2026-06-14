@@ -1,119 +1,139 @@
 /* ═══════════════════════════════════════════
-   04-vesica-ui.js — Sphères Vesica & édition
+   04-vesica-ui.js — Sphère FBF396 (bulle unique)
    ═══════════════════════════════════════════ */
 
-// Long press (<480ms) = mute/unmute | Long press (≥480ms) = modal
-var _vpTimer=null, _vpFired=false;
-function _vpStart(i,e){
-  if(e.type==='touchstart'){try{e.preventDefault();}catch(x){}}
-  _vpFired=false; clearTimeout(_vpTimer);
-  _vpTimer=setTimeout(()=>{_vpFired=true;_vpTimer=null;openOscModal(i);},480);
-}
-function _vpEnd(i){
-  if(_vpTimer){clearTimeout(_vpTimer);_vpTimer=null;if(!_vpFired)toggleMuteP(i);}
-}
-function _vpCancel(){clearTimeout(_vpTimer);_vpTimer=null;}
+// Détection tap court vs long press sur la sphère
+var _sphTimer = null, _sphFired = false;
 
+function _sphStart(e) {
+  if (e.type === 'touchstart') { try { e.preventDefault(); } catch(x) {} }
+  _sphFired = false;
+  clearTimeout(_sphTimer);
+  _sphTimer = setTimeout(() => {
+    _sphFired = true; _sphTimer = null;
+    triggerFBF396(); // long press = re-random
+  }, 500);
+}
+function _sphEnd() {
+  if (_sphTimer) {
+    clearTimeout(_sphTimer); _sphTimer = null;
+    if (!_sphFired) fbfSpherePress(); // tap court
+  }
+}
+function _sphCancel() { clearTimeout(_sphTimer); _sphTimer = null; }
+
+// Calcule le style inline de la bulle selon la couleur active
+function _sphereStyle(color) {
+  return {
+    borderColor: color + 'BB',
+    background: `radial-gradient(circle at 35% 28%,
+      rgba(255,255,255,.88) 0%,
+      rgba(255,255,255,.45) 5%,
+      ${color}AA 18%,
+      ${color}77 44%,
+      ${color}33 68%,
+      rgba(8,2,24,.55) 88%)`,
+    boxShadow: `0 0 90px ${color}55,0 0 44px ${color}33,
+      inset 0 0 65px ${color}18,
+      inset 28px 28px 52px rgba(255,255,255,.13)`
+  };
+}
+
+function _applyStyle(el, color) {
+  const s = _sphereStyle(color);
+  el.style.borderColor = s.borderColor;
+  el.style.background  = s.background;
+  el.style.boxShadow   = s.boxShadow;
+}
+
+// Construit la sphère unique centrée
 function buildVesicaPairs() {
   const layer = document.getElementById('sphere-layer');
   if (!layer) return;
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const sz = Math.min(vw, vh);
-  document.querySelectorAll('.vp-wrap,.vp-center-wrap').forEach(n => n.remove());
+  layer.innerHTML = '';
 
-  const cx = vw / 2, cy = vh / 2;
-  const R  = sz * 0.34;
+  const color = SPHERE_COLORS_12[_sphereColorIdx];
 
-  for (let i = 0; i < 6; i++) {
-    const pair = PAIRS[i];
-    const c    = pair.color;
-    const rad  = (HEX_DEG[i] - 90) * Math.PI / 180;
-    const px   = cx + R * Math.cos(rad);
-    const py   = cy + R * Math.sin(rad);
-    const isMutedP = !!mutedOscs[pair.pingala.id];
-    const pF   = calcPFreq(i);
+  const wrap = document.createElement('div');
+  wrap.id = 'fbf-sphere-wrap';
 
-    const vp = document.createElement('div');
-    vp.className = 'vp-wrap';
-    vp.id = 'vp' + i;
-    vp.style.left = px + 'px';
-    vp.style.top  = py + 'px';
-    vp.innerHTML = `
-      <div class="vp-p ${isMutedP?'vp-muted':''} ${flowing&&!isMutedP?'vp-live':''}"
-           id="vpc-p${i}"
-           style="border-color:${c}AA;background:radial-gradient(circle,${c}44 0%,${c}1A 60%,transparent 100%);box-shadow:0 0 18px ${c}35;cursor:pointer;user-select:none;"
-           onmousedown="_vpStart(${i},event)" onmouseup="_vpEnd(${i})" onmouseleave="_vpCancel()"
-           ontouchstart="_vpStart(${i},event)" ontouchend="_vpEnd(${i})">
-        <span class="vp-type" style="color:${c}CC">Canal ${i+1}</span>
-        <span class="vp-freq" id="vp-pf-${i}">${fmtShort(pF)}</span>
-      </div>
-      <div class="micro-btn micro-left"  style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nDecrement(${i})">−</div>
-      <div class="micro-btn micro-right" style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nIncrement(${i})">+</div>
-      <div class="micro-btn micro-top"   style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nReset(${i})">↺</div>
-      <div class="micro-btn micro-bot"   style="border-color:${c}99;color:${c};background:${c}22;" onclick="event.stopPropagation();nRandom(${i})">⚄</div>`;
-    layer.appendChild(vp);
-  }
+  const sphere = document.createElement('div');
+  sphere.id = 'fbf-sphere';
+  sphere.className = 'fbf-bubble' + (flowing ? ' sph-flowing' : '');
+  _applyStyle(sphere, color);
 
-  const mp  = PAIRS[MASTER_IDX];
-  const mc  = mp.color;
-  const isMutedMP = !!mutedOscs[mp.pingala.id];
+  sphere.innerHTML = `
+    <div class="sph-shine"></div>
+    <div class="sph-content">
+      <div class="sph-label">FBF396</div>
+      <div class="sph-freq" id="sphere-freq">${masterFreq}</div>
+      <div class="sph-sub" id="sphere-sub">Press &amp; Destress</div>
+    </div>`;
 
-  const vcw = document.createElement('div');
-  vcw.className = 'vp-center-wrap';
-  vcw.id = 'vp' + MASTER_IDX;
-  vcw.innerHTML = `
-    <div class="vp-p ${isMutedMP?'vp-muted':''} ${flowing&&!isMutedMP?'vp-live':''}"
-         id="vpc-p${MASTER_IDX}"
-         style="border-color:${mc}CC;background:radial-gradient(circle,${mc}50 0%,${mc}20 55%,rgba(26,5,51,.6) 100%);box-shadow:0 0 25px ${mc}50;backdrop-filter:blur(4px);cursor:pointer;user-select:none;"
-         onmousedown="_vpStart(${MASTER_IDX},event)" onmouseup="_vpEnd(${MASTER_IDX})" onmouseleave="_vpCancel()"
-         ontouchstart="_vpStart(${MASTER_IDX},event)" ontouchend="_vpEnd(${MASTER_IDX})">
-      <span class="vp-type" style="color:${mc}BB;font-size:.7rem;letter-spacing:.14em;">MAÎTRE</span>
-      <span class="ms-freq" id="ms-freq" onclick="event.stopPropagation();openFreqEdit();">${masterFreq}</span>
-      <input type="number" id="freq-input-master" min="36" max="864" placeholder="${masterFreq}" autocomplete="off"
-             onkeydown="handleFreqKey(event);">
-      <span class="ms-state" id="ms-state">Binaural</span>
-    </div>
-    <div class="micro-btn micro-left"  style="border-color:${mc}BB;color:${mc};" onclick="masterStep(-18)" title="-18 Hz">−18</div>
-    <div class="micro-btn micro-right" style="border-color:${mc}BB;color:${mc};" onclick="masterStep(18)"  title="+18 Hz">+18</div>
-    <div class="micro-btn micro-top"   style="border-color:${mc}BB;color:${mc};" onclick="resetAll()"      title="Reset">↺</div>
-    <div class="micro-btn micro-bot"   style="border-color:${mc}BB;color:${mc};" onclick="triggerMagicAuto()" title="Aléatoire">⚄</div>`;
-  layer.appendChild(vcw);
+  sphere.addEventListener('mousedown',  _sphStart);
+  sphere.addEventListener('mouseup',    _sphEnd);
+  sphere.addEventListener('mouseleave', _sphCancel);
+  sphere.addEventListener('touchstart', _sphStart, {passive:false});
+  sphere.addEventListener('touchend',   _sphEnd);
 
-  const inp = document.getElementById('freq-input-master');
-  if (inp && !inp._bound) {
-    inp._bound = true;
-    inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); exitEditMaster(true); }
-      if (e.key === 'Escape') exitEditMaster(false);
-    });
-    inp.addEventListener('blur', () => exitEditMaster(true));
+  const btnPlus = document.createElement('button');
+  btnPlus.className = 'sph-btn sph-plus';
+  btnPlus.textContent = '+';
+  btnPlus.addEventListener('click', e => { e.stopPropagation(); fbfStep(36); });
+
+  const btnMinus = document.createElement('button');
+  btnMinus.className = 'sph-btn sph-minus';
+  btnMinus.textContent = '−';
+  btnMinus.addEventListener('click', e => { e.stopPropagation(); fbfStep(-36); });
+
+  wrap.appendChild(sphere);
+  wrap.appendChild(btnPlus);
+  wrap.appendChild(btnMinus);
+  layer.appendChild(wrap);
+}
+
+// Met à jour l'affichage de la sphère (fréquence, couleur, état flux)
+function updateSphereDisplay() {
+  const freqEl = document.getElementById('sphere-freq');
+  if (freqEl) freqEl.textContent = masterFreq;
+
+  const sphere = document.getElementById('fbf-sphere');
+  if (!sphere) return;
+
+  const isFlowing = typeof flowing !== 'undefined' && flowing;
+  sphere.classList.toggle('sph-flowing', isFlowing);
+
+  _applyStyle(sphere, SPHERE_COLORS_12[_sphereColorIdx]);
+}
+
+// Tap court = toggle flux ; si on démarre → random complet
+function fbfSpherePress() {
+  if (typeof flowing !== 'undefined' && flowing) {
+    stopFlow();
+  } else {
+    triggerFBF396();
   }
 }
 
-function openFreqEdit() {
-  const freq = document.getElementById('ms-freq');
-  const inp  = document.getElementById('freq-input-master');
-  if (!freq || !inp) return;
-  freq.style.display = 'none';
-  inp.style.display = 'block'; inp.value = masterFreq; inp.focus(); inp.select();
-}
-function handleFreqKey(e) {
-  if (e.key === 'Enter') { e.preventDefault(); exitEditMaster(true); }
-  if (e.key === 'Escape') exitEditMaster(false);
-}
-function exitEditMaster(apply) {
-  const freq = document.getElementById('ms-freq');
-  const inp  = document.getElementById('freq-input-master');
-  if (!freq || !inp) return;
-  inp.style.display = 'none';
-  freq.style.display = 'block';
-  if (!apply) return;
-  const v = parseInt(inp.value);
-  if (isNaN(v) || v < 36 || v > 864) return;
-  setMasterFreq(v);
+// Stubs de compatibilité (remplaçants des fonctions Vesica multi-sphères)
+function updatePairUI(i) {
+  // Mise à jour éléments modal oscillateur (silencieuse si éléments absents)
+  const pair = PAIRS[i];
+  const pF = calcPFreq(i), iF = calcIFreq(i);
+  const ws = waveState(pair.ida.delta);
+  ['pfreq-'+i,'bfr-'+i].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=fmtFreq(pF); });
+  ['ifreq-'+i,'ibf-r-'+i].forEach(id => { const e=document.getElementById(id); if(e) e.textContent=fmtFreq(iF); });
+  const bws=document.getElementById('bws-'+i); if(bws){bws.textContent=ws.s;bws.style.color=ws.c;}
+  updateOrbUI(i);
 }
 
+function updateOrbUI(i) {
+  if (typeof patchFBFState === 'function') patchFBFState();
+}
+
+function openFreqEdit() {}
+function handleFreqKey(e) {}
+function exitEditMaster() {}
 function toggleAccord(id) {
   const body  = document.getElementById('ab-'+id);
   const arrow = document.getElementById('aa-'+id);
