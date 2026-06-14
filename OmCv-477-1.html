@@ -1,0 +1,2005 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<!-- ═══════════════════════════════════════════════════════════
+     PARTIE 1 — HEAD / FONTS / TONE.JS
+     FBF432 — 6 Paires Binaural · Cube de Metatron
+     Base audio identique FBF 1.44 — Limiter / rampTo / releaseOsc
+═══════════════════════════════════════════════════════════ -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OmCv-477 · FBF 432</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PARTIE 2 — CSS GLOBAL / BODY / LAYOUT
+═══════════════════════════════════════════════════════════ -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  min-height:100vh;font-family:'IM Fell English',Georgia,serif;color:#f0ead8;
+  background:#1a0533;
+  background-image:
+    radial-gradient(ellipse 140% 60% at 50% -5%,  rgba(180,80,255,.18),transparent 55%),
+    radial-gradient(ellipse 80%  90% at  4%  45%,  rgba(80,20,160,.22), transparent 55%),
+    radial-gradient(ellipse 80%  90% at 96%  55%,  rgba(20,80,180,.22), transparent 55%),
+    radial-gradient(ellipse 120% 55% at 50%  108%, rgba(100,0,180,.28), transparent 55%);
+  display:flex;align-items:flex-start;justify-content:center;
+  padding:.5rem 0 3rem;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Ccircle cx='80' cy='80' r='72' fill='none' stroke='%23c8a0ff' stroke-width='.4' opacity='.25'/%3E%3Ccircle cx='80' cy='80' r='52' fill='none' stroke='%23c8a0ff' stroke-width='.3' opacity='.18'/%3E%3Ccircle cx='80' cy='80' r='32' fill='none' stroke='%23c8a0ff' stroke-width='.25' opacity='.14'/%3E%3Cline x1='80' y1='8' x2='80' y2='152' stroke='%23c8a0ff' stroke-width='.2' opacity='.14'/%3E%3Cline x1='8' y1='80' x2='152' y2='80' stroke='%23c8a0ff' stroke-width='.2' opacity='.14'/%3E%3Cline x1='22' y1='22' x2='138' y2='138' stroke='%23c8a0ff' stroke-width='.18' opacity='.1'/%3E%3Cline x1='138' y1='22' x2='22' y2='138' stroke='%23c8a0ff' stroke-width='.18' opacity='.1'/%3E%3C/svg%3E");
+  background-size:160px 160px;opacity:.07;
+}
+
+/* ── NOUVEAU LAYOUT : Plus de grille globale forçante ── */
+.wrap {
+  max-width: 1400px; /* Limite élégante sur grand écran */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+  padding: 0 .4rem;
+  box-sizing: border-box;
+}
+
+/* ── VUE METATRON BASE (Mobile) ── */
+.view-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+/* Le conteneur occupe son propre espace sans forcer en "fixed" */
+.meta-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 60vh;
+  min-height: 350px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.meta-controls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  pointer-events: all;
+}
+
+/* Desktop ≥ 800px : canvas colonne gauche "sticky", contrôles colonne droite */
+@media(min-width:800px) {
+  .view-meta {
+    display: grid;
+    grid-template-columns: 1fr minmax(320px, 420px);
+    column-gap: 2rem;
+    align-items: start;
+  }
+  .meta-container {
+    /* Maintien à l'écran lors du scroll */
+    position: sticky;
+    top: 20px;
+    height: calc(100vh - 40px);
+    max-height: none;
+    aspect-ratio: auto;
+  }
+}
+
+/* ── HEADER ── */
+header{text-align:center;}
+header h1{
+  font-family:'Cinzel Decorative',serif;font-size:3rem;font-weight:700;letter-spacing:.32em;
+  background:linear-gradient(135deg,#FF6EFF 0%,#A78BFA 25%,#60D8FF 50%,#80FFB0 75%,#FFD060 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1;
+}
+header .sub{font-size:.88rem;font-style:italic;letter-spacing:.18em;color:rgba(200,180,255,.5);margin-top:.5rem;}
+
+/* ── METATRON ELEMENTS ── */
+#meta-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+#sphere-layer{position:absolute;inset:0;}
+#sphere-layer .vp-wrap,#sphere-layer .vp-center-wrap{pointer-events:all;}
+
+/* ── SPHÈRES — taille unique 80px pour toutes ── */
+.vp-wrap{
+  position:absolute;transform:translate(-50%,-50%);
+  width:164px;height:164px;
+  display:flex;align-items:center;justify-content:center;
+  z-index:6;
+}
+.vp-p{
+  width:80px;height:80px;border-radius:50%;border:2px solid;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  cursor:pointer;transition:filter .35s,transform .25s,opacity .4s;
+  flex-shrink:0;
+}
+.vp-p:hover{filter:brightness(1.5);transform:scale(1.1);}
+.vp-p:active{animation:tap-flash .25s ease-out;}
+@keyframes tap-flash{0%{filter:brightness(2.2);transform:scale(1.15);}100%{filter:brightness(1);transform:scale(1);}}
+.vp-p.vp-muted{opacity:.1;filter:saturate(.06);}
+.vp-p.vp-live{animation:vplive 8s ease-in-out infinite;}
+@keyframes vplive{0%,100%{filter:brightness(1);}50%{filter:brightness(1.38);}}
+.vp-type{font-family:'Cinzel Decorative',serif;font-size:.35rem;letter-spacing:.06em;opacity:.5;}
+.vp-freq{font-family:'IM Fell English',serif;font-size:1.05rem;line-height:1;color:#f0ead8;text-shadow:0 0 8px rgba(255,255,255,.28);font-weight:600;}
+.vp-hz{display:none;}
+.vp-hz{font-size:.36rem;color:rgba(240,234,216,.36);letter-spacing:.1em;}
+
+/* ── PAIRE CENTRALE MAÎTRE — même taille, centrée exacte ── */
+.vp-center-wrap{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:164px;height:164px;
+  display:flex;align-items:center;justify-content:center;
+  z-index:8;
+}
+/* ms-freq compact pour 80px */
+.ms-freq{font-family:'IM Fell English',serif;font-size:1.4rem;color:#E8BFFF;line-height:1;cursor:text;text-shadow:0 0 16px rgba(200,100,255,.55);}
+.ms-freq:hover{color:#fff;}
+.ms-state{font-size:.48rem;font-style:italic;letter-spacing:.1em;color:rgba(200,160,255,.5);text-transform:uppercase;transition:color .5s;}
+#freq-input-master{
+  display:none;width:72px;background:transparent;border:none;border-bottom:1px solid rgba(200,120,255,.55);
+  color:#E8BFFF;font-family:'IM Fell English',serif;font-size:1.2rem;text-align:center;outline:none;-moz-appearance:textfield;
+}
+#freq-input-master::-webkit-inner-spin-button,#freq-input-master::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+/* ── 4 MICRO-BOUTONS −10% (33→30px) — fond coloré transparent ── */
+.micro-btn{
+  position:absolute;width:38px;height:38px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.62);
+  background:rgba(8,0,25,.75);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.82rem;font-weight:700;cursor:pointer;transition:all .18s;z-index:10;
+  color:rgba(255,255,255,.92);text-shadow:0 0 5px rgba(255,255,255,.4);
+  box-shadow:0 0 5px rgba(0,0,0,.7);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.micro-btn:hover{border-color:#fff;color:#fff;transform:scale(1.3);box-shadow:0 0 16px rgba(160,80,255,.7);}
+/* Positions relatives au conteneur 164px */
+.micro-left {left:4px; top:50%;transform:translateY(-50%);}
+.micro-right{right:4px;top:50%;transform:translateY(-50%);}
+.micro-top  {top:4px;  left:50%;transform:translateX(-50%);}
+.micro-bot  {bottom:4px;left:50%;transform:translateX(-50%);}
+
+/* ── ZONE CÔTE À CÔTE : MAÎTRE+DELTA / PROGRESSION ── */
+.ctrl-row{
+  display:flex;gap:.8rem;align-items:flex-start;
+  flex-wrap:wrap;justify-content:center;
+  width:100%;max-width:660px;
+}
+.ctrl-col{display:flex;flex-direction:column;gap:.6rem;flex:1;min-width:200px;width:100%;}
+
+/* ── SPHÈRE DELTA BINAURAL ── */
+.delta-sphere-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  background:rgba(180,80,255,.05);border:1px solid rgba(180,80,255,.18);
+  border-radius:14px;padding:.75rem 1.2rem;width:100%;
+}
+.delta-sphere-label{font-size:.62rem;font-style:italic;letter-spacing:.18em;text-transform:uppercase;color:rgba(200,170,255,.52);text-align:center;}
+.delta-sphere-row{display:flex;align-items:center;gap:.65rem;justify-content:center;}
+.delta-sphere-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,80,255,.18) 0%,rgba(200,80,255,.06) 60%,transparent 100%);
+  border:1.5px solid rgba(200,80,255,.55);
+  color:#E8BFFF;font-size:1.4rem;font-weight:700;line-height:1;
+  cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 10px rgba(180,60,255,.18);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.delta-sphere-btn:hover{border-color:#E8BFFF;box-shadow:0 0 22px rgba(200,80,255,.45);transform:scale(1.12);}
+.delta-sphere-btn:active{transform:scale(.93);}
+.delta-sphere-val{
+  display:flex;flex-direction:column;align-items:center;gap:.15rem;
+  min-width:80px;
+}
+.delta-sphere-num{
+  width:78px;background:rgba(20,5,40,.7);
+  border:1px solid rgba(200,80,255,.28);border-bottom:2.5px solid rgba(200,80,255,.65);
+  color:#E8BFFF;font-family:'IM Fell English',serif;font-size:1.5rem;
+  text-align:center;padding:.14rem .2rem;border-radius:6px;
+  outline:none;-moz-appearance:textfield;transition:border-color .2s;
+}
+.delta-sphere-num:focus{border-bottom-color:#E8BFFF;}
+.delta-sphere-num::-webkit-inner-spin-button,.delta-sphere-num::-webkit-outer-spin-button{-webkit-appearance:none;}
+.delta-sphere-wave{font-family:'IM Fell English',serif;font-size:.7rem;font-style:italic;letter-spacing:.1em;transition:color .3s;}
+.delta-sphere-range{font-size:.5rem;font-style:italic;color:rgba(200,170,255,.3);letter-spacing:.1em;}
+
+/* ── VOLUME MAÎTRE — axe 4 ── */
+.mvol-wrap{display:flex;flex-direction:column;align-items:center;gap:.3rem;width:100%;max-width:300px;margin: 0 auto;}
+.mvol-label{font-size:.58rem;font-style:italic;letter-spacing:.16em;text-transform:uppercase;color:rgba(200,170,255,.42);}
+.mvol-row{display:flex;align-items:center;gap:.5rem;width:100%;justify-content:center;}
+.mvol-slider{width:150px;cursor:pointer;accent-color:#C080FF;height:16px;}
+.mvol-val{font-family:'IM Fell English',serif;font-size:.72rem;color:rgba(220,190,255,.65);min-width:32px;text-align:right;}
+
+/* ── STATUS / BOUTON FLOW ── */
+.btn-reset{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.18);
+  color:rgba(240,234,216,.45);font-size:1.1rem;width:38px;height:38px;
+  border-radius:50%;cursor:pointer;transition:all .25s;
+  display:flex;align-items:center;justify-content:center;
+  touch-action:manipulation;
+}
+.btn-reset:hover{border-color:rgba(255,200,100,.55);color:rgba(255,200,100,.8);box-shadow:0 0 14px rgba(255,180,60,.2);}
+.btn-flow{
+  background:rgba(180,80,255,.08);border:1.5px solid rgba(180,80,255,.45);color:#E0A0FF;
+  padding:.9rem 3rem;font-family:'Cinzel Decorative',serif;font-size:.92rem;letter-spacing:.28em;
+  text-transform:uppercase;border-radius:4px;cursor:pointer;transition:all .5s;
+  text-shadow:0 0 14px rgba(180,80,255,.35);
+}
+.btn-flow:hover:not(:disabled){background:rgba(180,80,255,.14);box-shadow:0 0 36px rgba(180,80,255,.2);}
+.btn-flow:disabled{opacity:.3;cursor:default;}
+.status{display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:.7rem;font-style:italic;letter-spacing:.14em;color:rgba(180,140,255,.4);}
+.wave-badge{font-family:'IM Fell English',serif;font-size:.64rem;font-style:italic;padding:.08rem .32rem;border-radius:10px;border:1px solid transparent;transition:all .4s;letter-spacing:.08em;}
+.wave-badge.live{border-color:currentColor;opacity:.85;}
+.status.live{color:rgba(200,160,255,.75);}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(150,80,255,.3);transition:all .5s;}
+.dot.live{background:#C080FF;box-shadow:0 0 10px rgba(180,80,255,.8);animation:blink 2.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── SLIDER MAÎTRE ── */
+/* ── CELLULE FRÉQUENCE MAÎTRE ±12Hz ── */
+.mfreq-ctrl{
+  display:flex;flex-direction:column;align-items:center;gap:.4rem;
+  background:rgba(200,80,255,.05);border:1px solid rgba(200,80,255,.22);
+  border-radius:14px;padding:.65rem 1rem;width:100%;
+}
+.mfreq-label{font-size:.6rem;font-style:italic;letter-spacing:.18em;text-transform:uppercase;color:rgba(200,160,255,.55);}
+.mfreq-row{display:flex;align-items:center;gap:.35rem;justify-content:center;}
+.mfreq-btn{
+  width:42px;height:42px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,80,255,.2) 0%,rgba(200,80,255,.06) 65%,transparent 100%);
+  border:1.5px solid rgba(200,80,255,.6);color:#E8BFFF;
+  font-size:1.3rem;font-weight:700;cursor:pointer;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.mfreq-btn:hover{border-color:#E8BFFF;box-shadow:0 0 18px rgba(200,80,255,.4);transform:scale(1.1);}
+.mfreq-btn:active{transform:scale(.92);}
+.mfreq-btn.sm{width:36px;height:36px;font-size:.68rem;font-weight:600;opacity:.75;}
+.mfreq-btn.sm:hover{opacity:1;}
+.mfreq-input{
+  width:86px;background:rgba(20,5,40,.72);
+  border:1px solid rgba(200,80,255,.3);border-bottom:2.5px solid rgba(200,80,255,.7);
+  color:#E8BFFF;font-family:'IM Fell English',serif;font-size:1.65rem;
+  text-align:center;padding:.12rem .2rem;border-radius:6px;
+  outline:none;-moz-appearance:textfield;
+}
+.mfreq-input:focus{border-bottom-color:#E8BFFF;}
+.mfreq-input::-webkit-inner-spin-button,.mfreq-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.mfreq-range{font-size:.5rem;font-style:italic;color:rgba(200,160,255,.3);letter-spacing:.12em;}
+
+/* ── FULLSCREEN BUTTON ── */
+#btn-fullscreen{
+  position:fixed;top:.7rem;right:.8rem;z-index:9999;
+  width:36px;height:36px;border-radius:50%;
+  background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.6);font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;touch-action:manipulation;backdrop-filter:blur(4px);
+}
+#btn-fullscreen:hover{border-color:rgba(255,255,255,.5);color:#fff;box-shadow:0 0 12px rgba(255,255,255,.15);}
+
+/* ── ONGLET PRESET ── */
+.preset-panel{display:flex;flex-direction:column;gap:1.2rem;padding:.6rem .2rem;}
+.preset-intro{font-size:.72rem;font-style:italic;color:rgba(200,180,255,.5);text-align:center;letter-spacing:.1em;line-height:1.6;}
+.preset-section-title{
+  font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.22em;
+  text-transform:uppercase;color:rgba(200,160,255,.55);
+  display:flex;align-items:center;gap:.6rem;
+}
+.preset-section-title::before,.preset-section-title::after{content:'';flex:1;height:1px;background:rgba(200,140,255,.15);}
+.preset-grid{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(45px, 1fr));gap:.32rem;
+}
+.preset-freq-btn{
+  display:flex;flex-direction:column;align-items:center;gap:.1rem;
+  padding:.4rem .15rem;border-radius:8px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);
+  transition:all .18s;touch-action:manipulation;
+}
+.preset-freq-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);transform:scale(1.04);}
+.preset-freq-btn.active{border-color:rgba(200,140,255,.8);background:rgba(180,80,255,.18);box-shadow:0 0 12px rgba(180,80,255,.25);}
+.preset-freq-hz{font-family:'IM Fell English',serif;font-size:.82rem;color:#f0ead8;line-height:1;}
+.preset-freq-label{font-size:.42rem;font-style:italic;color:rgba(200,170,255,.4);letter-spacing:.08em;}
+.preset-assign-wrap{
+  background:rgba(0,0,0,.18);border-radius:10px;padding:.7rem .8rem;
+  display:flex;flex-direction:column;gap:.5rem;border:1px solid rgba(255,255,255,.07);
+}
+.preset-assign-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;}
+.preset-assign-label{font-size:.6rem;font-style:italic;color:rgba(200,170,255,.45);min-width:90px;letter-spacing:.08em;}
+.preset-assign-freq{
+  font-family:'IM Fell English',serif;font-size:.82rem;
+  padding:.12rem .4rem;border-radius:5px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.05);color:#f0ead8;
+}
+.preset-assign-ratio{font-size:.56rem;color:rgba(200,170,255,.4);font-style:italic;}
+.btn-preset-launch{
+  background:rgba(180,80,255,.1);border:1.5px solid rgba(180,80,255,.4);
+  color:#E0BFFF;font-family:'Cinzel Decorative',serif;font-size:.72rem;
+  letter-spacing:.2em;padding:.65rem 2rem;border-radius:4px;
+  cursor:pointer;transition:all .3s;margin:0 auto;display:block;
+  touch-action:manipulation;
+}
+.btn-preset-launch:hover{background:rgba(180,80,255,.2);box-shadow:0 0 24px rgba(180,80,255,.22);}
+.btn-preset-launch:disabled{opacity:.3;cursor:default;}
+
+/* ── ONGLET NOTICE ── */
+.notice-panel{
+  display:flex;flex-direction:column;gap:1rem;
+  padding:.8rem .4rem;max-width:600px;margin:0 auto;
+}
+.notice-h1{
+  font-family:'Cinzel Decorative',serif;font-size:.85rem;letter-spacing:.2em;
+  text-align:center;color:#E8BFFF;margin-bottom:.3rem;
+}
+.notice-block{
+  background:rgba(255,255,255,.03);border-left:3px solid rgba(180,80,255,.35);
+  border-radius:0 8px 8px 0;padding:.65rem .85rem;
+  display:flex;flex-direction:column;gap:.3rem;
+}
+.notice-term{
+  font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.15em;
+  color:rgba(180,80,255,.9);text-transform:uppercase;
+}
+.notice-def{font-size:.72rem;font-style:italic;color:rgba(220,210,255,.7);line-height:1.6;}
+.notice-step{
+  display:flex;gap:.6rem;align-items:flex-start;
+  padding:.4rem .5rem;background:rgba(255,255,255,.03);border-radius:6px;
+}
+.notice-step-num{
+  font-family:'Cinzel Decorative',serif;font-size:.65rem;color:rgba(180,80,255,.7);
+  min-width:18px;margin-top:.05rem;
+}
+.notice-step-txt{font-size:.7rem;font-style:italic;color:rgba(220,210,255,.65);line-height:1.55;}
+
+/* ── MODE PROGRESSION DISCRET ── */
+.prog-wrap{
+  width:100%;
+  background:rgba(255,180,80,.05);
+  border:1px solid rgba(255,180,80,.2);
+  border-radius:14px;padding:.7rem 1rem;
+  display:flex;flex-direction:column;gap:.55rem;
+}
+.prog-title{
+  font-family:'Cinzel Decorative',serif;font-size:.58rem;
+  letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(255,200,100,.6);text-align:center;
+}
+.prog-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:center;}
+.prog-label{font-size:.6rem;font-style:italic;color:rgba(255,210,130,.45);letter-spacing:.1em;min-width:44px;}
+.prog-select{
+  background:rgba(20,10,0,.65);border:1px solid rgba(255,180,80,.28);
+  border-bottom:2px solid rgba(255,180,80,.55);
+  color:rgba(255,220,150,.9);font-family:'IM Fell English',serif;
+  font-style:italic;font-size:.78rem;padding:.18rem .4rem;
+  border-radius:5px;cursor:pointer;outline:none;
+  -webkit-appearance:none;appearance:none;
+}
+.prog-select option{background:#1a0a00;color:#f0ead8;}
+.prog-mode-row{display:flex;gap:.35rem;justify-content:center;flex-wrap:wrap;}
+.prog-mode-btn{
+  font-family:'IM Fell English',serif;font-size:.62rem;font-style:italic;
+  padding:.22rem .6rem;border-radius:12px;cursor:pointer;
+  border:1px solid rgba(255,180,80,.25);background:rgba(255,180,80,.05);
+  color:rgba(255,210,130,.55);transition:all .2s;touch-action:manipulation;
+}
+.prog-mode-btn:hover{background:rgba(255,180,80,.14);color:rgba(255,220,150,.9);}
+.prog-mode-btn.active{
+  background:rgba(255,180,80,.18);border-color:rgba(255,180,80,.65);
+  color:#FFD080;box-shadow:0 0 10px rgba(255,160,40,.2);
+}
+.prog-range-row{display:flex;align-items:center;gap:.4rem;justify-content:center;flex-wrap:wrap;}
+.prog-range-input{
+  width:62px;background:rgba(20,10,0,.65);
+  border:1px solid rgba(255,180,80,.28);border-bottom:2px solid rgba(255,180,80,.5);
+  color:rgba(255,220,150,.9);font-family:'IM Fell English',serif;font-size:.82rem;
+  text-align:center;padding:.1rem .2rem;border-radius:4px;
+  outline:none;-moz-appearance:textfield;
+}
+.prog-range-input::-webkit-inner-spin-button,.prog-range-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+.prog-freq-display{
+  font-family:'IM Fell English',serif;font-size:.72rem;
+  color:rgba(255,220,130,.55);text-align:center;
+  letter-spacing:.1em;font-style:italic;min-height:1rem;
+  transition:color .3s;
+}
+.prog-freq-display.active{color:rgba(255,200,80,.85);}
+.btn-prog{
+  background:rgba(255,180,80,.08);border:1.5px solid rgba(255,180,80,.4);
+  color:#FFD080;font-family:'Cinzel Decorative',serif;font-size:.72rem;
+  letter-spacing:.18em;padding:.55rem 1.6rem;border-radius:4px;
+  cursor:pointer;transition:all .3s;touch-action:manipulation;
+  display:block;margin:0 auto;
+}
+.btn-prog:hover{background:rgba(255,180,80,.18);box-shadow:0 0 20px rgba(255,160,40,.25);}
+.btn-prog.running{
+  background:rgba(255,100,60,.12);border-color:rgba(255,120,60,.5);
+  color:#FFB080;animation:prog-pulse 2s ease-in-out infinite;
+}
+@keyframes prog-pulse{0%,100%{box-shadow:0 0 6px rgba(255,120,60,.2);}50%{box-shadow:0 0 18px rgba(255,120,60,.45);}}
+
+/* ── SÉPARATEUR ── */
+.section-sep{
+  width:100%;display:flex;align-items:center;gap:1rem;
+  font-family:'Cinzel Decorative',serif;font-size:.58rem;letter-spacing:.3em;
+  text-transform:uppercase;color:rgba(200,160,255,.32);
+}
+.section-sep::before,.section-sep::after{content:'';flex:1;height:1px;background:rgba(160,100,255,.18);}
+
+/* ══════════════════════════════════════════════════════════
+   PARTIE 3 — ONGLETS & BLOCS PAIRES
+══════════════════════════════════════════════════════════ */
+.tabs-bar{
+  display:flex;gap:.35rem;flex-wrap:wrap;justify-content:center;width:100%;
+}
+.tab-btn{
+  font-family:'IM Fell English',serif;font-size:.72rem;font-style:italic;letter-spacing:.1em;
+  padding:.32rem .8rem;border-radius:20px;cursor:pointer;transition:background .2s,border-color .2s,color .2s;
+  border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);
+  color:rgba(240,234,216,.5);
+}
+.tab-btn:hover{background:rgba(255,255,255,.1);color:#f0ead8;}
+.tab-btn.active{color:#f0ead8;font-style:normal;}
+.tab-btn.live-pair::after{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:currentColor;margin-left:.35rem;vertical-align:middle;animation:blink 2.5s infinite;opacity:.8;}
+.tab-pane{display:none;width:100%;}
+.tab-pane.active{display:block;}
+
+/* ── PAIRE BLOCK ── */
+.pair-panel{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  border-left:4px solid transparent;border-radius:12px;padding:.9rem 1rem;
+  display:flex;flex-direction:column;gap:.55rem;
+  backdrop-filter:blur(6px);transition:box-shadow .25s,border-color .2s;
+}
+.pair-panel:hover{box-shadow:0 2px 24px rgba(0,0,0,.22);}
+.pair-head{display:flex;align-items:center;gap:.5rem;padding-bottom:.35rem;border-bottom:1px solid rgba(255,255,255,.08);}
+.pair-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.pair-name{font-family:'Cinzel Decorative',serif;font-size:.72rem;letter-spacing:.12em;flex:1;}
+.pair-freqs{display:flex;gap:.6rem;align-items:center;}
+.pair-freq-p{font-family:'IM Fell English',serif;font-size:.9rem;color:#f0ead8;}
+.pair-freq-i{font-family:'IM Fell English',serif;font-size:.82rem;opacity:.65;}
+.pair-mute-p,.pair-mute-i{
+  font-family:inherit;font-size:.58rem;padding:.1rem .38rem;border-radius:3px;cursor:pointer;transition:all .2s;letter-spacing:.06em;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);color:rgba(240,234,216,.55);
+}
+.pair-mute-p:hover,.pair-mute-i:hover{border-color:rgba(255,255,255,.4);color:#f0ead8;}
+.pair-mute-p.muted,.pair-mute-i.muted{background:rgba(200,60,60,.12);border-color:rgba(200,70,70,.42);color:rgba(220,120,100,.72);}
+.btn-activer{
+  background:rgba(120,200,60,.08);border:1px solid rgba(120,200,60,.35);
+  color:rgba(140,220,80,.72);font-family:inherit;font-size:.58rem;
+  padding:.1rem .38rem;border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.btn-activer:hover{background:rgba(120,200,60,.18);border-color:rgba(120,200,60,.62);color:rgba(160,240,90,.95);}
+
+/* Formule */
+.block-formula{
+  display:flex;align-items:baseline;gap:.22rem;flex-wrap:wrap;
+  font-family:'IM Fell English',serif;font-style:italic;font-size:.74rem;
+  padding:.18rem .32rem;background:rgba(0,0,0,.18);border-radius:5px;
+}
+.bf-sym{color:rgba(200,180,255,.32);font-style:normal;font-size:.66rem;margin:0 .04rem;}
+.bf-master,.bf-ratio,.bf-n{color:rgba(220,200,255,.72);}
+.bf-result{color:#E8BFFF;font-size:.88rem;font-style:normal;margin-left:.1rem;}
+.bf-link{color:rgba(150,200,255,.65);}
+.bf-delta{color:rgba(220,200,255,.72);}
+
+/* ── Accordéon Pingala/Ida — axe 1 ── */
+.accord-header{
+  display:flex;align-items:center;gap:.4rem;cursor:pointer;
+  padding:.22rem .3rem;border-radius:4px;
+  transition:background .18s;user-select:none;touch-action:manipulation;
+}
+.accord-header:hover{background:rgba(255,255,255,.05);}
+.accord-arrow{font-size:.62rem;transition:transform .22s;color:rgba(255,255,255,.35);}
+.accord-arrow.open{transform:rotate(90deg);}
+.accord-body{overflow:hidden;transition:max-height .28s ease,opacity .2s;max-height:0;opacity:0;}
+.accord-body.open{max-height:600px;opacity:1;}
+
+/* Contrôles */
+.bctrl{display:flex;flex-direction:column;gap:.1rem;}
+.bctrl-row{display:flex;align-items:center;justify-content:space-between;gap:.3rem;}
+.bctrl-label{font-size:.6rem;font-style:italic;letter-spacing:.12em;text-transform:uppercase;color:rgba(200,170,255,.44);}
+.bctrl-val{font-family:'IM Fell English',serif;font-size:.68rem;color:rgba(220,190,255,.7);flex-shrink:0;}
+.wave-state{font-family:'IM Fell English',serif;font-size:.64rem;font-style:italic;letter-spacing:.1em;transition:color .3s;flex-shrink:0;}
+select.bsel{
+  width:100%;background:rgba(20,5,40,.6);border:1px solid rgba(160,100,255,.25);
+  color:rgba(232,220,255,.85);font-family:'IM Fell English',serif;font-style:italic;font-size:.74rem;
+  padding:.26rem .42rem;border-radius:5px;cursor:pointer;outline:none;transition:border-color .2s;
+  -webkit-appearance:none;appearance:none;
+}
+select.bsel:hover,select.bsel:focus{border-color:rgba(200,140,255,.5);}
+select.bsel option{background:#1a0533;color:#f0ead8;}
+input[type="range"].brange{width:100%;cursor:pointer;height:16px;}
+.param-row{display:flex;align-items:center;gap:.5rem;}
+.param-label{font-size:.7rem;font-style:italic;color:rgba(200,170,255,.44);letter-spacing:.1em;min-width:28px;}
+input.param-input{
+  width:74px;background:rgba(20,5,40,.6);
+  border:1px solid rgba(160,100,255,.22);border-bottom:2px solid rgba(200,120,255,.4);
+  color:#E8BFFF;font-family:'IM Fell English',serif;font-style:italic;font-size:.94rem;
+  text-align:center;padding:.15rem .28rem;border-radius:4px;
+  outline:none;-moz-appearance:textfield;transition:border-color .2s;
+}
+input.param-input::-webkit-inner-spin-button,input.param-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+input.param-input:focus{border-bottom-color:rgba(200,120,255,.85);}
+.param-hint{font-size:.56rem;font-style:italic;color:rgba(200,170,255,.28);}
+.polarity-btn{
+  background:rgba(255,255,255,.07);border:1px solid rgba(180,140,255,.28);
+  color:rgba(220,200,255,.72);font-family:'IM Fell English',serif;
+  font-size:.88rem;width:24px;height:24px;border-radius:50%;
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+}
+.polarity-btn:hover{border-color:rgba(200,150,255,.6);color:#E8BFFF;}
+.polarity-btn.negative{color:#FF9898;border-color:rgba(255,152,152,.38);}
+
+</style>
+</head>
+
+<body>
+<img id="bg-cosmique" src="img/1781445886083.png" alt="" style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:0.32;pointer-events:none;" onerror="this.style.display='none'">
+
+<div class="wrap">
+<!-- Bouton Fullscreen -->
+<button id="btn-fullscreen" onclick="toggleFullscreen()" title="Plein écran">⛶</button>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PARTIE 4 — HTML STRUCTURE : HEADER + METATRON + SLIDERS
+═══════════════════════════════════════════════════════════ -->
+  <header>
+    <h1>FBF 432</h1>
+    <div class="sub">6 Paires Binaural · Cube de Metatron · Géométrie Sacrée</div>
+  </header>
+
+  <!-- ONGLETS NAVIGATION -->
+  <div class="tabs-bar" id="tabs-bar"></div>
+
+  <!-- ONGLET 0 : VUE METATRON -->
+  <div class="tab-pane active" id="tab-meta">
+    <div class="view-meta">
+
+      <!-- Metatron Canvas + Sphères (Désormais contenu et redimensionné) -->
+      <div class="meta-container" id="meta-container">
+        <canvas id="meta-canvas"></canvas>
+        <div id="sphere-layer">
+          <!-- VP pairs built dynamically by buildVesicaPairs() -->
+        </div>
+      </div>
+
+      <!-- Contrôles à droite (ou en dessous) -->
+      <div class="meta-controls">
+        <!-- Zone côte à côte pour les paramètres de la vue 0 -->
+        <div class="ctrl-row">
+          
+          <!-- Colonne gauche : maître + delta -->
+          <div class="ctrl-col">
+            <!-- Cellule fréquence maître ±12Hz -->
+            <div class="mfreq-ctrl">
+              <div class="mfreq-label">Fréquence maître</div>
+              <div class="mfreq-row">
+                <button class="mfreq-btn sm" onclick="masterStep(-12)" title="-12 Hz">−12</button>
+                <button class="mfreq-btn" onclick="masterStep(-1)" title="-1 Hz">−</button>
+                <input type="number" id="master-input" class="mfreq-input"
+                       min="36" max="1296" value="432" step="1"
+                       oninput="onMasterInput(this.value)"
+                       onchange="onMasterChange(this.value)">
+                <button class="mfreq-btn" onclick="masterStep(1)" title="+1 Hz">+</button>
+                <button class="mfreq-btn sm" onclick="masterStep(12)" title="+12 Hz">+12</button>
+              </div>
+              <div class="mfreq-range">36 — 1296 Hz</div>
+            </div>
+
+            <!-- Sphère Δ Binaural Global -->
+            <div class="delta-sphere-wrap">
+              <div class="delta-sphere-label">Δ Binaural Global · Toutes IDA</div>
+              <div class="delta-sphere-row">
+                <button class="delta-sphere-btn" onclick="deltaStep(-0.1)" title="-0.1 Hz">−</button>
+                <div class="delta-sphere-val">
+                  <input type="number" class="delta-sphere-num" id="global-delta-input"
+                         min="0.1" max="36" step="0.1" value="7.83"
+                         oninput="setGlobalDelta(this.value)"
+                         onchange="setGlobalDelta(this.value)">
+                  <span class="delta-sphere-wave" id="global-ws" style="color:#F5D460">Thêta</span>
+                  <span class="delta-sphere-range">0.1 — 36 Hz</span>
+                </div>
+                <button class="delta-sphere-btn" onclick="deltaStep(0.1)" title="+0.1 Hz">+</button>
+              </div>
+            </div>
+
+            <!-- Bouton flow + status -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:.65rem;">
+              <div style="display:flex;gap:.7rem;align-items:center;">
+                <button class="btn-flow" id="btn" onclick="toggleFlow()">Rayonner</button>
+                <button class="btn-reset" id="btn-reset" onclick="resetAll()" title="Réinitialiser tout">↺</button>
+              </div>
+              <div class="status" id="status">
+                <div class="dot" id="dot"></div>
+                <span id="stxt">Metatron immobile</span>
+                <span class="wave-badge" id="wave-badge"></span>
+              </div>
+              <!-- Axe 4 : volume maître -->
+              <div class="mvol-wrap">
+                <span class="mvol-label">Volume maître</span>
+                <div class="mvol-row">
+                  <input type="range" id="mvol-slider" class="mvol-slider"
+                         min="0" max="1" step="0.01" value="0.8"
+                         oninput="setMasterVol(this.value)">
+                  <span class="mvol-val" id="mvol-val">80%</span>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /ctrl-col -->
+          
+          <!-- Colonne droite : progression -->
+          <div class="ctrl-col">
+            <!-- Mode Progression Discret -->
+            <div class="prog-wrap" id="prog-wrap">
+              <div class="prog-title">⟳ Progression Harmonique</div>
+              <div class="prog-row">
+                <span class="prog-label">Ratio</span>
+                <select class="prog-select" id="prog-ratio">
+                  <option value="0">11/10 — Inspire</option>
+                  <option value="1">10/11 — Expire</option>
+                  <option value="2">12/10 — Inspire profond</option>
+                  <option value="3">10/12 — Expire profond</option>
+                  <option value="4">11/12 — Contraction</option>
+                  <option value="5" selected>12/11 — Expansion</option>
+                </select>
+              </div>
+              <div class="prog-row">
+                <span class="prog-label">Palier</span>
+                <select class="prog-select" id="prog-dur">
+                  <option value="4000">4 s</option>
+                  <option value="8000" selected>8 s</option>
+                  <option value="16000">16 s</option>
+                  <option value="32000">32 s</option>
+                  <option value="64000">64 s</option>
+                </select>
+              </div>
+              <div class="prog-range-row">
+                <span class="prog-label">Plage</span>
+                <input type="number" class="prog-range-input" id="prog-min" min="36" max="1296" value="216">
+                <span style="color:rgba(255,200,100,.4);font-size:.7rem;">—</span>
+                <input type="number" class="prog-range-input" id="prog-max" min="36" max="1296" value="432">
+                <span style="color:rgba(255,200,100,.35);font-size:.56rem;font-style:italic;">Hz</span>
+              </div>
+              <div class="prog-mode-row">
+                <button class="prog-mode-btn active" id="pmode-up"     onclick="setProgMode('up')">↑ Montée</button>
+                <button class="prog-mode-btn"        id="pmode-yoyo"   onclick="setProgMode('yoyo')">◎ Yoyo</button>
+                <button class="prog-mode-btn"        id="pmode-bounce" onclick="setProgMode('bounce')">↕ Aller-retour</button>
+                <button class="prog-mode-btn"        id="pmode-down"   onclick="setProgMode('down')">↓ Descente</button>
+              </div>
+              <div class="prog-freq-display" id="prog-display">—</div>
+              <button class="btn-prog" id="btn-prog" onclick="toggleProgression()">▶ Progression</button>
+            </div>
+          </div><!-- /ctrl-col droite -->
+          
+        </div><!-- /ctrl-row -->
+      </div><!-- /meta-controls -->
+    </div><!-- /view-meta -->
+  </div><!-- /tab-meta -->
+
+  <!-- ONGLETS 1–6 : PAIRES (générés par JS) -->
+
+</div><!-- /wrap -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     PARTIE 5 — DONNÉES : PAIRS / RATIO_OPTS / CONSTANTES AUDIO
+═══════════════════════════════════════════════════════════ -->
+<script>
+// ══ CONSTANTES AUDIO — identiques FBF 1.44 ══
+const FADE = 1.6;
+const swapTimers = {};
+let masterFreq = 432, flowing = false;
+let masterVol = 0.8; // axe 4
+let nodes = {}, masterGain = null, limiter = null, analyser = null;
+let animID = null, metaAngle = 0, metaRAF = null;
+
+// ══ RATIOS RESPIRATION NATURELLE — 6 ratios, les seuls de ce projet ══
+const RATIO_OPTS = [
+  {r:11/10, l:'11/10'},  // 0 — inspire
+  {r:10/11, l:'10/11'},  // 1 — expire
+  {r:12/10, l:'12/10'},  // 2 — inspire profond
+  {r:10/12, l:'10/12'},  // 3 — expire profond
+  {r:11/12, l:'11/12'},  // 4 — contraction
+  {r:12/11, l:'12/11'},  // 5 — expansion
+];
+
+// ══ 7 PAIRES — 6 latérales hexagonales + 1 maître centrale ══
+const MASTER_IDX = 6;
+const PAIRS = [
+  { label:'Paire 1', color:'#FF6B6B', grad:['#FF6B6B','#FF9A8B'],
+    pingala:{id:'p0', ri:0, n:1.0, vol:.12}, ida:{id:'i0', delta:7.2,  polarity:1, vol:.12} },
+  { label:'Paire 2', color:'#FFB347', grad:['#FFB347','#FFD080'],
+    pingala:{id:'p1', ri:1, n:1.0, vol:.12}, ida:{id:'i1', delta:9.6,  polarity:1, vol:.12} },
+  { label:'Paire 3', color:'#E8FF60', grad:['#E8FF60','#C8FF80'],
+    pingala:{id:'p2', ri:2, n:1.0, vol:.12}, ida:{id:'i2', delta:4.0,  polarity:1, vol:.12} },
+  { label:'Paire 4', color:'#56FFB0', grad:['#56FFB0','#80FFD0'],
+    pingala:{id:'p3', ri:3, n:1.0, vol:.12}, ida:{id:'i3', delta:12.0, polarity:1, vol:.12} },
+  { label:'Paire 5', color:'#60D8FF', grad:['#60D8FF','#80B0FF'],
+    pingala:{id:'p4', ri:4, n:1.0, vol:.12}, ida:{id:'i4', delta:6.0,  polarity:1, vol:.12} },
+  { label:'Paire 6', color:'#C080FF', grad:['#C080FF','#E080FF'],
+    pingala:{id:'p5', ri:5, n:1.0, vol:.12}, ida:{id:'i5', delta:10.8, polarity:1, vol:.12} },
+  { label:'Maître',  color:'#FFB0FF', grad:['#FFB0FF','#FF80C0'],
+    pingala:{id:'p6', ri:0, n:1.0, vol:.14}, ida:{id:'i6', delta:8.0,  polarity:1, vol:.14} },
+];
+
+// IDA active par défaut
+let mutedOscs = {};
+PAIRS.forEach(p => {
+  mutedOscs[p.pingala.id] = false;
+  mutedOscs[p.ida.id]     = false;
+});
+
+// ═══════════════════════════════════════════════════════════
+// PARTIE 6 — MOTEUR AUDIO (transplant exact FBF 1.44)
+// ═══════════════════════════════════════════════════════════
+
+function waveState(hz) {
+  const a = Math.abs(hz);
+  if (a < 0.5) return {s:'—',     c:'rgba(200,200,255,.4)'};
+  if (a <= 4)  return {s:'Delta', c:'#C890FF'};
+  if (a <= 8)  return {s:'Thêta', c:'#F5D460'};
+  if (a <= 13) return {s:'Alpha', c:'#56FFB0'};
+  if (a <= 30) return {s:'Bêta',  c:'#60D8FF'};
+  return              {s:'Gamma', c:'#FF9A8B'};
+}
+
+function calcPFreq(i) {
+  const p = PAIRS[i].pingala;
+  return masterFreq * Math.pow(RATIO_OPTS[p.ri].r, p.n);
+}
+function calcIFreq(i) {
+  const { ida } = PAIRS[i];
+  return calcPFreq(i) + ida.polarity * ida.delta;
+}
+function safeF(f) { return Math.max(1, Math.min(22000, f)); }
+function fmtFreq(f) {
+  const a = Math.abs(f);
+  if (a < 1)    return f.toFixed(2)+' Hz';
+  if (a < 100)  return f.toFixed(1)+' Hz';
+  if (a < 10000)return Math.round(f)+' Hz';
+  return (f/1000).toFixed(2)+' kHz';
+}
+function fmtShort(f) {
+  const a = Math.abs(f);
+  if (a < 1)    return f.toFixed(2);
+  if (a < 100)  return f.toFixed(1);
+  if (a < 10000)return Math.round(f);
+  return (f/1000).toFixed(1)+'k';
+}
+
+// ── buildOsc / releaseOsc — identiques FBF 1.44 ──
+function buildOsc(id, freq, vol, pan) {
+  const p = new Tone.Panner(pan);
+  const o = new Tone.Oscillator({ frequency: safeF(freq), type: 'sine' });
+  const g = new Tone.Gain(0);
+  o.connect(p); p.connect(g); g.connect(masterGain);
+  o.start();
+  if (!mutedOscs[id] && vol > 0) {
+    const now = Tone.now();
+    g.gain.cancelScheduledValues(now);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(vol, now + FADE);
+  }
+  return { o, g, p };
+}
+// tuneOsc — glisse fréquence sans recréer, anti-craquement slider
+const TUNE_T = 0.14; // Fix craquement 3 : ramp fréquence plus longue
+function tuneOsc(id, freq) {
+  const node = nodes[id]; if (!node) return;
+  try {
+    const f = safeF(freq), now = Tone.now();
+    node.o.frequency.cancelScheduledValues(now);
+    node.o.frequency.setValueAtTime(node.o.frequency.value, now);
+    node.o.frequency.linearRampToValueAtTime(f, now + TUNE_T);
+  } catch(e) {}
+}
+function releaseOsc(node) {
+  try {
+    const now = Tone.now();
+    node.g.gain.cancelScheduledValues(now);
+    node.g.gain.setValueAtTime(node.g.gain.value, now);
+    node.g.gain.linearRampToValueAtTime(0, now + FADE);
+  } catch(e) {}
+  const disposeDelay = (FADE + 0.8) * 1000;
+  setTimeout(() => {
+    try { node.o.stop(); } catch(e) {}
+    setTimeout(() => {
+      ['o','g','p'].forEach(k => { try { node[k].dispose?.(); } catch(e){} });
+    }, 120);
+  }, disposeDelay);
+}
+
+function swapPingala(i) {
+  if (!flowing || !masterGain) return;
+  const { pingala } = PAIRS[i];
+  if (nodes[pingala.id]) releaseOsc(nodes[pingala.id]);
+  nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+  // Fix craquement 4 : délai 40ms entre Pingala et Ida — évite le spike de double recréation
+  setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
+  updatePairUI(i);
+}
+function swapIda(i) {
+  if (!flowing || !masterGain) return; // axe 2
+  const { ida } = PAIRS[i];
+  if (nodes[ida.id]) releaseOsc(nodes[ida.id]);
+  nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+  updatePairUI(i);
+}
+function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
+function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] = setTimeout(() => swapIda(i), 380); }
+
+// ── Contrôles ──
+function setN(i, raw) {
+  const n = Math.round(Math.max(0, parseFloat(raw)) * 10) / 10;
+  if (isNaN(n)) return;
+  PAIRS[i].pingala.n = n;
+  updatePairUI(i);
+  if (flowing) swapPDebounced(i);
+  saveState();
+}
+function setRatio(i, ri) {
+  PAIRS[i].pingala.ri = ri;
+  if (flowing) swapPingala(i); else updatePairUI(i);
+  saveState();
+}
+function setDelta(i, raw) {
+  const d = Math.round(Math.max(0.1, Math.min(43.2, parseFloat(raw))) * 10) / 10;
+  if (isNaN(d)) return;
+  PAIRS[i].ida.delta = d;
+  updatePairUI(i);
+  if (flowing) swapIDebounced(i);
+  saveState();
+}
+function togglePolarity(i) {
+  PAIRS[i].ida.polarity *= -1;
+  if (flowing) swapIda(i); else updatePairUI(i);
+  saveState();
+}
+// safeRamp — axe 1 : cancelScheduledValues avant tout fade
+function safeRamp(gainParam, target, duration) {
+  const now = Tone.now();
+  gainParam.cancelScheduledValues(now);
+  gainParam.setValueAtTime(gainParam.value, now);
+  gainParam.linearRampToValueAtTime(target, now + duration);
+}
+function toggleMuteP(i) {
+  const pid = PAIRS[i].pingala.id;
+  mutedOscs[pid] = !mutedOscs[pid];
+  const node = nodes[pid];
+  if (node) safeRamp(node.g.gain, mutedOscs[pid] ? 0 : PAIRS[i].pingala.vol, 0.5);
+  updatePairUI(i); saveState();
+}
+function toggleMuteI(i) {
+  const iid = PAIRS[i].ida.id;
+  mutedOscs[iid] = !mutedOscs[iid];
+  const node = nodes[iid];
+  if (node) safeRamp(node.g.gain, mutedOscs[iid] ? 0 : PAIRS[i].ida.vol, 0.5);
+  updatePairUI(i); updateMasterState(); saveState();
+}
+function setVolP(i, vol) {
+  PAIRS[i].pingala.vol = vol;
+  const pid = PAIRS[i].pingala.id;
+  const d = document.getElementById('o-pvol-'+i); if (d) d.textContent = vol.toFixed(2);
+  const node = nodes[pid]; if (node && !mutedOscs[pid]) safeRamp(node.g.gain, vol, 0.3);
+  saveState();
+}
+function setVolI(i, vol) {
+  PAIRS[i].ida.vol = vol;
+  const iid = PAIRS[i].ida.id;
+  const d = document.getElementById('o-ivol-'+i); if (d) d.textContent = vol.toFixed(2);
+  const node = nodes[iid]; if (node && !mutedOscs[iid]) safeRamp(node.g.gain, vol, 0.3);
+  saveState();
+}
+function setMasterVol(v) {
+  masterVol = Math.max(0, Math.min(1, parseFloat(v)));
+  if (masterGain) safeRamp(masterGain.gain, masterVol, 0.3);
+  const d = document.getElementById('mvol-val');
+  if (d) d.textContent = Math.round(masterVol * 100) + '%';
+  saveState();
+}
+function setMasterFreq(f) {
+  masterFreq = f;
+  updateDisplay();
+  if (flowing) PAIRS.forEach((_, i) => swapPDebounced(i)); // axe 3+14
+  // Axe 17 : titre dynamique
+  document.title = 'FBF ' + f;
+  const h1 = document.querySelector('header h1');
+  if (h1) h1.dataset.freq = f; // utilisé par CSS ou JS
+  saveState();
+}
+
+// ── Δ Binaural Global — assigne la même valeur à toutes les IDA ──
+let globalDelta = 7.83;
+// Sphère Δ — boutons ± 0.1 Hz
+function deltaStep(delta) {
+  const d = Math.round(Math.max(0.1, Math.min(36, globalDelta + delta)) * 10) / 10;
+  setGlobalDelta(d);
+}
+function setGlobalDelta(raw) {
+  const d = Math.round(Math.max(0.1, Math.min(36, parseFloat(raw))) * 10) / 10; // bornes 0.1–36
+  if (isNaN(d)) return;
+  globalDelta = d;
+  PAIRS.forEach((pair, i) => {
+    pair.ida.delta = d;
+    updatePairUI(i); // axe 7 : sync bd-i + bws-i via updatePairUI
+    if (flowing) tuneOsc(pair.ida.id, calcIFreq(i)); // anti-craquement
+    // Axe 7 : sync tab-btn indicateur live
+    const tb = document.getElementById('tabBtn-'+i);
+    if (tb) tb.classList.toggle('live-pair', flowing && !mutedOscs[pair.pingala.id]);
+  });
+  const ws  = waveState(d);
+  const gws = document.getElementById('global-ws');
+  if (gws) { gws.textContent = ws.s; gws.style.color = ws.c; }
+  const gdi = document.getElementById('global-delta-input');
+  if (gdi && document.activeElement !== gdi) gdi.value = d.toFixed(1);
+  saveState();
+}
+
+// ── Micro-boutons : n±0.1 / reset / aléatoire ──
+function nDecrement(i) {
+  const n = Math.max(0, Math.round((PAIRS[i].pingala.n - 0.1) * 10) / 10);
+  setN(i, n);
+}
+function nIncrement(i) {
+  const n = Math.round((PAIRS[i].pingala.n + 0.1) * 10) / 10;
+  setN(i, n);
+}
+function nReset(i) {
+  // Reset : ratio × masterFreq → n=1 ramène à masterFreq×ratio^1
+  PAIRS[i].pingala.n = 1.0;
+  updatePairUI(i);
+  if (flowing) swapPDebounced(i);
+}
+function nRandom(i) {
+  // Axe 13 : bornes calculées selon signe log(r) — ratios < 1 inclus
+  const r = RATIO_OPTS[PAIRS[i].pingala.ri].r;
+  if (r <= 0 || r === 1) return;
+  const logR = Math.log(r);
+  const nA = Math.log(72  / masterFreq) / logR;
+  const nB = Math.log(864 / masterFreq) / logR;
+  const nMin = Math.max(0, Math.min(nA, nB));
+  const nMax = Math.max(0, Math.max(nA, nB));
+  if (nMin >= nMax) { PAIRS[i].pingala.n = 1.0; }
+  else { PAIRS[i].pingala.n = Math.round((nMin + Math.random() * (nMax - nMin)) * 10) / 10; }
+  updatePairUI(i);
+  if (flowing) swapPDebounced(i);
+}
+
+// ─────────────────────────────────────────────────────────────
+// PARTIE 7 — FLOW / ANIMATION ANALYSER
+// ─────────────────────────────────────────────────────────────
+
+async function startFlow() {
+  // Axe 4 : feedback immédiat avant le premier son
+  const btn = document.getElementById('btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Initialisation…'; }
+  ui('idle', '', '✦ Éveil du Metatron…');
+  try {
+    await Tone.start();
+    limiter    = new Tone.Limiter(-3).toDestination();
+    analyser   = new Tone.Analyser('waveform', 256);
+    masterGain = new Tone.Gain(masterVol); // axe 4
+    masterGain.connect(analyser);
+    masterGain.connect(limiter);
+    flowing = true;
+    PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 350 + i * 210));
+    PAIRS.forEach((_, i) => updateOrbUI(i));
+    ui('live', 'Dissoudre', 'En expansion…');
+    animAnalyser();
+  } catch(err) {
+    flowing = false; nodes = {};
+    [masterGain, limiter, analyser].forEach(x => { try { x?.dispose(); } catch(e){} });
+    masterGain = null; limiter = null; analyser = null;
+    if (btn) btn.disabled = false;
+    ui('idle', 'Rayonner', 'Erreur audio — relancer');
+  }
+}
+async function stopFlow() {
+  document.getElementById('btn').disabled = true;
+  ui('idle', '', 'Dissolution…');
+  // 1. Stopper la progression AVANT tout
+  if (progRunning) stopProgression();
+  // 2. Annuler tous les debounce timers
+  Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
+  // 3. Silence immédiat sur masterGain
+  try { if (masterGain) masterGain.gain.setValueAtTime(0, Tone.now()); } catch(e){}
+  // 4. Stop + disconnect chaque oscillateur
+  const nodesCopy = {...nodes};
+  nodes = {};
+  flowing = false; // ICI — avant les stops pour bloquer tout nouveau swap
+  Object.values(nodesCopy).forEach(n => {
+    if (!n) return;
+    try { n.g.gain.cancelScheduledValues(Tone.now()); n.g.gain.setValueAtTime(0, Tone.now()); } catch(e){}
+    try { n.o.stop(); } catch(e){}
+    try { n.o.disconnect(); n.g.disconnect(); n.p.disconnect(); } catch(e){}
+    setTimeout(() => { ['o','g','p'].forEach(k => { try { n[k].dispose?.(); } catch(e){} }); }, 300);
+  });
+  // 5. Court délai puis dispose du graph maître
+  await new Promise(r => setTimeout(r, 350));
+  if (animID) { cancelAnimationFrame(animID); animID = null; }
+  [masterGain, limiter, analyser].forEach(x => {
+    try { x?.disconnect(); } catch(e){}
+    try { x?.dispose(); } catch(e){}
+  });
+  masterGain = null; limiter = null; analyser = null;
+  PAIRS.forEach((_, i) => updateOrbUI(i));
+  const mc = document.getElementById('vpc-p' + MASTER_IDX);
+  if (mc) mc.style.boxShadow = '';
+  document.getElementById('btn').disabled = false;
+  ui('idle', 'Rayonner', 'Metatron immobile');
+}
+async function toggleFlow() {
+  if (!flowing) await startFlow(); else await stopFlow();
+}
+
+function animAnalyser() {
+  if (!flowing || !analyser) return;
+  animID = requestAnimationFrame(animAnalyser);
+  const data = analyser.getValue();
+  // Axe 15 : sous-échantillonnage step 4 — CPU ÷4, rendu identique
+  let sum = 0, count = 0;
+  for (let k = 0; k < data.length; k += 4) { sum += Math.abs(data[k]); count++; }
+  const e = Math.min(1, sum / count * 7);
+  const mc = document.getElementById('vpc-p' + MASTER_IDX);
+  if (mc) {
+    const g = Math.round(e * 45);
+    const a = (0.12 + e * .48).toFixed(2);
+    mc.style.boxShadow = `0 0 ${g}px rgba(255,160,255,${a}),0 0 ${g*2}px rgba(255,160,255,${(a*.35).toFixed(2)}),inset 0 0 ${Math.round(g*.5)}px rgba(255,160,255,${(a*.25).toFixed(2)})`;
+  }
+}
+
+function ui(state, label, text) {
+  const btn = document.getElementById('btn');
+  if (label) btn.textContent = label;
+  document.getElementById('dot').classList.toggle('live', state === 'live');
+  document.getElementById('status').classList.toggle('live', state === 'live');
+  document.getElementById('stxt').textContent = text;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PARTIE 8 — UI : AFFICHAGE / ONGLETS / CONSTRUCTION BLOCS
+// ─────────────────────────────────────────────────────────────
+
+function updateMasterState() {
+  const active = PAIRS.filter(p => !mutedOscs[p.ida.id]);
+  const el = document.getElementById('ms-state');
+  const badge = document.getElementById('wave-badge');
+  if (!active.length) {
+    if (el) { el.textContent = 'Binaural'; el.style.color = 'rgba(200,140,255,.5)'; }
+    if (badge) { badge.textContent = ''; badge.className = 'wave-badge'; }
+    return;
+  }
+  const avg = active.reduce((s, p) => s + p.ida.delta, 0) / active.length;
+  const ws = waveState(avg);
+  if (el) { el.textContent = ws.s; el.style.color = ws.c; }
+  // Axe 6 : badge onde dans status bar
+  if (badge && flowing) {
+    badge.textContent = ws.s + ' · ' + avg.toFixed(2) + ' Hz';
+    badge.style.color = ws.c;
+    badge.className = 'wave-badge live';
+  } else if (badge) { badge.textContent = ''; badge.className = 'wave-badge'; }
+}
+
+function updateDisplay() {
+  const msf = document.getElementById('ms-freq');
+  if (msf) msf.textContent = masterFreq;
+  // Sync cellule input maître — BUG 2 fix
+  const mi = document.getElementById('master-input');
+  if (mi && document.activeElement !== mi) mi.value = masterFreq;
+  document.title = 'FBF ' + masterFreq;
+  PAIRS.forEach((_, i) => updatePairUI(i));
+  updateMasterState();
+}
+
+function updatePairUI(i) {
+  const pair = PAIRS[i];
+  const pF   = calcPFreq(i), iF = calcIFreq(i);
+  const ws   = waveState(pair.ida.delta);
+
+  // Fréquences dans bloc paire
+  const pfreq = document.getElementById('pfreq-'+i); if (pfreq) pfreq.textContent = fmtFreq(pF);
+  const ifreq = document.getElementById('ifreq-'+i); if (ifreq) ifreq.textContent = fmtFreq(iF);
+  const bmf   = document.getElementById('bmf-'+i);   if (bmf)   bmf.textContent = masterFreq;
+  const brl   = document.getElementById('brl-'+i);   if (brl)   brl.textContent = RATIO_OPTS[pair.pingala.ri].l;
+  const bfn   = document.getElementById('bfn-'+i);   if (bfn)   bfn.textContent = pair.pingala.n;
+  const bfr   = document.getElementById('bfr-'+i);   if (bfr)   bfr.textContent = fmtFreq(pF);
+  const brs   = document.getElementById('brat-'+i);  if (brs)   brs.value = pair.pingala.ri;
+  const bn    = document.getElementById('bn-'+i);
+  if (bn && document.activeElement !== bn) bn.value = pair.pingala.n;
+
+  // Ida
+  const ibp   = document.getElementById('ibf-p-'+i); if (ibp)   ibp.textContent = fmtShort(pF);
+  const ipol  = document.getElementById('ipol-'+i);
+  if (ipol) { ipol.textContent = pair.ida.polarity === 1 ? '+' : '−'; ipol.classList.toggle('negative', pair.ida.polarity === -1); }
+  const ibd   = document.getElementById('ibf-d-'+i); if (ibd)   ibd.textContent = pair.ida.delta;
+  const ibr   = document.getElementById('ibf-r-'+i); if (ibr)   ibr.textContent = fmtFreq(iF);
+  const bws   = document.getElementById('bws-'+i);   if (bws)   { bws.textContent = ws.s; bws.style.color = ws.c; }
+  const bd    = document.getElementById('bd-'+i);
+  if (bd && document.activeElement !== bd) bd.value = pair.ida.delta;
+
+  // Boutons mute
+  const pmb = document.getElementById('pmute-'+i);
+  const isMutedP = !!mutedOscs[pair.pingala.id];
+  if (pmb) { pmb.textContent = isMutedP ? 'Son' : 'Mute'; pmb.classList.toggle('muted', isMutedP); }
+  const imb = document.getElementById('imute-'+i);
+  const isMutedI = !!mutedOscs[pair.ida.id];
+  if (imb) {
+    if (isMutedI) { imb.textContent = 'Activer'; imb.className = 'btn-activer'; }
+    else          { imb.textContent = 'Couper';  imb.className = 'pair-mute-i muted'; }
+  }
+
+  // Orbes
+  updateOrbUI(i);
+  // Tab label fréquences
+  const tl = document.getElementById('tab-label-'+i);
+  if (tl) tl.textContent = fmtShort(pF);
+}
+
+function updateOrbUI(i) {
+  const pair = PAIRS[i];
+  const pF = calcPFreq(i);
+  const isMutedP = !!mutedOscs[pair.pingala.id];
+  const vcp = document.getElementById('vpc-p' + i);
+  if (vcp) {
+    vcp.classList.toggle('vp-muted', isMutedP);
+    vcp.classList.toggle('vp-live',  flowing && !isMutedP);
+    // Axe 0 : sphère maître = ms-freq, latérales = vp-pf-i
+    if (i === MASTER_IDX) {
+      const msf = document.getElementById('ms-freq');
+      if (msf) msf.textContent = fmtShort(pF);
+    } else {
+      const f = document.getElementById('vp-pf-' + i); if (f) f.textContent = fmtShort(pF);
+    }
+  }
+  const tb = document.getElementById('tabBtn-'+i);
+  if (tb) tb.classList.toggle('live-pair', flowing && !isMutedP);
+  const tl = document.getElementById('tab-label-' + i); if (tl) tl.textContent = fmtShort(pF);
+}
+
+// ── Onglets ──
+let activeTab = 0;
+function switchTab(idx) {
+  activeTab = idx;
+  document.querySelectorAll('.tab-pane').forEach((p, j) => p.classList.toggle('active', j === idx));
+  document.querySelectorAll('.tab-btn').forEach((b, j) => {
+    b.classList.toggle('active', j === idx);
+    // Axe 8 : scroll onglet actif en vue sur mobile
+    if (j === idx) b.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  });
+}
+
+// ══ FULLSCREEN ══════════════════════════════════════════════
+function toggleFullscreen() {
+  const btn = document.getElementById('btn-fullscreen');
+  if (!document.fullscreenElement) {
+    let p = null;
+    if (document.documentElement.requestFullscreen) {
+        p = document.documentElement.requestFullscreen();
+    } else if (document.documentElement.webkitRequestFullscreen) {
+        p = document.documentElement.webkitRequestFullscreen();
+    } else if (document.documentElement.mozRequestFullScreen) {
+        p = document.documentElement.mozRequestFullScreen();
+    }
+    if (p && typeof p.catch === 'function') {
+        p.catch(err => {
+            console.warn("Plein écran refusé par le navigateur :", err);
+            if (btn) btn.textContent = '⛶';
+        });
+    }
+    if (btn) btn.textContent = '✕';
+  } else {
+    let p = null;
+    if (document.exitFullscreen) {
+        p = document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+        p = document.webkitExitFullscreen();
+    } else if (document.mozCancelFullScreen) {
+        p = document.mozCancelFullScreen();
+    }
+    if (p && typeof p.catch === 'function') {
+        p.catch(err => console.warn(err));
+    }
+    if (btn) btn.textContent = '⛶';
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.textContent = document.fullscreenElement ? '✕' : '⛶';
+  // Force redraw on fullscreen toggle to perfectly match new screen dimension
+  setTimeout(() => {
+    buildVesicaPairs(); drawMetatron();
+  }, 100);
+});
+
+// ══ PRESET ══════════════════════════════════════════════════
+// 34 fréquences de 36 à 432 par pas de 12
+const PRESET_FREQS = Array.from({length:34}, (_,i) => 36 + i * 12);
+// 3 plages cibles pour les 6 paires latérales
+const PRESET_RANGES = [
+  { pairs:[0,1], min:54,  max:144, label:'Grave 54–144 Hz',   color:'#FF9A8B' },
+  { pairs:[2,3], min:144, max:288, label:'Médium 144–288 Hz', color:'#80FFD0' },
+  { pairs:[4,5], min:288, max:432, label:'Aigu 288–432 Hz',   color:'#60D8FF' },
+];
+// Noms Solfège
+const SOLFEGE = {36:'Ut₁',72:'Ut₂',108:'Sol₁',144:'Ré₂',180:'La₂',
+  216:'Mi₂',252:'Si♭₂',288:'Ré₃',324:'Sol₃',360:'La₃',
+  396:'Sol♭₃',432:'La₃☉'};
+
+let presetSelected = 432;
+let presetAssign = []; // [{pair, ratio, n, freq}]
+
+function computePresetAssign(mf) {
+  // Pour chaque plage, trouver 2 paires avec ratio+n donnant une freq dans la plage
+  const result = [];
+  PRESET_RANGES.forEach(range => {
+    range.pairs.forEach((pairIdx, k) => {
+      let best = null;
+      // Chercher ratio et n entier positif pour atterrir dans la plage
+      for (let ri = 0; ri < RATIO_OPTS.length; ri++) {
+        const r = RATIO_OPTS[ri].r;
+        // n tel que mf × r^n ∈ [range.min, range.max]
+        const nA = Math.log(range.min / mf) / Math.log(r);
+        const nB = Math.log(range.max / mf) / Math.log(r);
+        const nMin = Math.max(0, Math.min(nA, nB));
+        const nMax = Math.max(0, Math.max(nA, nB));
+        // Chercher n entier ou 1 décimale dans [nMin, nMax]
+        for (let n = Math.ceil(nMin * 10) / 10; n <= nMax + 0.05; n = Math.round((n + 0.1) * 10) / 10) {
+          const freq = mf * Math.pow(r, n);
+          if (freq >= range.min && freq <= range.max) {
+            // Préférer n différent des autres paires déjà assignées dans la même plage
+            const alreadyUsed = result.filter(x => x.range === range.label).map(x => x.ri+'-'+x.n);
+            if (!best || !alreadyUsed.includes(ri+'-'+n)) {
+              best = { pairIdx, ri, n: Math.round(n * 10) / 10, freq: Math.round(freq * 10) / 10,
+                       ratioLabel: RATIO_OPTS[ri].l, range: range.label, color: range.color };
+              if (!alreadyUsed.includes(ri+'-'+n)) break;
+            }
+          }
+        }
+        if (best && !result.find(x => x.pairIdx === pairIdx)) break;
+      }
+      if (best) result.push(best);
+      else result.push({ pairIdx, ri:k%RATIO_OPTS.length, n:1, freq:mf, ratioLabel:'1/1', range:range.label, color:range.color });
+    });
+  });
+  return result;
+}
+
+function selectPreset(freq) {
+  presetSelected = freq;
+  presetAssign = computePresetAssign(freq);
+  // Mettre à jour UI boutons
+  document.querySelectorAll('.preset-freq-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.freq) === freq);
+  });
+  renderPresetAssign();
+}
+
+function renderPresetAssign() {
+  const wrap = document.getElementById('preset-assign-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  PRESET_RANGES.forEach(range => {
+    const assigns = presetAssign.filter(a => a.range === range.label);
+    const row = document.createElement('div');
+    row.className = 'preset-assign-row';
+    row.innerHTML = `<span class="preset-assign-label" style="color:${range.color}88">${range.label}</span>`;
+    assigns.forEach(a => {
+      row.innerHTML += `<span class="preset-assign-freq" style="border-color:${a.color}44">${a.freq} Hz</span>
+        <span class="preset-assign-ratio">${a.ratioLabel}^${a.n}</span>`;
+    });
+    wrap.appendChild(row);
+  });
+}
+
+function applyPreset() {
+  if (!presetAssign.length) return;
+  // Appliquer masterFreq
+  setMasterFreq(presetSelected);
+  // Appliquer ratio+n sur chaque paire
+  presetAssign.forEach(a => {
+    PAIRS[a.pairIdx].pingala.ri = a.ri;
+    PAIRS[a.pairIdx].pingala.n  = a.n;
+    mutedOscs[PAIRS[a.pairIdx].pingala.id] = false;
+    mutedOscs[PAIRS[a.pairIdx].ida.id]     = false;
+  });
+  // Maître sur masterFreq directe (n=1, ratio 11/10)
+  PAIRS[MASTER_IDX].pingala.ri = 0;
+  PAIRS[MASTER_IDX].pingala.n  = 1.0;
+  if (flowing) PAIRS.forEach((_, i) => swapPingala(i));
+  else updateDisplay();
+  saveState();
+  // Feedback visuel
+  const btn = document.getElementById('preset-launch-btn');
+  if (btn) { btn.textContent = '✓ Appliqué'; setTimeout(() => btn.textContent = '▶ Lancer', 1800); }
+}
+
+function buildPresetHTML() {
+  const grid = PRESET_FREQS.map(f => {
+    const sol = SOLFEGE[f] ? `<span class="preset-freq-label">${SOLFEGE[f]}</span>` : '<span class="preset-freq-label">&nbsp;</span>';
+    return `<button class="preset-freq-btn${f===presetSelected?' active':''}" data-freq="${f}"
+      onclick="selectPreset(${f})">
+      <span class="preset-freq-hz">${f}</span>
+      ${sol}
+    </button>`;
+  }).join('');
+
+  return `<div class="preset-panel">
+    <div class="preset-intro">Choisis une fréquence · les 6 oscillateurs s'accordent automatiquement</div>
+    <div class="preset-section-title">Fréquence maître · 36 → 432 Hz</div>
+    <div class="preset-grid">${grid}</div>
+    <div class="preset-section-title">Répartition harmonique</div>
+    <div class="preset-assign-wrap" id="preset-assign-wrap"></div>
+    <button class="btn-preset-launch" id="preset-launch-btn" onclick="applyPreset()">▶ Lancer</button>
+  </div>`;
+}
+
+// ══ NOTICE ══════════════════════════════════════════════════
+function buildNoticeHTML() {
+  return `<div class="notice-panel">
+    <div class="notice-h1">✦ Guide FBF ✦</div>
+
+    <div class="notice-block">
+      <div class="notice-term">Fréquence Maître</div>
+      <div class="notice-def">L'ancre de tout le système. Tous les oscillateurs en dérivent par ratio harmonique. Modifie-la avec les boutons − et + ou via l'onglet Preset.</div>
+    </div>
+
+    <div class="notice-block">
+      <div class="notice-term">Pingala ☀</div>
+      <div class="notice-def">Canal droit — fréquence calculée selon le ratio et l'exposant n. Correspond au courant solaire, actif, ascendant.</div>
+    </div>
+
+    <div class="notice-block">
+      <div class="notice-term">Ida ☽</div>
+      <div class="notice-def">Canal gauche — fréquence Pingala ± Δ binaural. L'écart entre les deux canaux crée le battement binaural perçu par le cerveau.</div>
+    </div>
+
+    <div class="notice-block">
+      <div class="notice-term">Δ Binaural</div>
+      <div class="notice-def">Différence de fréquence entre Pingala et Ida. Le cerveau perçoit un troisième son égal à cet écart — c'est le battement binaural.<br>
+      · 0.1–4 Hz → Delta (sommeil profond)<br>
+      · 4–8 Hz → Thêta (méditation, créativité)<br>
+      · 8–13 Hz → Alpha (relaxation, présence)<br>
+      · 13–30 Hz → Bêta (concentration, éveil)<br>
+      · 30+ Hz → Gamma (hyperconscience)</div>
+    </div>
+
+    <div class="notice-block">
+      <div class="notice-term">Ratios harmoniques</div>
+      <div class="notice-def">
+      · 11/10 — Inspire · 12/10 — Inspire profond · 12/11 — Expansion<br>
+      · 10/11 — Expire · 10/12 — Expire profond · 11/12 — Contraction<br>
+      Ces ratios reflètent les intervalles naturels de la respiration.</div>
+    </div>
+
+    <div class="notice-section-title" style="font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.2em;color:rgba(200,160,255,.55);text-align:center;margin:.4rem 0;">Comment commencer</div>
+
+    <div class="notice-step"><span class="notice-step-num">1</span><span class="notice-step-txt">Va dans l'onglet <strong>Preset</strong>, choisis une fréquence entre 36 et 432 Hz. Appuie sur <strong>▶ Lancer</strong>.</span></div>
+    <div class="notice-step"><span class="notice-step-num">2</span><span class="notice-step-txt">Reviens sur <strong>Metatron</strong> et appuie sur <strong>Rayonner</strong>. Le son démarre.</span></div>
+    <div class="notice-step"><span class="notice-step-num">3</span><span class="notice-step-txt">Écoute avec un casque stéréo pour percevoir les battements binauraux.</span></div>
+    <div class="notice-step"><span class="notice-step-num">4</span><span class="notice-step-txt">Ajuste le <strong>Δ Binaural</strong> pour choisir ton état cible : Thêta pour méditer, Alpha pour te détendre, Bêta pour te concentrer.</span></div>
+    <div class="notice-step"><span class="notice-step-num">5</span><span class="notice-step-txt">Explore les onglets de chaque paire pour affiner ratio, volume et polarité.</span></div>
+  </div>`;
+}
+
+function buildTabs() {
+  const bar  = document.getElementById('tabs-bar');
+  const wrap = document.querySelector('.wrap');
+  bar.innerHTML = '';
+
+  // Onglet 0 : Metatron
+  const t0 = document.createElement('button');
+  t0.className = 'tab-btn active';
+  t0.innerHTML = '✦ Metatron';
+  t0.style.background = 'rgba(180,80,255,.15)';
+  t0.style.borderColor = 'rgba(180,80,255,.45)';
+  t0.style.color = '#E0BFFF';
+  t0.onclick = () => switchTab(0);
+  bar.appendChild(t0);
+
+  // Onglet 1 : Preset
+  const tPre = document.createElement('button');
+  tPre.className = 'tab-btn';
+  tPre.id = 'tabBtn-preset';
+  tPre.innerHTML = '✦ Preset';
+  tPre.style.borderColor = 'rgba(255,180,80,.5)';
+  tPre.style.color = '#FFD080';
+  tPre.onclick = () => { switchTab(1); renderPresetAssign(); };
+  bar.appendChild(tPre);
+  const panePre = document.createElement('div');
+  panePre.className = 'tab-pane';
+  panePre.id = 'tab-preset';
+  panePre.innerHTML = buildPresetHTML();
+  wrap.appendChild(panePre);
+
+  // Onglet 2 : Notice
+  const tNot = document.createElement('button');
+  tNot.className = 'tab-btn';
+  tNot.id = 'tabBtn-notice';
+  tNot.innerHTML = '✦ Notice';
+  tNot.style.borderColor = 'rgba(100,220,255,.4)';
+  tNot.style.color = '#80E8FF';
+  tNot.onclick = () => switchTab(2);
+  bar.appendChild(tNot);
+  const paneNot = document.createElement('div');
+  paneNot.className = 'tab-pane';
+  paneNot.id = 'tab-notice';
+  paneNot.innerHTML = buildNoticeHTML();
+  wrap.appendChild(paneNot);
+
+  // Onglets 3–9 : Paires (décalées de 2 pour Preset+Notice)
+  PAIRS.forEach((pair, i) => {
+    const tb = document.createElement('button');
+    tb.className = 'tab-btn';
+    tb.id = 'tabBtn-'+i;
+    tb.style.borderColor = pair.color + '55';
+    tb.innerHTML = `<span style="color:${pair.color}">${pair.label}</span> <span id="tab-label-${i}" style="font-size:.6rem;opacity:.55">${fmtShort(calcPFreq(i))}</span>`;
+    tb.onclick = () => switchTab(i + 3);
+    bar.appendChild(tb);
+    const pane = document.createElement('div');
+    pane.className = 'tab-pane';
+    pane.id = 'tab-pair-'+i;
+    pane.innerHTML = buildPairHTML(pair, i);
+    wrap.appendChild(pane);
+  });
+
+  // Init preset assign
+  selectPreset(presetSelected);
+}
+
+function buildPairHTML(pair, i) {
+  const c    = pair.color;
+  const pF   = calcPFreq(i), iF = calcIFreq(i);
+  const ws   = waveState(pair.ida.delta);
+  const isMutedI = !!mutedOscs[pair.ida.id];
+  const isMutedP = !!mutedOscs[pair.pingala.id];
+
+  return `<div class="pair-panel" style="border-left-color:${c};margin-top:.5rem;">
+    <div class="pair-head">
+      <span class="pair-dot" style="background:${c}"></span>
+      <span class="pair-name" style="color:${c}">${pair.label} — Pingala / Ida</span>
+    </div>
+
+    <!-- PINGALA -->
+    <div style="background:rgba(0,0,0,.15);border-radius:8px;border-left:2px solid ${c}88;">
+      <div class="accord-header" onclick="toggleAccord('p${i}')">
+        <span class="accord-arrow open" id="aa-p${i}">▶</span>
+        <span style="font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.14em;color:${c};">☀ PINGALA</span>
+        <span id="pfreq-${i}" style="font-family:'IM Fell English',serif;font-size:.92rem;color:${c};margin-left:auto;">${fmtFreq(pF)}</span>
+        <button class="pair-mute-p${isMutedP?' muted':''}" id="pmute-${i}" onclick="event.stopPropagation();toggleMuteP(${i})">${isMutedP?'Son':'Mute'}</button>
+      </div>
+      <div class="accord-body open" id="ab-p${i}" style="padding:0 .7rem .6rem;">
+      <div class="block-formula">
+        <span class="bf-master" id="bmf-${i}">${masterFreq}</span>
+        <span class="bf-sym">×</span>
+        <span class="bf-ratio" id="brl-${i}">${RATIO_OPTS[pair.pingala.ri].l}</span>
+        <span class="bf-sym">^</span>
+        <span class="bf-n" id="bfn-${i}">${pair.pingala.n}</span>
+        <span class="bf-sym">=</span>
+        <span class="bf-result" id="bfr-${i}">${fmtFreq(pF)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;padding:.1rem 0;">
+        <span style="font-size:.58rem;font-style:italic;color:rgba(200,170,255,.44);min-width:50px;">Vol P</span>
+        <input type="range" class="brange" id="pvol-${i}" min="0" max="0.45" step="0.01" value="${pair.pingala.vol}"
+          style="flex:1;accent-color:${c};" oninput="setVolP(${i},parseFloat(this.value))">
+        <span style="font-family:'IM Fell English',serif;font-size:.65rem;color:rgba(220,190,255,.65);min-width:28px;text-align:right;" id="o-pvol-${i}">${pair.pingala.vol.toFixed(2)}</span>
+      </div>
+      <div class="bctrl">
+        <div class="bctrl-row"><span class="bctrl-label">Ratio harmonique</span></div>
+        <select class="bsel" id="brat-${i}" onchange="setRatio(${i},parseInt(this.value))">
+          ${RATIO_OPTS.map((r,j)=>`<option value="${j}"${j===pair.pingala.ri?' selected':''}>${r.l}</option>`).join('')}
+        </select>
+      </div>
+      <div class="param-row">
+        <span class="param-label">n =</span>
+        <input type="number" class="param-input" id="bn-${i}" min="0" step="0.1" value="${pair.pingala.n}" oninput="setN(${i},this.value)">
+        <span class="param-hint">masterFreq × ratio^n</span>
+      </div>
+
+      </div>
+    </div>
+    <!-- IDA -->
+    <div style="background:rgba(0,0,0,.12);border-radius:8px;border-left:2px dashed ${c}55;">
+      <div class="accord-header" onclick="toggleAccord('i${i}')">
+        <span class="accord-arrow open" id="aa-i${i}">▶</span>
+        <span style="font-family:'Cinzel Decorative',serif;font-size:.6rem;letter-spacing:.14em;color:${c};opacity:.7;">☽ IDA</span>
+        <span id="ifreq-${i}" style="font-family:'IM Fell English',serif;font-size:.88rem;color:${c};opacity:.75;margin-left:auto;">${fmtFreq(iF)}</span>
+        <button id="imute-${i}" class="${isMutedI?'btn-activer':'pair-mute-i muted'}" onclick="event.stopPropagation();toggleMuteI(${i})">${isMutedI?'Activer':'Couper'}</button>
+      </div>
+      <div class="accord-body open" id="ab-i${i}" style="padding:0 .7rem .6rem;">
+      <div class="block-formula">
+        <span class="bf-link" id="ibf-p-${i}">${fmtShort(pF)}</span>
+        <button class="polarity-btn${pair.ida.polarity===-1?' negative':''}" id="ipol-${i}" onclick="togglePolarity(${i})">${pair.ida.polarity===1?'+':'−'}</button>
+        <span class="bf-delta" id="ibf-d-${i}">${pair.ida.delta}</span>
+        <span class="bf-sym">=</span>
+        <span class="bf-result" id="ibf-r-${i}">${fmtFreq(iF)}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:.5rem;padding:.1rem 0;">
+        <span style="font-size:.58rem;font-style:italic;color:rgba(200,170,255,.44);min-width:50px;">Vol I</span>
+        <input type="range" class="brange" id="ivol-${i}" min="0" max="0.45" step="0.01" value="${pair.ida.vol}"
+          style="flex:1;accent-color:${c}88;" oninput="setVolI(${i},parseFloat(this.value))">
+        <span style="font-family:'IM Fell English',serif;font-size:.65rem;color:rgba(220,190,255,.65);min-width:28px;text-align:right;" id="o-ivol-${i}">${pair.ida.vol.toFixed(2)}</span>
+      </div>
+      <div class="bctrl">
+        <div class="bctrl-row">
+          <span class="bctrl-label">Δ Binaural</span>
+          <span class="wave-state" id="bws-${i}" style="color:${ws.c}">${ws.s}</span>
+        </div>
+        <div class="param-row">
+          <span class="param-label">Δ =</span>
+          <input type="number" class="param-input" id="bd-${i}" min="0.1" max="43.2" step="0.1" value="${pair.ida.delta}" oninput="setDelta(${i},this.value)">
+          <span class="param-hint">Hz (0.1 → 43.2)</span>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PARTIE 9 — METATRON CANVAS + SPHÈRES ORBITALES + INIT
+// ─────────────────────────────────────────────────────────────
+
+// ── Cube de Metatron ──────────────────────────────────────────
+// 13 cercles de la Fleur de Vie + connexions sacrées
+function drawMetatron() {
+  const cv   = document.getElementById('meta-canvas');
+  const cont = document.getElementById('meta-container');
+  // Calculer l'espace en se basant sur le conteneur lui-même
+  const vw   = cont.clientWidth;
+  const vh   = cont.clientHeight;
+  const sz   = Math.min(vw, vh); // carré inscrit dans le conteneur
+  const dpr  = window.devicePixelRatio || 1;
+  
+  cv.width  = vw * dpr;
+  cv.height = vh * dpr;
+  cv.style.width  = vw + 'px';
+  cv.style.height = vh + 'px';
+  
+  const ctx = cv.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, vw, vh);
+
+  const cx = vw / 2, cy = vh / 2;
+  const R  = sz * 0.32; // rayon des 6 cercles externes
+  const r  = sz * 0.145; // rayon de chaque cercle individuel (Fleur de Vie)
+
+  const a = metaAngle;
+
+  // 7 centres de la Fleur de Vie (centre + 6 autour)
+  const centers = [{ x: cx, y: cy }];
+  for (let k = 0; k < 6; k++) {
+    centers.push({
+      x: cx + R * Math.cos(a + k * Math.PI / 3),
+      y: cy + R * Math.sin(a + k * Math.PI / 3)
+    });
+  }
+  // 6 centres externes du Metatron (entre les précédents)
+  const centers2 = [];
+  for (let k = 0; k < 6; k++) {
+    centers2.push({
+      x: cx + R * 2 * Math.cos(a + Math.PI / 6 + k * Math.PI / 3),
+      y: cy + R * 2 * Math.sin(a + Math.PI / 6 + k * Math.PI / 3)
+    });
+  }
+
+  // ── Connexions Metatron (toutes les paires de centres) ──
+  const allC = [...centers, ...centers2];
+  ctx.save();
+  for (let p = 0; p < allC.length; p++) {
+    for (let q = p + 1; q < allC.length; q++) {
+      const dist = Math.hypot(allC[p].x - allC[q].x, allC[p].y - allC[q].y);
+      if (dist < sz * 0.76) {
+        const grad = ctx.createLinearGradient(allC[p].x, allC[p].y, allC[q].x, allC[q].y);
+        grad.addColorStop(0,  'rgba(200,100,255,.38)');
+        grad.addColorStop(.5, 'rgba(80,200,255,.44)');
+        grad.addColorStop(1,  'rgba(80,255,180,.34)');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth   = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(allC[p].x, allC[p].y);
+        ctx.lineTo(allC[q].x, allC[q].y);
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.restore();
+
+  // ── Cercles de la Fleur de Vie ──
+  centers.forEach((c, k) => {
+    const hue = (k * 60 + metaAngle * 18) % 360;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = `hsla(${hue},80%,80%,.62)`;
+    ctx.lineWidth   = 1.4;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // ── Cercles externes ──
+  centers2.forEach((c, k) => {
+    const hue = (k * 60 + 30 + metaAngle * 18) % 360;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(c.x, c.y, r * .7, 0, Math.PI * 2);
+    ctx.strokeStyle = `hsla(${hue},70%,75%,.42)`;
+    ctx.lineWidth   = 1.0;
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // ── Cercle extérieur global ──
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx, cy, sz * .47, 0, Math.PI * 2);
+  const glowGrad = ctx.createLinearGradient(cx - sz * .47, cy, cx + sz * .47, cy);
+  glowGrad.addColorStop(0,   'rgba(200,80,255,.40)');
+  glowGrad.addColorStop(.33, 'rgba(80,200,255,.35)');
+  glowGrad.addColorStop(.66, 'rgba(80,255,160,.35)');
+  glowGrad.addColorStop(1,   'rgba(255,160,80,.38)');
+  ctx.strokeStyle = glowGrad;
+  ctx.lineWidth   = 1.6;
+  ctx.stroke();
+  ctx.restore();
+}
+
+function animMetatron() {
+  metaAngle = (metaAngle + 0.004) % (Math.PI * 2); // axe 16
+  drawMetatron();
+  metaRAF = requestAnimationFrame(animMetatron);
+}
+
+// ── 7 sphères Pingala (canvas) — IDA via menu uniquement ────────
+// 6 latérales hexagonales + 1 maître au centre exact
+const HEX_DEG = [0, 60, 120, 180, 240, 300];
+
+let _bvpRetry = 0;
+function buildVesicaPairs() {
+  const layer = document.getElementById('sphere-layer');
+  const cont  = document.getElementById('meta-container');
+  // Ajustement précis via conteneur
+  const vw    = cont.clientWidth;
+  const vh    = cont.clientHeight;
+  const sz    = Math.min(vw, vh);
+  
+  _bvpRetry = 0;
+  document.querySelectorAll('.vp-wrap,.vp-center-wrap').forEach(n => n.remove());
+
+  const cx = vw / 2, cy = vh / 2;
+  const R  = sz * 0.39; // rayon hexagonal
+
+  // ── 6 sphères latérales — hexagone parfait ────────────────────
+  for (let i = 0; i < 6; i++) {
+    const pair = PAIRS[i];
+    const c    = pair.color;
+    const rad  = (HEX_DEG[i] - 90) * Math.PI / 180;
+    const px   = cx + R * Math.cos(rad);
+    const py   = cy + R * Math.sin(rad);
+    const isMutedP = !!mutedOscs[pair.pingala.id];
+    const pF   = calcPFreq(i);
+
+    const vp = document.createElement('div');
+    vp.className = 'vp-wrap';
+    vp.id = 'vp' + i;
+    vp.style.left = px + 'px';
+    vp.style.top  = py + 'px';
+    vp.innerHTML = `
+      <div class="vp-p ${isMutedP?'vp-muted':''} ${flowing&&!isMutedP?'vp-live':''}"
+           id="vpc-p${i}"
+           style="border-color:${c}AA;background:radial-gradient(circle,${c}44 0%,${c}1A 60%,transparent 100%);box-shadow:0 0 16px ${c}35;"
+           onclick="switchTab(${i+3})">
+        <span class="vp-type" style="color:${c}99">P${i+1}</span>
+        <span class="vp-freq" id="vp-pf-${i}">${fmtShort(pF)}</span>
+        <span class="vp-hz">Hz</span>
+      </div>
+      <div class="micro-btn micro-left"
+           style="border-color:${c}99;color:${c};background:${c}22;"
+           onclick="event.stopPropagation();nDecrement(${i})">−</div>
+      <div class="micro-btn micro-right"
+           style="border-color:${c}99;color:${c};background:${c}22;"
+           onclick="event.stopPropagation();nIncrement(${i})">+</div>
+      <div class="micro-btn micro-top"
+           style="border-color:${c}99;color:${c};background:${c}22;"
+           onclick="event.stopPropagation();nReset(${i})" title="Reset">↺</div>
+      <div class="micro-btn micro-bot"
+           style="border-color:${c}99;color:${c};background:${c}22;"
+           onclick="event.stopPropagation();nRandom(${i})" title="Aléatoire">⚄</div>`;
+    layer.appendChild(vp);
+  }
+
+  // ── Sphère maître — centre géométrique exact ──────────────────
+  const mp  = PAIRS[MASTER_IDX];
+  const mc  = mp.color;
+  const mpF = calcPFreq(MASTER_IDX);
+  const isMutedMP = !!mutedOscs[mp.pingala.id];
+
+  const vcw = document.createElement('div');
+  vcw.className = 'vp-center-wrap';
+  vcw.id = 'vp' + MASTER_IDX;
+  vcw.innerHTML = `
+    <div class="vp-p ${isMutedMP?'vp-muted':''} ${flowing&&!isMutedMP?'vp-live':''}"
+         id="vpc-p${MASTER_IDX}"
+         style="border-color:${mc}CC;background:radial-gradient(circle,${mc}50 0%,${mc}20 55%,rgba(26,5,51,.6) 100%);box-shadow:0 0 22px ${mc}50;backdrop-filter:blur(4px);"
+         onclick="switchTab(${MASTER_IDX+3})">
+      <span class="vp-type" style="color:${mc}BB;font-size:.28rem;letter-spacing:.14em;">MAÎTRE</span>
+      <span class="ms-freq" id="ms-freq" onclick="event.stopPropagation();openFreqEdit();">${masterFreq}</span>
+      <input type="number" id="freq-input-master" min="36" max="1296" placeholder="${masterFreq}" autocomplete="off"
+             onkeydown="handleFreqKey(event);">
+      <span class="ms-state" id="ms-state">Binaural</span>
+      <span style="font-size:.3rem;color:${mc}55;letter-spacing:.14em;">Hz</span>
+    </div>
+    <div class="micro-btn micro-left"
+         style="border-color:${mc}BB;color:${mc};"
+         onclick="nDecrement(${MASTER_IDX})">−</div>
+    <div class="micro-btn micro-right"
+         style="border-color:${mc}BB;color:${mc};"
+         onclick="nIncrement(${MASTER_IDX})">+</div>
+    <div class="micro-btn micro-top"
+         style="border-color:${mc}BB;color:${mc};"
+         onclick="nReset(${MASTER_IDX})" title="Reset">↺</div>
+    <div class="micro-btn micro-bot"
+         style="border-color:${mc}BB;color:${mc};"
+         onclick="nRandom(${MASTER_IDX})" title="Aléatoire">⚄</div>`;
+  layer.appendChild(vcw);
+
+  // Attacher listener freq-input après création
+  const inp = document.getElementById('freq-input-master');
+  if (inp && !inp._bound) {
+    inp._bound = true;
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); exitEditMaster(true); }
+      if (e.key === 'Escape') exitEditMaster(false);
+    });
+    inp.addEventListener('blur', () => exitEditMaster(true));
+  }
+  if (typeof activeTab !== 'undefined') switchTab(activeTab); // axe 12
+}
+
+// ── Saisie fréquence maître (inline handlers) ──────────────────
+function openFreqEdit() {
+  const freq = document.getElementById('ms-freq');
+  const inp  = document.getElementById('freq-input-master');
+  if (!freq || !inp) return;
+  freq.style.display = 'none';
+  inp.style.display = 'block'; inp.value = masterFreq; inp.focus(); inp.select();
+}
+function handleFreqKey(e) {
+  if (e.key === 'Enter') { e.preventDefault(); exitEditMaster(true); }
+  if (e.key === 'Escape') exitEditMaster(false);
+}
+function exitEditMaster(apply) {
+  const freq = document.getElementById('ms-freq');
+  const inp  = document.getElementById('freq-input-master');
+  if (!freq || !inp) return;
+  inp.style.display = 'none';
+  freq.style.display = 'block';
+  if (!apply) return;
+  let v = parseInt(inp.value);
+  if (isNaN(v) || v < 36 || v > 1296) return;
+  setMasterFreq(v);
+}
+
+
+// ── Accordéon — axe 1 ──────────────────────────────────
+function toggleAccord(id) {
+  const body  = document.getElementById('ab-'+id);
+  const arrow = document.getElementById('aa-'+id);
+  if (!body || !arrow) return;
+  const open = body.classList.toggle('open');
+  arrow.classList.toggle('open', open);
+}
+
+// ── Reset global — axe 7 ─────────────────────────────────
+function resetAll() {
+  if (flowing) return; // sécurité : pas de reset pendant le flow
+  masterFreq = 432; globalDelta = 7.83; masterVol = 0.8;
+  PAIRS.forEach((p, i) => {
+    p.pingala.ri = i % RATIO_OPTS.length;
+    p.pingala.n  = 1.0;
+    p.pingala.vol = .12;
+    p.ida.delta   = 7.83;
+    p.ida.polarity = 1;
+    p.ida.vol     = .12;
+    mutedOscs[p.pingala.id] = false;
+    mutedOscs[p.ida.id]     = false;
+  });
+  PAIRS[MASTER_IDX].pingala.vol = .14;
+  PAIRS[MASTER_IDX].ida.vol     = .14;
+  try { localStorage.removeItem(LS_KEY); } catch(e) {}
+  const mvs = document.getElementById('mvol-slider');
+  if (mvs) mvs.value = 0.8;
+  const mvv = document.getElementById('mvol-val');
+  if (mvv) mvv.textContent = '80%';
+  updateDisplay();
+  setGlobalDelta(7.83);
+}
+
+// ── Axe 18 : Persistance localStorage ───────────────────────
+// ══ MODE PROGRESSION DISCRET ════════════════════════════════
+let progRunning  = false;
+let progTimer    = null;
+let progMode     = 'up';      // 'up' | 'down' | 'bounce'
+let progDir      = 1;         // +1 montée, -1 descente
+let progFreqCur  = 432;       // fréquence courante dans la progression
+
+function setProgMode(mode) {
+  progMode = mode;
+  document.querySelectorAll('.prog-mode-btn').forEach(b => {
+    b.classList.toggle('active', b.id === 'pmode-' + mode);
+  });
+}
+
+function getProgRange() {
+  const lo = Math.max(36,   Math.min(1296, parseInt(document.getElementById('prog-min')?.value) || 36));
+  const hi = Math.max(lo+1, Math.min(1296, parseInt(document.getElementById('prog-max')?.value) || 1296));
+  return { lo, hi };
+}
+
+function progStep() {
+  const ri = parseInt(document.getElementById('prog-ratio').value);
+  const r  = RATIO_OPTS[ri].r;
+  const { lo, hi } = getProgRange();
+  let next;
+
+  if (progMode === 'yoyo') {
+    // ◎ Yoyo / bol tibétain : oscillation continue entre lo et hi selon ratio
+    next = Math.round(progFreqCur * (progDir === 1 ? r : 1/r) * 100) / 100;
+    if (next >= hi) { progDir = -1; next = hi; }
+    else if (next <= lo) { progDir = 1; next = lo; }
+  } else {
+    next = Math.round(progFreqCur * (progDir === 1 ? r : 1/r) * 100) / 100;
+    if (next > hi) {
+      if (progMode === 'bounce') { progDir = -1; next = Math.round(progFreqCur / r * 100) / 100; }
+      else if (progMode === 'up')   { next = lo; }
+      else { stopProgression(); return; }
+    }
+    if (next < lo) {
+      if (progMode === 'bounce') { progDir = 1; next = Math.round(progFreqCur * r * 100) / 100; }
+      else if (progMode === 'down') { next = hi; }
+      else { stopProgression(); return; }
+    }
+  }
+
+  next = Math.max(lo, Math.min(hi, next));
+  progFreqCur = next;
+  masterFreq  = Math.round(next);
+  updateDisplay();
+  document.title = 'FBF ' + masterFreq;
+  if (flowing) {
+    PAIRS.forEach((pair, i) => {
+      tuneOsc(pair.pingala.id, calcPFreq(i));
+      tuneOsc(pair.ida.id,     calcIFreq(i));
+    });
+  }
+  const disp = document.getElementById('prog-display');
+  if (disp) {
+    disp.textContent = masterFreq + ' Hz · ' + RATIO_OPTS[ri].l + (progMode==='yoyo' ? ' ◎' : '');
+    disp.classList.add('active');
+  }
+  saveState();
+}
+
+function startProgression() {
+  const dur = parseInt(document.getElementById('prog-dur').value);
+  const { lo, hi } = getProgRange();
+  if (progMode === 'yoyo') { progFreqCur = lo; progDir = 1; }
+  else if (progMode === 'down') { progFreqCur = hi; progDir = -1; }
+  else { progFreqCur = (masterFreq >= lo && masterFreq <= hi) ? masterFreq : lo; progDir = 1; }
+  progRunning = true;
+
+  const btn = document.getElementById('btn-prog');
+  if (btn) { btn.textContent = '■ Arrêter'; btn.classList.add('running'); }
+  const disp = document.getElementById('prog-display');
+  if (disp) disp.textContent = masterFreq + ' Hz — départ';
+
+  progStep(); // premier pas immédiat
+  progTimer = setInterval(progStep, dur);
+}
+
+function stopProgression() {
+  progRunning = false;
+  clearInterval(progTimer); progTimer = null;
+  const btn = document.getElementById('btn-prog');
+  if (btn) { btn.textContent = '▶ Progression'; btn.classList.remove('running'); }
+  const disp = document.getElementById('prog-display');
+  if (disp) { disp.textContent = masterFreq + ' Hz — arrêté'; disp.classList.remove('active'); }
+}
+
+function toggleProgression() {
+  if (progRunning) stopProgression();
+  else startProgression();
+}
+
+// ── Cellule fréquence maître ±1/±12 Hz ──────────────────────
+function masterStep(delta) {
+  const v = Math.max(36, Math.min(1296, masterFreq + delta));
+  setMasterFreq(v);
+}
+function onMasterInput(raw) {
+  const v = parseInt(raw);
+  if (isNaN(v) || v < 36 || v > 1296) return;
+  masterFreq = v;
+  const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = v;
+  document.title = 'FBF ' + v;
+  PAIRS.forEach((pair, i) => {
+    const pF = v * Math.pow(RATIO_OPTS[pair.pingala.ri].r, pair.pingala.n);
+    const iF = pF + pair.ida.polarity * pair.ida.delta;
+    if (flowing) { tuneOsc(pair.pingala.id, pF); tuneOsc(pair.ida.id, iF); }
+    const pf  = document.getElementById('pfreq-'+i);     if (pf)  pf.textContent  = fmtFreq(pF);
+    const iff = document.getElementById('ifreq-'+i);     if (iff) iff.textContent = fmtFreq(iF);
+    const tl  = document.getElementById('tab-label-'+i); if (tl)  tl.textContent  = fmtShort(pF);
+    const vpf = document.getElementById('vp-pf-'+i);     if (vpf) vpf.textContent = fmtShort(pF);
+  });
+}
+function onMasterChange(raw) {
+  const v = Math.max(36, Math.min(1296, parseInt(raw)));
+  if (!isNaN(v)) setMasterFreq(v);
+}
+
+const LS_KEY = 'fbf436_state';
+function saveState() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      masterFreq, globalDelta, masterVol,
+      pairs: PAIRS.map(p => ({
+        ri:p.pingala.ri, n:p.pingala.n, volP:p.pingala.vol,
+        delta:p.ida.delta, polarity:p.ida.polarity, volI:p.ida.vol,
+        mutedP:!!mutedOscs[p.pingala.id], mutedI:!!mutedOscs[p.ida.id]
+      }))
+    }));
+  } catch(e) {}
+}
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if (!s) return;
+    if (s.masterFreq >= 36 && s.masterFreq <= 1296) masterFreq = s.masterFreq;
+    if (s.globalDelta > 0) globalDelta = s.globalDelta;
+    if (s.masterVol >= 0 && s.masterVol <= 1) masterVol = s.masterVol;
+    (s.pairs||[]).forEach((sp,i) => {
+      if (!PAIRS[i]) return;
+      if (sp.ri >= 0 && sp.ri < RATIO_OPTS.length) PAIRS[i].pingala.ri = sp.ri;
+      if (!isNaN(sp.n) && sp.n >= 0) PAIRS[i].pingala.n = sp.n;
+      if (sp.volP >= 0) PAIRS[i].pingala.vol = sp.volP;
+      if (sp.delta > 0) PAIRS[i].ida.delta = sp.delta;
+      if (sp.polarity===1||sp.polarity===-1) PAIRS[i].ida.polarity = sp.polarity;
+      if (sp.volI >= 0) PAIRS[i].ida.vol = sp.volI;
+      mutedOscs[PAIRS[i].pingala.id] = !!sp.mutedP;
+      mutedOscs[PAIRS[i].ida.id]     = !!sp.mutedI;
+    });
+  } catch(e) {}
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+function init() {
+  loadState();
+  buildTabs();
+  buildVesicaPairs();
+  animMetatron();
+  setGlobalDelta(globalDelta); // axe 4
+}
+// Axe 16 : fonts.ready + fallback 800ms garanti mobile
+function launchInit() {
+  let done = false;
+  function go() { if (done) return; done = true; setTimeout(init, 60); }
+  try { document.fonts.ready.then(go); } catch(e) {}
+  setTimeout(go, 800);
+}
+if (document.readyState === 'complete') { launchInit(); }
+else { window.addEventListener('load', launchInit); }
+window.addEventListener('resize', () => setTimeout(() => {
+  if (metaRAF) { cancelAnimationFrame(metaRAF); metaRAF = null; }
+  buildVesicaPairs(); drawMetatron(); animMetatron();
+}, 150));
+</script>
+</body>
+</html>
