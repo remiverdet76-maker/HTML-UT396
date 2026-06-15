@@ -414,9 +414,51 @@ function buildMasterFXHTML() {
       </div>
     </div>
 
-    <!-- ⑩ Presets de session -->
+    <!-- ⑩ Ping Pong Stéréo -->
     <div class="fx-block">
-      <div class="fx-title">⑩ Presets de Session</div>
+      <div class="fx-title">⑩ Ping Pong Stéréo</div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Temps</span>
+          <input type="range" class="fx-slider" id="ppTime" min="0.04" max="0.8" step="0.01" value="0.25" oninput="updateFX('ppTime',this.value)">
+          <span class="fx-val-disp" id="ppTime-val">0.25s</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Feedback</span>
+          <input type="range" class="fx-slider" id="ppFeedback" min="0" max="0.85" step="0.01" value="0.3" oninput="updateFX('ppFeedback',this.value)">
+          <span class="fx-val-disp" id="ppFeedback-val">30%</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Mix</span>
+          <input type="range" class="fx-slider" id="ppWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('ppWet',this.value)">
+          <span class="fx-val-disp" id="ppWet-val">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑪ Respiration -->
+    <div class="fx-block">
+      <div class="fx-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>⑪ Respiration</span>
+        <label class="fx-toggle"><input type="checkbox" id="breath-on" onchange="breathToggle(this.checked)"><span class="fx-tog-track"></span></label>
+      </div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Rythme</span>
+          <input type="range" class="fx-slider" id="breath-rate" min="0.05" max="0.33" step="0.005" value="0.13" oninput="breathSet('rate',this.value)">
+          <span class="fx-val-disp" id="sv-breath-rate">7.8 /min</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Profond.</span>
+          <input type="range" class="fx-slider" id="breath-depth" min="0.05" max="0.7" step="0.01" value="0.35" oninput="breathSet('depth',this.value)">
+          <span class="fx-val-disp" id="sv-breath-depth">0.35</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑫ Presets de session -->
+    <div class="fx-block">
+      <div class="fx-title">⑫ Presets de Session</div>
       <div class="fx-presets-list" id="fx-presets-list">${psRows}</div>
     </div>
 
@@ -503,7 +545,10 @@ function updateFX(paramId, value) {
   else if(paramId==='delayTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(masterDelay)masterDelay.delayTime.value=v;}catch(e){} }
   else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelay)masterDelay.feedback.value=v;}catch(e){} }
   else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterDelay)masterDelay.wet.value=v; }
-  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb){ _setReverbActive(v>0.001); masterReverb.wet.value=v; } }
+  else if(paramId==='reverbWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb){ _setReverbActive(v>0.001); masterReverb.wet.value=v; } }
+  else if(paramId==='ppTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(pingPongDelay)pingPongDelay.delayTime.value=v;}catch(e){} }
+  else if(paramId==='ppFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(pingPongDelay)pingPongDelay.feedback.value=v;}catch(e){} }
+  else if(paramId==='ppWet')      { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(pingPongDelay)pingPongDelay.wet.value=v; }
 }
 
 // ── updateMasterState ─────────────────────────────────────────────
