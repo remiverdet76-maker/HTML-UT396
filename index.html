@@ -23,41 +23,6 @@
 </head>
 <body>
 
-<!-- Fond cosmique — diaporama rotatif -->
-<img id="cosmic-bg" src="img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.54 (2).jpeg" alt="" onerror="this.style.display='none'">
-<script>
-(function(){
-  var IMGS=[
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.52 (1).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.52 (2).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.52 (3).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.52.jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.53 (1).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.53.jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.54 (1).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.54 (2).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.54 (3).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.54.jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.55 (1).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.55 (2).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.55.jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.57.jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.58 (1).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.58 (2).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.58 (3).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.58 (4).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.58 (5).jpeg',
-    'img/Medidative Art/WhatsApp Image 2026-06-14 at 23.46.58.jpeg'
-  ];
-  var el=document.getElementById('cosmic-bg');
-  var idx=Math.floor(Math.random()*IMGS.length);
-  el.src=IMGS[idx];
-  setInterval(function(){
-    el.style.opacity='0';
-    setTimeout(function(){idx=(idx+1)%IMGS.length;el.src=IMGS[idx];el.style.opacity='0.38';},1000);
-  },14000);
-})();
-</script>
 <canvas id="meta-canvas"></canvas>
 
 <!-- Titre discret en haut -->
@@ -99,20 +64,6 @@
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
     <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran
   </button>
-  <div class="dmenu-sep"></div>
-  <div class="dmenu-section">Pages Omcha 432</div>
-  <a class="dmenu-item" href="theme432_omcha_v2.html">
-    <span class="dmenu-ico">◈</span>Thème 432 Omcha v2
-  </a>
-  <a class="dmenu-item" href="OmCv-477-1.html">
-    <span class="dmenu-ico">◈</span>OmCv-477
-  </a>
-  <a class="dmenu-item" href="omcha432-flux.html">
-    <span class="dmenu-ico">◈</span>Omcha 432 Flux
-  </a>
-  <a class="dmenu-item" href="sphere432-maxexp.html">
-    <span class="dmenu-ico">◈</span>Sphère 432 MaxExp
-  </a>
 </div>
 <div id="menu-backdrop" onclick="closeMenu()"></div>
 
