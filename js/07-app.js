@@ -54,7 +54,7 @@ function saveState() { clearTimeout(_saveTimer); _saveTimer = setTimeout(_doSave
 function _doSave() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
-      masterFreq, globalDelta, masterVol, activeGeometry, sphereColorIdx: _sphereColorIdx,
+      masterFreq, globalDelta, masterVol, activeGeometry, sphereColorIdx: _sphereColorIdx, zoomLevel,
       pairs: PAIRS.map(p => ({
         ri:p.pingala.ri, n:p.pingala.n, volP:p.pingala.vol, baseFreq:p.pingala.baseFreq,
         delta:p.ida.delta, polarity:p.ida.polarity, volI:p.ida.vol,
@@ -72,6 +72,7 @@ function loadState() {
     if (s.masterVol>=0&&s.masterVol<=1) masterVol = s.masterVol;
     if (typeof s.activeGeometry==='number') activeGeometry = s.activeGeometry;
     if (typeof s.sphereColorIdx==='number') _sphereColorIdx = s.sphereColorIdx % SPHERE_COLORS_12.length;
+    if (typeof s.zoomLevel==='number') zoomLevel = s.zoomLevel % TORUS_ZOOMS.length;
     (s.pairs||[]).forEach((sp,i) => {
       if (!PAIRS[i]) return;
       if (sp.ri>=0&&sp.ri<RATIO_OPTS.length) PAIRS[i].pingala.ri = sp.ri;

@@ -90,6 +90,15 @@
   letter-spacing: .04em;
 }
 
+.sph-zoom {
+  font-family: 'Cinzel Decorative', serif;
+  font-size: clamp(.55rem, 2.1vmin, .82rem);
+  color: rgba(200,220,255,.88);
+  letter-spacing: .18em;
+  text-shadow: 0 0 12px rgba(100,180,255,.6);
+  margin: 0 0 .15em;
+  transition: all .6s ease;
+}
 .sph-sub {
   font-family: 'IM Fell English', serif;
   font-size: clamp(.52rem, 2vmin, .78rem);

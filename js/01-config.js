@@ -17,6 +17,14 @@ const SPHERE_COLORS_12 = [
 ];
 let _sphereColorIdx = 0;
 
+// Flux Toroïdal — 3 points d'observation
+const TORUS_ZOOMS = [
+  { name:'Cosmos',  icon:'⊙', bandVols:[.18,.18,.07,.07,.03,.03] },
+  { name:'Humain',  icon:'◈', bandVols:[.10,.10,.14,.14,.10,.10] },
+  { name:'Cellule', icon:'⊛', bandVols:[.03,.03,.07,.07,.18,.18] },
+];
+let zoomLevel = 1;
+
 const RATIO_OPTS = [
   {r:9/10,  l:'9/10'},
   {r:10/9,  l:'10/9'},

@@ -17,8 +17,9 @@ function trigger0mcha396() {
   PAIRS[4].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
   PAIRS[5].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
 
-  // Reset volumes
-  PAIRS.forEach(p => { p.pingala.vol = .12; p.ida.vol = .12; });
+  // Volumes selon point d'observation toroïdal
+  const zVols = TORUS_ZOOMS[zoomLevel].bandVols;
+  for (let i = 0; i < MASTER_IDX; i++) { PAIRS[i].pingala.vol = zVols[i]; PAIRS[i].ida.vol = zVols[i]; }
   PAIRS[MASTER_IDX].pingala.vol = .14; PAIRS[MASTER_IDX].ida.vol = .14;
 
   if (typeof flowing !== 'undefined' && flowing) {
@@ -252,6 +253,22 @@ function onMasterChange(raw) {
 // FBF toggle flux
 function fbfToggle() {
   if (typeof flowing !== 'undefined' && flowing) stopFlow(); else startFlow();
+}
+
+// ── Flux Toroïdal — point d'observation ──────────────────────────
+function applyZoom() {
+  const z = TORUS_ZOOMS[zoomLevel];
+  for (let i = 0; i < MASTER_IDX; i++) {
+    PAIRS[i].pingala.vol = z.bandVols[i];
+    PAIRS[i].ida.vol     = z.bandVols[i];
+    if (typeof nodes !== 'undefined') {
+      const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
+      if (!mutedOscs[pid] && nodes[pid]) safeRamp(nodes[pid].g.gain, z.bandVols[i], 1.2);
+      if (!mutedOscs[iid] && nodes[iid]) safeRamp(nodes[iid].g.gain, z.bandVols[i], 1.2);
+    }
+  }
+  updateDisplay();
+  saveState();
 }
 
 // Alias pour compatibilité panel FX / raccourci clavier
