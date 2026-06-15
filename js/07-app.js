@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   07-app.js — État, presets, progression, navigation, Horloge UT432, init
+   07-app.js — État, presets, progression, navigation, init
    ═══════════════════════════════════════════ */
 
 // ── Progression Harmonique ────────────────────────────────────────
@@ -123,119 +123,6 @@ function exportState() {
   } catch(e) {}
 }
 
-// ── UT432 Horloge Solaire ─────────────────────────────────────────
-// Longitude Paris ~2.35°E. Heure solaire = UTC+heure légale + longitude/15 + équation du temps
-const UT432_SEUILS = [
-  { v:0,   name:'Kether',    color:'#FFFFFF' },
-  { v:54,  name:'Chokhmah',  color:'#E0CFFF' },
-  { v:108, name:'Binah',     color:'#63E6FF' },
-  { v:162, name:'Chesed',    color:'#86FFC0' },
-  { v:216, name:'Tiphereth', color:'#FFD060' },
-  { v:270, name:'Netzach',   color:'#FF8EFF' },
-  { v:324, name:'Hod',       color:'#FF8E8E' },
-  { v:378, name:'Yesod',     color:'#C0AAFF' },
-  { v:432, name:'Malkuth',   color:'#A8F0B0' }
-];
-
-// Equation du temps — approximation sinusoïdale (minutes)
-function _eqT(doy) {
-  const B = 2 * Math.PI * (doy - 81) / 364;
-  return 9.87*Math.sin(2*B) - 7.53*Math.cos(B) - 1.5*Math.sin(B);
-}
-// Offset DST France : +120 min en été (dernier dim mars → dernier dim oct), +60 en hiver
-function _frOff(d) {
-  const y = d.getUTCFullYear();
-  // Dernier dimanche de mars
-  const marchEnd  = new Date(Date.UTC(y,2,31)); marchEnd.setUTCDate(31-marchEnd.getUTCDay());
-  // Dernier dimanche d'octobre
-  const octEnd    = new Date(Date.UTC(y,9,31)); octEnd.setUTCDate(31-octEnd.getUTCDay());
-  return (d >= marchEnd && d < octEnd) ? 120 : 60;
-}
-
-function calcUT432() {
-  const now = new Date();
-  const doy = Math.floor((now - new Date(now.getFullYear(),0,0)) / 86400000);
-  const eqMin  = _eqT(doy);
-  const lngMin = (2.35 / 15) * 60;           // +9.4 min pour Paris
-  const dstMin = _frOff(now);
-  // Heure solaire vraie en minutes depuis minuit (UTC)
-  const utcMin = now.getUTCHours()*60 + now.getUTCMinutes() + now.getUTCSeconds()/60;
-  const solarMin = utcMin + dstMin + lngMin + eqMin;
-  // Normalise 0–1440 → 0–432
-  const ut = Math.max(0, Math.min(432, (solarMin / 1440) * 432));
-  return Math.round(ut);
-}
-
-function getCurSeuil432(ut) {
-  let seuil = UT432_SEUILS[0];
-  for (const s of UT432_SEUILS) { if (ut >= s.v) seuil = s; else break; }
-  return seuil;
-}
-
-let _h432Timer = null;
-
-function _tickHorloge432() {
-  updateInfobar();
-  const ut      = calcUT432();
-  const seuil   = getCurSeuil432(ut);
-  const pct     = (ut / 432) * 100;
-  const now     = new Date();
-  const civil   = now.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
-
-  const valEl   = document.getElementById('h432-val');
-  const seuilEl = document.getElementById('h432-seuil');
-  const progEl  = document.getElementById('h432-progress');
-  const civEl   = document.getElementById('h432-civil');
-
-  if (valEl)   { valEl.textContent = ut; valEl.style.color = seuil.color; }
-  if (seuilEl) { seuilEl.textContent = seuil.name; seuilEl.style.color = seuil.color+'99'; }
-  if (progEl)  { progEl.style.width = pct.toFixed(2)+'%'; progEl.style.background = `linear-gradient(90deg,${seuil.color}44,${seuil.color})`; }
-  if (civEl)   civEl.textContent = civil;
-}
-
-function startHorloge432() {
-  _tickHorloge432();
-  if (!_h432Timer) _h432Timer = setInterval(_tickHorloge432, 1000);
-}
-function stopHorloge432() {
-  clearInterval(_h432Timer); _h432Timer = null;
-}
-
-function triggerHorloge432() {
-  const ut    = calcUT432();
-  const seuil = getCurSeuil432(ut);
-
-  // Fréquence maître = UT432 (clampé 36–432)
-  const freq = Math.max(36, Math.min(432, ut || 216));
-  setMasterFreq(freq);
-
-  // Géométrie aléatoire
-  setGeometry(Math.floor(Math.random() * GEO_NAMES.length));
-
-  // Ratios et deltas harmoniques aléatoires pour chaque paire
-  PAIRS.forEach((pair, i) => {
-    pair.pingala.ri = Math.floor(Math.random() * RATIO_OPTS.length);
-    const deltas = [0.5, 1.0, 1.5, 2.1, 3.5, 4.0, 6.0, 7.83];
-    pair.ida.delta = deltas[Math.floor(Math.random() * deltas.length)];
-    pair.ida.polarity = Math.random() > 0.5 ? 1 : -1;
-  });
-
-  updateDisplay();
-  if (flowing) PAIRS.forEach((_,i) => { tuneOsc(PAIRS[i].pingala.id,calcPFreq(i)); tuneOsc(PAIRS[i].ida.id,calcIFreq(i)); });
-  saveState();
-
-  // Flash du bouton
-  const btn = document.getElementById('btn-h432');
-  if (btn) {
-    btn.textContent = `⊙ ${ut} · ${seuil.name}`;
-    btn.style.borderColor = seuil.color;
-    btn.style.color = seuil.color;
-    setTimeout(() => {
-      if (btn) { btn.textContent = '⊙ Jeu UT432'; btn.style.borderColor=''; btn.style.color=''; }
-    }, 3500);
-  }
-}
-
 // ── Plein écran ───────────────────────────────────────────────────
 function toggleFullscreen() {
   const el = document.documentElement;
@@ -280,13 +167,12 @@ function tPanel(panId, btnId) {
   const btn = document.getElementById(btnId);
   if (!pan) return;
 
-  // Désactiver le bouton principal FBF396 quand un panel est ouvert
+  // Désactiver le bouton principal 0mcha396 quand un panel est ouvert
   const mainBtn = document.getElementById('bnt-main');
 
   if (_openPanel === panId) {
     pan.classList.remove('open');
     if (btn) btn.classList.remove('on');
-    if (panId === 'panUT') stopHorloge432();
     _openPanel = null; _openBtnId = null;
     if (mainBtn) mainBtn.classList.add('active');
     return;
@@ -296,14 +182,12 @@ function tPanel(panId, btnId) {
     const old = document.getElementById(_openPanel);
     if (old) old.classList.remove('open');
     if (_openBtnId) { const ob = document.getElementById(_openBtnId); if (ob) ob.classList.remove('on'); }
-    if (_openPanel === 'panUT') stopHorloge432();
   }
 
   pan.classList.add('open');
   if (btn) btn.classList.add('on');
   _openPanel = panId; _openBtnId = btnId;
   if (mainBtn) mainBtn.classList.remove('active');
-  if (panId === 'panUT') startHorloge432();
   if (panId === 'panFX') requestAnimationFrame(()=>initEQ2D(document.getElementById('eq2d-canvas')));
 }
 
@@ -313,7 +197,6 @@ function closePanel() {
     const old = document.getElementById(_openPanel);
     if (old) old.classList.remove('open');
     if (_openBtnId) { const ob = document.getElementById(_openBtnId); if (ob) ob.classList.remove('on'); }
-    if (_openPanel === 'panUT') stopHorloge432();
     _openPanel = null; _openBtnId = null;
   }
   const mainBtn = document.getElementById('bnt-main');
@@ -336,12 +219,6 @@ function updateInfobar() {
   if (ibGeo) ibGeo.textContent = GEO_NAMES[activeGeometry] || '—';
   if (hdrFreq) hdrFreq.textContent = masterFreq + ' Hz · ' + (GEO_NAMES[activeGeometry] || '');
 
-  if (ibUT) {
-    const ut    = calcUT432();
-    const seuil = getCurSeuil432(ut);
-    ibUT.textContent = ut + ' · ' + seuil.name;
-    ibUT.style.color = seuil.color;
-  }
 }
 
 // ── Oscillator modal ───────────────────────────────────────────────
@@ -513,10 +390,6 @@ function init() {
     requestAnimationFrame(() => initEQ2D(document.getElementById('eq2d-canvas')));
   }
 
-  // Inject Horloge 432 panel
-  const h432Body = document.getElementById('panel-horloge-body');
-  if (h432Body) h432Body.innerHTML = buildHorloge432HTML();
-
   // Inject progression into random panel
   const progWrap = document.getElementById('rand-prog-wrap');
   if (progWrap) progWrap.innerHTML = buildProgHTML();
@@ -559,7 +432,7 @@ function init() {
   window.updateDisplay = function() {
     _uD && _uD();
     typeof updateSphereDisplay === 'function' && updateSphereDisplay();
-    document.title = 'FBF396 · ' + masterFreq + ' Hz';
+    document.title = '0mcha396 · ' + masterFreq + ' Hz';
   };
   window.patchFBFState = function() {
     _pF && _pF();

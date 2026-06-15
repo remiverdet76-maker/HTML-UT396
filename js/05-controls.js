@@ -1,13 +1,13 @@
 /* ═══════════════════════════════════════════
-   05-controls.js — Contrôles FBF396 & oscillateurs
+   05-controls.js — Contrôles 0mcha396 & oscillateurs
    ═══════════════════════════════════════════ */
 
-// ── Trigger FBF396 — mode full aléatoire binaural ─────────────────
+// ── Trigger 0mcha396 — mode full aléatoire binaural ─────────────────
 // Band A (36–108) : oscs 0,1
 // Band B (108–256): oscs 2,3
 // Band C (256–432): oscs 4,5
 // Maître : aléatoire 36–432
-function triggerFBF396() {
+function trigger0mcha396() {
   masterFreq = 36 + Math.floor(Math.random() * 397);
 
   PAIRS[0].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
@@ -93,9 +93,13 @@ function randomizeFX() {
   const eqMG  = Math.round((Math.random() * 6 - 3) * 10) / 10;
   const eqHF  = Math.round(4000 + Math.random() * 6000);
   const eqHG  = Math.round((Math.random() * 6 - 3) * 10) / 10;
+  const ppT   = +(0.1 + Math.random() * .4).toFixed(2);           // ping pong 0.1–0.5s
+  const ppFB  = +(Math.random() * .4).toFixed(2);
+  const ppW   = +(Math.random() * .2).toFixed(2);                 // max 20% mix
   [['eqLowFreq',eqLF],['eqLowGain',eqLG],['eqMidFreq',eqMF],['eqMidGain',eqMG],
    ['eqHighFreq',eqHF],['eqHighGain',eqHG],['delayTime',delT],['delayFeedback',delFB],
-   ['delayWet',delW],['reverbWet',revW]].forEach(([id,val]) => {
+   ['delayWet',delW],['reverbWet',revW],['ppTime',ppT],['ppFeedback',ppFB],['ppWet',ppW]
+  ].forEach(([id,val]) => {
     const sl = document.getElementById(id); if (sl) sl.value = val;
     if (typeof updateFX === 'function') updateFX(id, val);
   });
@@ -103,6 +107,16 @@ function randomizeFX() {
   if (typeof chorus !== 'undefined' && chorus) {
     try { chorus.depth = 0; chorus.wet.value = 0; } catch(e) {}
   }
+  // Respiration : activée aléatoirement (40% chance), rythme méditation 4.8–15 /min
+  const breathOn    = Math.random() < 0.4;
+  const breathRate  = +(0.08 + Math.random() * 0.17).toFixed(3);
+  const breathDepth = +(0.1  + Math.random() * 0.40).toFixed(2);
+  const brEl = document.getElementById('breath-rate');
+  const bdEl = document.getElementById('breath-depth');
+  const boEl = document.getElementById('breath-on');
+  if (brEl) { brEl.value = breathRate;  if (typeof breathSet==='function') breathSet('rate', breathRate); }
+  if (bdEl) { bdEl.value = breathDepth; if (typeof breathSet==='function') breathSet('depth', breathDepth); }
+  if (boEl) { boEl.checked = breathOn;  if (typeof breathToggle==='function') breathToggle(breathOn); }
 }
 
 // ── Contrôles individuels oscillateurs ─────────────────────────────
@@ -221,7 +235,7 @@ function onMasterInput(raw) {
   if (isNaN(v) || v < 36 || v > 432) return;
   masterFreq = v;
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = v;
-  document.title = 'FBF396 · ' + v;
+  document.title = '0mcha396 · ' + v;
   PAIRS.forEach((pair, i) => {
     if (typeof flowing !== 'undefined' && flowing) {
       tuneOsc(pair.pingala.id, calcPFreq(i));
@@ -241,7 +255,7 @@ function fbfToggle() {
 }
 
 // Alias pour compatibilité panel FX / raccourci clavier
-function triggerMagicAuto() { triggerFBF396(); }
+function triggerMagicAuto() { trigger0mcha396(); }
 
 function toggleFullscreen() {
   const el = document.documentElement;

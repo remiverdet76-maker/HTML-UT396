@@ -414,40 +414,56 @@ function buildMasterFXHTML() {
       </div>
     </div>
 
-    <!-- ⑩ Presets de session -->
+    <!-- ⑩ Ping Pong Stéréo -->
     <div class="fx-block">
-      <div class="fx-title">⑩ Presets de Session</div>
+      <div class="fx-title">⑩ Ping Pong Stéréo</div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Temps</span>
+          <input type="range" class="fx-slider" id="ppTime" min="0.04" max="0.8" step="0.01" value="0.25" oninput="updateFX('ppTime',this.value)">
+          <span class="fx-val-disp" id="ppTime-val">0.25s</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Feedback</span>
+          <input type="range" class="fx-slider" id="ppFeedback" min="0" max="0.85" step="0.01" value="0.3" oninput="updateFX('ppFeedback',this.value)">
+          <span class="fx-val-disp" id="ppFeedback-val">30%</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Mix</span>
+          <input type="range" class="fx-slider" id="ppWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('ppWet',this.value)">
+          <span class="fx-val-disp" id="ppWet-val">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑪ Respiration -->
+    <div class="fx-block">
+      <div class="fx-title" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>⑪ Respiration</span>
+        <label class="fx-toggle"><input type="checkbox" id="breath-on" onchange="breathToggle(this.checked)"><span class="fx-tog-track"></span></label>
+      </div>
+      <div class="fx-row">
+        <div class="fx-control-group">
+          <span class="fx-label">Rythme</span>
+          <input type="range" class="fx-slider" id="breath-rate" min="0.05" max="0.33" step="0.005" value="0.13" oninput="breathSet('rate',this.value)">
+          <span class="fx-val-disp" id="sv-breath-rate">7.8 /min</span>
+        </div>
+        <div class="fx-control-group">
+          <span class="fx-label">Profond.</span>
+          <input type="range" class="fx-slider" id="breath-depth" min="0.05" max="0.7" step="0.01" value="0.35" oninput="breathSet('depth',this.value)">
+          <span class="fx-val-disp" id="sv-breath-depth">0.35</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑫ Presets de session -->
+    <div class="fx-block">
+      <div class="fx-title">⑫ Presets de Session</div>
       <div class="fx-presets-list" id="fx-presets-list">${psRows}</div>
     </div>
 
     <div style="text-align:center;margin-top:.4rem;padding-bottom:.5rem;">
       <button class="btn-flow" onclick="exportState()" style="padding:.45rem 1.1rem;font-size:.72rem;border-color:rgba(99,230,255,.5);color:#63E6FF;background:rgba(99,230,255,.06);">⎘ Partager Config</button>
-    </div>
-  </div>`;
-}
-
-// ── Horloge UT432 HTML ────────────────────────────────────────────
-function buildHorloge432HTML() {
-  return `<div class="h432-panel">
-    <div class="h432-display">
-      <div class="h432-num" id="h432-val" style="color:#FFD060;">—</div>
-      <div class="h432-seuil" id="h432-seuil" style="color:rgba(255,200,80,.6);">UT432</div>
-    </div>
-    <div class="h432-bar-wrap">
-      <div class="h432-bar-bg"><div class="h432-bar-fill" id="h432-progress" style="width:0%"></div></div>
-      <div class="h432-bar-labels"><span>0</span><span>108</span><span>216</span><span>324</span><span>432</span></div>
-    </div>
-    <div class="h432-civil" id="h432-civil">--:--:--</div>
-    <button class="btn-h432" id="btn-h432" onclick="triggerHorloge432()">⊙ Jeu UT432</button>
-    <div class="h432-desc">
-      <p>Le nombre UT432 mesure le temps solaire de Paris (0 → 432) en résonance avec les 9 Sephirot de la Kabbale.</p>
-      <p>⊙ Jeu UT432 génère une configuration harmonique basée sur la valeur de l'instant présent.</p>
-    </div>
-    <div style="margin-top:.5rem;padding:.8rem;background:rgba(255,200,60,.06);border:1px solid rgba(255,200,60,.18);border-radius:10px;font-size:.65rem;font-family:'IM Fell English',serif;font-style:italic;color:rgba(255,200,100,.55);text-align:center;line-height:1.6;">
-      <b>Les Seuils UT432</b><br>
-      0 Kether · 54 Chokhmah · 108 Binah<br>
-      162 Chesed · 216 Tiphereth · 270 Netzach<br>
-      324 Hod · 378 Yesod · 432 Malkuth
     </div>
   </div>`;
 }
@@ -503,7 +519,10 @@ function updateFX(paramId, value) {
   else if(paramId==='delayTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(masterDelay)masterDelay.delayTime.value=v;}catch(e){} }
   else if(paramId==='delayFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(masterDelay)masterDelay.feedback.value=v;}catch(e){} }
   else if(paramId==='delayWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterDelay)masterDelay.wet.value=v; }
-  else if(paramId==='reverbWet') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb){ _setReverbActive(v>0.001); masterReverb.wet.value=v; } }
+  else if(paramId==='reverbWet')  { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(masterReverb){ _setReverbActive(v>0.001); masterReverb.wet.value=v; } }
+  else if(paramId==='ppTime')     { if(valDisp)valDisp.textContent=v.toFixed(2)+'s'; try{if(pingPongDelay)pingPongDelay.delayTime.value=v;}catch(e){} }
+  else if(paramId==='ppFeedback') { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; try{if(pingPongDelay)pingPongDelay.feedback.value=v;}catch(e){} }
+  else if(paramId==='ppWet')      { if(valDisp)valDisp.textContent=Math.round(v*100)+'%'; if(pingPongDelay)pingPongDelay.wet.value=v; }
 }
 
 // ── updateMasterState ─────────────────────────────────────────────
@@ -531,7 +550,7 @@ function updateDisplay() {
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = masterFreq;
   const mi  = document.getElementById('master-input');
   if (mi && document.activeElement!==mi) mi.value = masterFreq;
-  document.title = 'FBF396 · ' + masterFreq + ' Hz';
+  document.title = '0mcha396 · ' + masterFreq + ' Hz';
   PAIRS.forEach((_,i) => updatePairUI(i));
   updateMasterState();
   patchRandomTable();

@@ -10,10 +10,12 @@ let nodes = {}, masterGain = null, analyser = null;
 
 let limiter = null;
 let eqLow = null, eqMid = null, eqHigh = null;
-let masterDelay = null, masterReverb = null;
+let masterDelay = null, masterReverb = null, pingPongDelay = null;
 let chorus = null, compressor = null;
-const LFO_STATE = {on:false, rate:.25, depth:.08};
+const LFO_STATE    = {on:false, rate:.25,  depth:.08};
+const BREATH_STATE = {on:false, rate:0.13, depth:0.35};
 let _lfoNode = null, _lfoGain = null;  // LFO natif Tone.js (audio thread)
+let _breathLFO = null, _breathGain = null;
 let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
 let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
@@ -100,26 +102,27 @@ function initFXChain() {
   compressor  = new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.02, release: 0.25 });
   masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
   masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
-  limiter      = new Tone.Limiter(-1.5).toDestination();
+  limiter       = new Tone.Limiter(-1.5).toDestination();
+  pingPongDelay = new Tone.PingPongDelay({ delayTime: 0.25, feedback: 0.3, wet: 0 });
   // Réverbe à convolution NON inline par défaut (off) : elle convolue en
   // permanence sinon = gros coût CPU mobile → underrun BT. On la branche
   // seulement quand wet > 0 (voir _setReverbActive).
-  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterDelay, limiter);
+  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterDelay, pingPongDelay, limiter);
 }
 
 // Branche/débranche la réverbe selon qu'elle est utilisée (anti-craquement BT).
 let _reverbActive = false;
 function _setReverbActive(on) {
-  if (!masterReverb || !masterDelay || !limiter || on === _reverbActive) return;
+  if (!masterReverb || !masterDelay || !pingPongDelay || !limiter || on === _reverbActive) return;
   try {
     if (on) {
-      masterDelay.disconnect(limiter);
+      masterDelay.disconnect(pingPongDelay);
       masterDelay.connect(masterReverb);
-      masterReverb.connect(limiter);
+      masterReverb.connect(pingPongDelay);
     } else {
       masterDelay.disconnect(masterReverb);
-      try { masterReverb.disconnect(limiter); } catch(e) {}
-      masterDelay.connect(limiter);
+      try { masterReverb.disconnect(pingPongDelay); } catch(e) {}
+      masterDelay.connect(pingPongDelay);
     }
     _reverbActive = on;
   } catch(e) {}
@@ -162,6 +165,28 @@ function lfoSet(param, v) {
     if (param === 'depth') { _lfoNode.min = 1 - LFO_STATE.depth; _lfoNode.max = 1 + LFO_STATE.depth; }
   }
   const el = document.getElementById('sv-lfo-' + param); if (el) el.textContent = parseFloat(v).toFixed(2);
+}
+
+function breathToggle(on) {
+  BREATH_STATE.on = on;
+  if (!_breathLFO || !_breathGain) return;
+  if (on) {
+    _breathLFO.connect(_breathGain.gain);
+  } else {
+    try { _breathLFO.disconnect(); } catch(e) {}
+    _breathGain.gain.setTargetAtTime(1, Tone.now(), 0.5);
+  }
+}
+function breathSet(param, v) {
+  BREATH_STATE[param] = parseFloat(v);
+  if (_breathLFO) {
+    if (param === 'rate')  _breathLFO.frequency.value = BREATH_STATE.rate;
+    if (param === 'depth') { _breathLFO.min = 1 - BREATH_STATE.depth; _breathLFO.max = 1 + BREATH_STATE.depth; }
+  }
+  const el = document.getElementById('sv-breath-' + param);
+  if (el) el.textContent = param === 'rate'
+    ? (BREATH_STATE.rate * 60).toFixed(1) + ' /min'
+    : parseFloat(v).toFixed(2);
 }
 
 function _startBTKeepalive() {
@@ -214,11 +239,15 @@ async function startFlow() {
     masterGain.gain.setValueAtTime(0, _now);
     masterGain.gain.setTargetAtTime(masterVol, _now, _fadeDur / 3);
     masterGain.connect(_lfoGain);
-    _lfoGain.connect(eqLow);
+    _breathGain = new Tone.Gain(1);
+    _lfoGain.connect(_breathGain);
+    _breathGain.connect(eqLow);
     masterGain.connect(analyser);
     // LFO natif Tone.js — fonctionne dans l'audio thread, zéro commandes JS
     _lfoNode = new Tone.LFO({ frequency: LFO_STATE.rate, min: 1 - LFO_STATE.depth, max: 1 + LFO_STATE.depth, type: 'sine' }).start();
     if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
+    _breathLFO = new Tone.LFO({ frequency: BREATH_STATE.rate, min: 1 - BREATH_STATE.depth, max: 1 + BREATH_STATE.depth, type: 'sine' }).start();
+    if (BREATH_STATE.on) _breathLFO.connect(_breathGain.gain);
     flowing = true;
     // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
     // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).
@@ -258,11 +287,11 @@ async function stopFlow() {
     setTimeout(() => { ['o','g','p'].forEach(k => { try { n[k].dispose?.(); } catch(e){} }); }, 500);
   });
   setTimeout(() => {
-    [_lfoNode, _lfoGain, masterGain, analyser].forEach(x => {
+    [_lfoNode, _lfoGain, _breathLFO, _breathGain, masterGain, analyser].forEach(x => {
       try { x?.disconnect(); } catch(e){}
       try { x?.dispose?.(); } catch(e){}
     });
-    _lfoNode = null; _lfoGain = null; masterGain = null; analyser = null;
+    _lfoNode = null; _lfoGain = null; _breathLFO = null; _breathGain = null; masterGain = null; analyser = null;
     PAIRS.forEach((_, i) => updateOrbUI(i));
     const mc = document.getElementById('vpc-p' + MASTER_IDX);
     if (mc) mc.style.boxShadow = '';
