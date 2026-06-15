@@ -296,7 +296,7 @@ function resetAll() {
   masterFreq = 252; globalDelta = 1.8; masterVol = 0.8;
   PAIRS.forEach((p, i) => {
     p.pingala.ri = i % RATIO_OPTS.length;
-    p.pingala.n  = (i === MASTER_IDX) ? 1.0 : 0.2 + (i * 0.5);
+    p.pingala.n  = (i === MASTER_IDX || i >= 7) ? 1.0 : 0.2 + (i * 0.5);
     p.pingala.vol = .12; p.ida.delta = 1.8; p.ida.polarity = 1; p.ida.vol = .12;
     mutedOscs[p.pingala.id] = false; mutedOscs[p.ida.id] = false;
   });
