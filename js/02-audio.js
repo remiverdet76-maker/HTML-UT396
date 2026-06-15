@@ -252,7 +252,9 @@ async function startFlow() {
     // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
     // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).
     try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
-    PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
+    // Bandes A–C + Maître démarrent en séquence, Band D (7,8) après 3s pour éviter le pic CPU
+    for (let i = 0; i <= MASTER_IDX; i++) setTimeout(() => swapPingala(i), 60 + i * 60);
+    setTimeout(() => { if (flowing) { swapPingala(7); swapPingala(8); } }, 3000);
     PAIRS.forEach((_, i) => updateOrbUI(i));
     ui('live', 'En expansion…');
   } catch(err) {
