@@ -14,126 +14,97 @@ let masterDelay = null, masterReverb = null, pingPongDelay = null;
 let chorus = null, compressor = null;
 const LFO_STATE    = {on:false, rate:.25,  depth:.08};
 const BREATH_STATE = {on:false, rate:0.13, depth:0.35};
-let _lfoNode = null, _lfoGain = null;  // LFO natif Tone.js (audio thread)
+let _lfoNode = null, _lfoGain = null;
 let _breathLFO = null, _breathGain = null;
-let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
+let _btKeepalive = null;
 let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
 
-// ── Moteur AudioWorklet (synthèse sinus dans le thread audio) ──
-// Tous les oscillateurs sont générés échantillon par échantillon dans
-// le thread de rendu audio → immunisé au jank du thread principal
-// (GC, layout, RAF) qui causait les craquements/déchirements sur WebView
-// Android. Phase continue + lissage fréq/gain par échantillon = zéro clic.
-// Le processeur est injecté via Blob URL (aucun fichier externe dans l'APK).
-const _WORKLET_SRC = `
-class OmchaProcessor extends AudioWorkletProcessor {
-  constructor() {
-    super();
-    this.N = 24;
-    this.phase = new Float32Array(this.N);
-    this.freq  = new Float32Array(this.N);
-    this.tFreq = new Float32Array(this.N);
-    this.gain  = new Float32Array(this.N);
-    this.tGain = new Float32Array(this.N);
-    this.panL  = new Float32Array(this.N);
-    this.panR  = new Float32Array(this.N);
-    this.act   = new Uint8Array(this.N);
-    // Coeffs de lissage one-pole (constantes de temps en secondes)
-    this.cF = Math.exp(-1 / (0.06 * sampleRate));
-    this.cG = Math.exp(-1 / (0.08 * sampleRate));
-    for (let s = 0; s < this.N; s++) { this.panL[s] = 0.707; this.panR[s] = 0.707; }
-    this.port.onmessage = (e) => {
-      const d = e.data, s = d.s;
-      if (d.t === 's') {
-        if (d.f !== undefined) { this.tFreq[s] = d.f; if (d.init) this.freq[s] = d.f; }
-        if (d.g !== undefined) this.tGain[s] = d.g;
-        if (d.p !== undefined) {
-          const a = (d.p + 1) * 0.25 * Math.PI;
-          this.panL[s] = Math.cos(a); this.panR[s] = Math.sin(a);
-        }
-        if (d.init) this.phase[s] = Math.random();
-        this.act[s] = 1;
-      } else if (d.t === 'alloff') {
-        for (let k = 0; k < this.N; k++) this.tGain[k] = 0;
-      }
-    };
+// ── Oscillateurs raw Web Audio (thread audio natif, zéro overhead JS) ──
+// On utilise directement les API Web Audio brutes (OscillatorNode,
+// GainNode, StereoPannerNode) plutôt que les wrappers Tone.js, pour
+// éliminer tout scheduling Tone sur le thread principal = zéro craquement.
+function buildOsc(id, freq, vol, pan) {
+  const ctx = Tone.context.rawContext;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  const p = ctx.createStereoPanner();
+  o.type = 'sine';
+  o.frequency.value = Math.max(1, safeF(freq));
+  p.pan.value = pan;
+  o.connect(g); g.connect(p); p.connect(masterGain.input);
+  g.gain.value = 0;
+  if (!mutedOscs[id] && vol > 0) {
+    const now = ctx.currentTime;
+    g.gain.setValueAtTime(0, now);
+    g.gain.setTargetAtTime(vol, now, FADE / 5);
   }
-  process(inputs, outputs) {
-    const out = outputs[0], L = out[0], R = out[1], n = L.length;
-    const TWO_PI = 6.283185307179586, sr = sampleRate, cF = this.cF, cG = this.cG;
-    for (let i = 0; i < n; i++) {
-      let l = 0, r = 0;
-      for (let s = 0; s < this.N; s++) {
-        if (!this.act[s]) continue;
-        this.freq[s] = this.tFreq[s] + (this.freq[s] - this.tFreq[s]) * cF;
-        this.gain[s] = this.tGain[s] + (this.gain[s] - this.tGain[s]) * cG;
-        let ph = this.phase[s] + this.freq[s] / sr;
-        ph -= Math.floor(ph);
-        this.phase[s] = ph;
-        const v = Math.sin(ph * TWO_PI) * this.gain[s];
-        l += v * this.panL[s]; r += v * this.panR[s];
-      }
-      L[i] = l; R[i] = r;
-    }
-    return true;
-  }
+  o.start();
+  return { o, g, p };
 }
-registerProcessor('omcha-proc', OmchaProcessor);
-`;
 
-let omchaNode = null;
-let _workletReady = false;
-const _initedSlots = {};
-
-// Slot par oscillateur : pingala paire i → 2*i, ida → 2*i+1
-const _slotOf = {};
-PAIRS.forEach((p, i) => { _slotOf[p.pingala.id] = 2 * i; _slotOf[p.ida.id] = 2 * i + 1; });
-
-async function _ensureWorklet(ctx) {
-  if (_workletReady) return;
+function tuneOsc(id, freq) {
+  const node = nodes[id]; if (!node) return;
   try {
-    // Tentative Blob URL
-    const url = URL.createObjectURL(new Blob([_WORKLET_SRC], { type: 'application/javascript' }));
-    await ctx.audioWorklet.addModule(url);
-    URL.revokeObjectURL(url);
-  } catch(e) {
-    // Fallback data URL (certains WebView Capacitor bloquent les Blob pour les worklets)
-    await ctx.audioWorklet.addModule('data:application/javascript,' + encodeURIComponent(_WORKLET_SRC));
-  }
-  _workletReady = true;
+    const f = Math.max(1, safeF(freq));
+    const now = Tone.context.rawContext.currentTime;
+    node.o.frequency.cancelScheduledValues(now);
+    node.o.frequency.setValueAtTime(node.o.frequency.value, now);
+    node.o.frequency.exponentialRampToValueAtTime(f, now + TUNE_T);
+  } catch(e) {}
 }
 
-function _post(msg) { if (omchaNode) try { omchaNode.port.postMessage(msg); } catch(e) {} }
+function releaseOsc(node) {
+  const ctx = Tone.context.rawContext;
+  try {
+    const now = ctx.currentTime;
+    node.g.gain.cancelScheduledValues(now);
+    node.g.gain.setValueAtTime(node.g.gain.value, now);
+    node.g.gain.setTargetAtTime(0, now, FADE / 5);
+    node.o.stop(now + FADE + 0.1);
+  } catch(e) {}
+  setTimeout(() => {
+    try { node.o.disconnect(); } catch(e) {}
+    try { node.g.disconnect(); } catch(e) {}
+    try { node.p.disconnect(); } catch(e) {}
+  }, (FADE + 0.4) * 1000);
+}
 
-// Règle le gain d'un oscillateur (id p0/i0…) — lissé dans le worklet
-function setOscGain(id, vol) { _post({ t: 's', s: _slotOf[id], g: vol }); }
-
-// Glisse la fréquence d'un oscillateur — lissée dans le worklet (zéro clic)
-function tuneOsc(id, freq) { _post({ t: 's', s: _slotOf[id], f: safeF(freq) }); }
-
-// Active/retune un oscillateur (init au 1er appel : phase aléatoire, freq directe)
+// Oscillateurs PERSISTANTS : tuneOsc si déjà actifs, buildOsc sinon.
 function swapPingala(i) {
-  if (!flowing) return;
+  if (!flowing || !masterGain) return;
   const { pingala } = PAIRS[i];
-  const slot = 2 * i, init = !_initedSlots[slot];
-  _post({ t: 's', s: slot, f: safeF(calcPFreq(i)), g: mutedOscs[pingala.id] ? 0 : pingala.vol, p: -1, init });
-  _initedSlots[slot] = true;
-  swapIda(i);
+  if (nodes[pingala.id]) {
+    tuneOsc(pingala.id, calcPFreq(i));
+  } else {
+    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+  }
+  setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   updatePairUI(i);
 }
 function swapIda(i) {
-  if (!flowing) return;
+  if (!flowing || !masterGain) return;
   const { ida } = PAIRS[i];
-  const slot = 2 * i + 1, init = !_initedSlots[slot];
-  _post({ t: 's', s: slot, f: safeF(calcIFreq(i)), g: mutedOscs[ida.id] ? 0 : ida.vol, p: 1, init });
-  _initedSlots[slot] = true;
+  if (nodes[ida.id]) {
+    tuneOsc(ida.id, calcIFreq(i));
+  } else {
+    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+  }
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
 function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] = setTimeout(() => swapIda(i), 380); }
 
-// Rampe douce sur un AudioParam Tone (masterGain) — inchangé
+// Rampe gain sur un oscillateur raw (mute, vol, zoom)
+function setOscGain(id, vol) {
+  const node = nodes[id]; if (!node) return;
+  const now = Tone.context.rawContext.currentTime;
+  node.g.gain.cancelScheduledValues(now);
+  node.g.gain.setValueAtTime(node.g.gain.value, now);
+  node.g.gain.setTargetAtTime(vol, now, 0.1);
+}
+
+// Rampe sur Tone.Param (masterGain, lfoGain…)
 function safeRamp(gainParam, target, duration) {
   const now = Tone.now();
   gainParam.cancelScheduledValues(now);
@@ -141,22 +112,19 @@ function safeRamp(gainParam, target, duration) {
   gainParam.setTargetAtTime(target, now, Math.max(0.01, duration / 5));
 }
 
-// ── FX Chain (créée une seule fois) ──────────────────────────
+// ── FX Chain (créée une seule fois, sans chorus) ──────────────
 function initFXChain() {
   if (eqLow) return;
-  eqLow       = new Tone.Filter({ type: 'lowshelf',  frequency: 200,  Q: 1, gain: 0 });
-  eqMid       = new Tone.Filter({ type: 'peaking',   frequency: 1000, Q: 1, gain: 0 });
-  eqHigh      = new Tone.Filter({ type: 'highshelf', frequency: 5000, Q: 1, gain: 0 });
-  chorus      = new Tone.Chorus({ frequency: 0.8, delayTime: 3.5, depth: 0, wet: 0 }).start();
-  compressor  = new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.02, release: 0.25 });
+  eqLow        = new Tone.Filter({ type: 'lowshelf',  frequency: 200,  Q: 1, gain: 0 });
+  eqMid        = new Tone.Filter({ type: 'peaking',   frequency: 1000, Q: 1, gain: 0 });
+  eqHigh       = new Tone.Filter({ type: 'highshelf', frequency: 5000, Q: 1, gain: 0 });
+  compressor   = new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.02, release: 0.25 });
   masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
   masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
-  limiter       = new Tone.Limiter(-1.5).toDestination();
+  limiter      = new Tone.Limiter(-1.5).toDestination();
   pingPongDelay = new Tone.PingPongDelay({ delayTime: 0.25, feedback: 0.3, wet: 0 });
-  // Réverbe à convolution NON inline par défaut (off) : elle convolue en
-  // permanence sinon = gros coût CPU mobile → underrun BT. On la branche
-  // seulement quand wet > 0 (voir _setReverbActive).
-  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterDelay, pingPongDelay, limiter);
+  // Chorus retiré : toujours wet:0, inutile, source potentielle d'underrun WebView
+  eqLow.chain(eqMid, eqHigh, compressor, masterDelay, pingPongDelay, limiter);
 }
 
 // Branche/débranche la réverbe selon qu'elle est utilisée (anti-craquement BT).
@@ -177,7 +145,6 @@ function _setReverbActive(on) {
   } catch(e) {}
 }
 
-// Espaces de réverbe spatiale
 const REVERB_SPACES = {
   sec:        { decay: 0.4,  preDelay: 0.01 },
   grotte:     { decay: 2.8,  preDelay: 0.08 },
@@ -251,8 +218,9 @@ function _startBTKeepalive() {
   } catch(e) {}
 }
 
-function setChorusDepth(v) { if (chorus) try { chorus.depth = parseFloat(v); } catch(e) {} }
-function setChorusRate(v)  { if (chorus) try { chorus.frequency.value = parseFloat(v); } catch(e) {} }
+// chorus = null (supprimé) — stubs pour compatibilité panel FX
+function setChorusDepth(v) {}
+function setChorusRate(v)  {}
 function setCompThresh(v)  { if (compressor) try { compressor.threshold.value = parseFloat(v); } catch(e) {} }
 function setCompRatio(v)   { if (compressor) try { compressor.ratio.value = parseFloat(v); } catch(e) {} }
 
@@ -273,14 +241,11 @@ async function startFlow() {
   try {
     await Tone.start();
     if (Tone.context.state !== 'running') await Tone.context.resume();
-    // Reprendre l'audio après retour de veille (Android Doze / écran off)
     document.addEventListener('visibilitychange', function _onVis() {
       if (document.visibilityState === 'visible' && Tone.context.state !== 'running') {
         Tone.context.resume();
       }
     });
-    const _rawCtx = Tone.context.rawContext;
-    await _ensureWorklet(_rawCtx);
     _startBTKeepalive();
     initFXChain();
     analyser   = new Tone.Analyser('waveform', 256);
@@ -294,24 +259,14 @@ async function startFlow() {
     _lfoGain.connect(_breathGain);
     _breathGain.connect(eqLow);
     masterGain.connect(analyser);
-    // LFO natif Tone.js — fonctionne dans l'audio thread, zéro commandes JS
     _lfoNode = new Tone.LFO({ frequency: LFO_STATE.rate, min: 1 - LFO_STATE.depth, max: 1 + LFO_STATE.depth, type: 'sine' }).start();
     if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
     _breathLFO = new Tone.LFO({ frequency: BREATH_STATE.rate, min: 1 - BREATH_STATE.depth, max: 1 + BREATH_STATE.depth, type: 'sine' }).start();
     if (BREATH_STATE.on) _breathLFO.connect(_breathGain.gain);
-    // Worklet : un seul nœud stéréo génère tous les oscillateurs → masterGain
-    omchaNode = new AudioWorkletNode(_rawCtx, 'omcha-proc', {
-      numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2]
-    });
-    // Connexion nœud raw Web Audio → Tone.Gain (via .input = le GainNode sous-jacent)
-    omchaNode.connect(masterGain.input);
     flowing = true;
-    // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
-    // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).
     try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
-    // Tous les oscillateurs démarrent ensemble : le worklet ne crée aucun
-    // nœud sur le thread principal, donc aucun pic CPU. Fade-in via le gain.
-    PAIRS.forEach((_, i) => swapPingala(i));
+    // Démarrage échelonné : évite le pic GC du premier rendu
+    PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
     ui('live', 'En expansion…');
   } catch(err) {
@@ -332,13 +287,25 @@ async function stopFlow() {
       masterGain.gain.setTargetAtTime(0, _t, _fadeDur / 8);
     }
   } catch(e) {}
+  const nodesCopy = {...nodes};
+  nodes = {};
   flowing = false;
-  // Coupe doucement tous les oscillateurs dans le worklet (lissage interne)
-  _post({ t: 'alloff' });
-  Object.keys(_initedSlots).forEach(k => delete _initedSlots[k]);
+  const _rawCtx = Tone.context.rawContext;
+  Object.values(nodesCopy).forEach(n => {
+    if (!n) return;
+    try {
+      const now = _rawCtx.currentTime;
+      n.g.gain.cancelScheduledValues(now);
+      n.g.gain.setTargetAtTime(0, now, 0.05);
+      n.o.stop(now + 0.3);
+    } catch(e) {}
+    setTimeout(() => {
+      try { n.o.disconnect(); } catch(e) {}
+      try { n.g.disconnect(); } catch(e) {}
+      try { n.p.disconnect(); } catch(e) {}
+    }, 500);
+  });
   setTimeout(() => {
-    try { omchaNode?.disconnect(); } catch(e) {}
-    omchaNode = null;
     [_lfoNode, _lfoGain, _breathLFO, _breathGain, masterGain, analyser].forEach(x => {
       try { x?.disconnect(); } catch(e){}
       try { x?.dispose?.(); } catch(e){}
@@ -357,10 +324,7 @@ function masterTick() {
   masterRAF = requestAnimationFrame(masterTick);
   metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
   drawMetatron();
-  // LFO géré nativement par Tone.LFO — aucun traitement JS ici
   if (!flowing || !analyser || document.visibilityState === 'hidden') return;
-  // Throttle des écritures boxShadow (style-recalc) : 1 frame sur 2.
-  // Soulage le thread principal → moins d'underruns audio sur mobile/BT.
   if ((_glowFrame++ & 1) === 0) { drawSpectroid(); return; }
   const data = analyser.getValue();
   let sum = 0, count = 0;
