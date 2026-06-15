@@ -20,64 +20,159 @@ let _btKeepalive = null;
 let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
 
-// ── Oscillateurs raw Web Audio (thread audio natif, zéro overhead JS) ──
-// On utilise directement les API Web Audio brutes (OscillatorNode,
-// GainNode, StereoPannerNode) plutôt que les wrappers Tone.js, pour
-// éliminer tout scheduling Tone sur le thread principal = zéro craquement.
+// ── Moteur de synthèse ────────────────────────────────────────
+// IMPORTANT : Tone.js v14 enveloppe tout dans standardized-audio-context.
+// Les nœuds raw Web Audio DOIVENT être créés sur masterGain.context.rawContext
+// (le même contexte que la chaîne Tone) et reliés via Tone.connect(), sinon
+// « cannot connect to an AudioNode belonging to a different audio context ».
+//
+// Deux moteurs :
+//   1. AudioWorklet (préféré) — synthèse dans le thread audio, immunisé au
+//      jank du thread principal = ZÉRO craquement. Requiert un contexte
+//      sécurisé (https/localhost) : OK dans l'APK Capacitor (https://localhost).
+//   2. OscillatorNode raw (repli) — si le worklet est indisponible (contexte
+//      non sécurisé, vieux WebView). Garantit toujours du son.
+const _WORKLET_SRC = `
+class OmchaProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.N = 24;
+    this.phase = new Float32Array(this.N);
+    this.freq  = new Float32Array(this.N);
+    this.tFreq = new Float32Array(this.N);
+    this.gain  = new Float32Array(this.N);
+    this.tGain = new Float32Array(this.N);
+    this.panL  = new Float32Array(this.N);
+    this.panR  = new Float32Array(this.N);
+    this.act   = new Uint8Array(this.N);
+    this.cF = Math.exp(-1 / (0.06 * sampleRate));
+    this.cG = Math.exp(-1 / (0.08 * sampleRate));
+    for (let s = 0; s < this.N; s++) { this.panL[s] = 0.707; this.panR[s] = 0.707; }
+    this.port.onmessage = (e) => {
+      const d = e.data, s = d.s;
+      if (d.t === 's') {
+        if (d.f !== undefined) { this.tFreq[s] = d.f; if (d.init) this.freq[s] = d.f; }
+        if (d.g !== undefined) this.tGain[s] = d.g;
+        if (d.p !== undefined) {
+          const a = (d.p + 1) * 0.25 * Math.PI;
+          this.panL[s] = Math.cos(a); this.panR[s] = Math.sin(a);
+        }
+        if (d.init) this.phase[s] = Math.random();
+        this.act[s] = 1;
+      } else if (d.t === 'alloff') {
+        for (let k = 0; k < this.N; k++) this.tGain[k] = 0;
+      }
+    };
+  }
+  process(inputs, outputs) {
+    const out = outputs[0], L = out[0], R = out[1], n = L.length;
+    const TWO_PI = 6.283185307179586, sr = sampleRate, cF = this.cF, cG = this.cG;
+    for (let i = 0; i < n; i++) {
+      let l = 0, r = 0;
+      for (let s = 0; s < this.N; s++) {
+        if (!this.act[s]) continue;
+        this.freq[s] = this.tFreq[s] + (this.freq[s] - this.tFreq[s]) * cF;
+        this.gain[s] = this.tGain[s] + (this.gain[s] - this.tGain[s]) * cG;
+        let ph = this.phase[s] + this.freq[s] / sr;
+        ph -= Math.floor(ph);
+        this.phase[s] = ph;
+        const v = Math.sin(ph * TWO_PI) * this.gain[s];
+        l += v * this.panL[s]; r += v * this.panR[s];
+      }
+      L[i] = l; R[i] = r;
+    }
+    return true;
+  }
+}
+registerProcessor('omcha-proc', OmchaProcessor);
+`;
+
+let omchaNode = null;
+let _workletReady = false;
+let _useRawOsc = false;
+let _AC = null;                 // contexte raw partagé (= masterGain.context.rawContext)
+const _initedSlots = {};
+
+// Slot par oscillateur : pingala paire i → 2*i, ida → 2*i+1
+const _slotOf = {};
+PAIRS.forEach((p, i) => { _slotOf[p.pingala.id] = 2 * i; _slotOf[p.ida.id] = 2 * i + 1; });
+
+async function _ensureWorklet(toneCtx) {
+  if (_workletReady) return true;
+  try {
+    const url = URL.createObjectURL(new Blob([_WORKLET_SRC], { type: 'application/javascript' }));
+    await toneCtx.addAudioWorkletModule(url);
+    URL.revokeObjectURL(url);
+    _workletReady = true; return true;
+  } catch(e) {
+    try {
+      await toneCtx.addAudioWorkletModule('data:application/javascript,' + encodeURIComponent(_WORKLET_SRC));
+      _workletReady = true; return true;
+    } catch(e2) { return false; }   // contexte non sécurisé → repli raw
+  }
+}
+
+function _post(msg) { if (omchaNode) try { omchaNode.port.postMessage(msg); } catch(e) {} }
+
+// ── Repli : oscillateurs raw Web Audio (sur le contexte de Tone) ──
 function buildOsc(id, freq, vol, pan) {
-  const ctx = Tone.context.rawContext;
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  const p = ctx.createStereoPanner();
+  const o = _AC.createOscillator();
+  const g = _AC.createGain();
   o.type = 'sine';
   o.frequency.value = Math.max(1, safeF(freq));
-  p.pan.value = pan;
-  o.connect(g); g.connect(p); p.connect(masterGain.input);
+  o.connect(g);
+  try {
+    const p = _AC.createStereoPanner();
+    p.pan.value = pan;
+    g.connect(p);
+    Tone.connect(p, masterGain);
+    var node = { o, g, p };
+  } catch(e) {
+    Tone.connect(g, masterGain);
+    var node = { o, g, p: null };
+  }
   g.gain.value = 0;
   if (!mutedOscs[id] && vol > 0) {
-    const now = ctx.currentTime;
+    const now = _AC.currentTime;
     g.gain.setValueAtTime(0, now);
     g.gain.setTargetAtTime(vol, now, FADE / 5);
   }
   o.start();
-  return { o, g, p };
+  return node;
 }
 
 function tuneOsc(id, freq) {
+  if (!_useRawOsc) { _post({ t: 's', s: _slotOf[id], f: safeF(freq) }); return; }
   const node = nodes[id]; if (!node) return;
   try {
-    const f = Math.max(1, safeF(freq));
-    const now = Tone.context.rawContext.currentTime;
+    const f = Math.max(1, safeF(freq)), now = _AC.currentTime;
     node.o.frequency.cancelScheduledValues(now);
     node.o.frequency.setValueAtTime(node.o.frequency.value, now);
     node.o.frequency.exponentialRampToValueAtTime(f, now + TUNE_T);
   } catch(e) {}
 }
 
-function releaseOsc(node) {
-  const ctx = Tone.context.rawContext;
-  try {
-    const now = ctx.currentTime;
-    node.g.gain.cancelScheduledValues(now);
-    node.g.gain.setValueAtTime(node.g.gain.value, now);
-    node.g.gain.setTargetAtTime(0, now, FADE / 5);
-    node.o.stop(now + FADE + 0.1);
-  } catch(e) {}
-  setTimeout(() => {
-    try { node.o.disconnect(); } catch(e) {}
-    try { node.g.disconnect(); } catch(e) {}
-    try { node.p.disconnect(); } catch(e) {}
-  }, (FADE + 0.4) * 1000);
+// Règle le gain d'un oscillateur (mute, vol, zoom)
+function setOscGain(id, vol) {
+  if (!_useRawOsc) { _post({ t: 's', s: _slotOf[id], g: vol }); return; }
+  const node = nodes[id]; if (!node) return;
+  const now = _AC.currentTime;
+  node.g.gain.cancelScheduledValues(now);
+  node.g.gain.setValueAtTime(node.g.gain.value, now);
+  node.g.gain.setTargetAtTime(vol, now, 0.1);
 }
 
-// Oscillateurs PERSISTANTS : tuneOsc si déjà actifs, buildOsc sinon.
+// Active/retune un oscillateur (worklet : message ; raw : build/tune)
 function swapPingala(i) {
   if (!flowing || !masterGain) return;
   const { pingala } = PAIRS[i];
-  if (nodes[pingala.id]) {
-    tuneOsc(pingala.id, calcPFreq(i));
+  if (_useRawOsc) {
+    if (nodes[pingala.id]) tuneOsc(pingala.id, calcPFreq(i));
+    else nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
   } else {
-    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
+    const slot = 2 * i, init = !_initedSlots[slot];
+    _post({ t: 's', s: slot, f: safeF(calcPFreq(i)), g: mutedOscs[pingala.id] ? 0 : pingala.vol, p: -1, init });
+    _initedSlots[slot] = true;
   }
   setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
   updatePairUI(i);
@@ -85,24 +180,18 @@ function swapPingala(i) {
 function swapIda(i) {
   if (!flowing || !masterGain) return;
   const { ida } = PAIRS[i];
-  if (nodes[ida.id]) {
-    tuneOsc(ida.id, calcIFreq(i));
+  if (_useRawOsc) {
+    if (nodes[ida.id]) tuneOsc(ida.id, calcIFreq(i));
+    else nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
   } else {
-    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
+    const slot = 2 * i + 1, init = !_initedSlots[slot];
+    _post({ t: 's', s: slot, f: safeF(calcIFreq(i)), g: mutedOscs[ida.id] ? 0 : ida.vol, p: 1, init });
+    _initedSlots[slot] = true;
   }
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
 function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] = setTimeout(() => swapIda(i), 380); }
-
-// Rampe gain sur un oscillateur raw (mute, vol, zoom)
-function setOscGain(id, vol) {
-  const node = nodes[id]; if (!node) return;
-  const now = Tone.context.rawContext.currentTime;
-  node.g.gain.cancelScheduledValues(now);
-  node.g.gain.setValueAtTime(node.g.gain.value, now);
-  node.g.gain.setTargetAtTime(vol, now, 0.1);
-}
 
 // Rampe sur Tone.Param (masterGain, lfoGain…)
 function safeRamp(gainParam, target, duration) {
@@ -123,11 +212,10 @@ function initFXChain() {
   masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
   limiter      = new Tone.Limiter(-1.5).toDestination();
   pingPongDelay = new Tone.PingPongDelay({ delayTime: 0.25, feedback: 0.3, wet: 0 });
-  // Chorus retiré : toujours wet:0, inutile, source potentielle d'underrun WebView
+  // Chorus retiré : toujours wet:0, inutile, source potentielle d'underrun
   eqLow.chain(eqMid, eqHigh, compressor, masterDelay, pingPongDelay, limiter);
 }
 
-// Branche/débranche la réverbe selon qu'elle est utilisée (anti-craquement BT).
 let _reverbActive = false;
 function _setReverbActive(on) {
   if (!masterReverb || !masterDelay || !pingPongDelay || !limiter || on === _reverbActive) return;
@@ -208,17 +296,17 @@ function breathSet(param, v) {
 function _startBTKeepalive() {
   if (_btKeepalive) return;
   try {
-    const ctx = Tone.context.rawContext;
+    const ctx = _AC || Tone.context.rawContext;
     const buf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const src = ctx.createBufferSource();
     src.buffer = buf; src.loop = true;
-    src.connect(ctx.destination);
+    Tone.connect(src, Tone.getDestination());
     src.start();
     _btKeepalive = src;
   } catch(e) {}
 }
 
-// chorus = null (supprimé) — stubs pour compatibilité panel FX
+// chorus retiré — stubs pour compatibilité panel FX
 function setChorusDepth(v) {}
 function setChorusRate(v)  {}
 function setCompThresh(v)  { if (compressor) try { compressor.threshold.value = parseFloat(v); } catch(e) {} }
@@ -246,10 +334,12 @@ async function startFlow() {
         Tone.context.resume();
       }
     });
-    _startBTKeepalive();
     initFXChain();
     analyser   = new Tone.Analyser('waveform', 256);
     masterGain = new Tone.Gain(0);
+    // Contexte raw partagé = celui des nœuds Tone (sinon « different context »)
+    _AC = masterGain.context.rawContext;
+    _startBTKeepalive();
     _lfoGain   = new Tone.Gain(1);
     const _now = Tone.now();
     masterGain.gain.setValueAtTime(0, _now);
@@ -263,12 +353,26 @@ async function startFlow() {
     if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
     _breathLFO = new Tone.LFO({ frequency: BREATH_STATE.rate, min: 1 - BREATH_STATE.depth, max: 1 + BREATH_STATE.depth, type: 'sine' }).start();
     if (BREATH_STATE.on) _breathLFO.connect(_breathGain.gain);
+
+    // Tente le worklet (anti-craquement) ; sinon repli oscillateurs raw
+    const okWk = await _ensureWorklet(masterGain.context);
+    if (okWk) {
+      try {
+        omchaNode = masterGain.context.createAudioWorkletNode('omcha-proc', {
+          numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2]
+        });
+        Tone.connect(omchaNode, masterGain);
+        _useRawOsc = false;
+      } catch(e) { omchaNode = null; _useRawOsc = true; }
+    } else {
+      _useRawOsc = true;
+    }
+
     flowing = true;
     try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
-    // Démarrage échelonné : évite le pic GC du premier rendu
     PAIRS.forEach((_, i) => setTimeout(() => swapPingala(i), 60 + i * 60));
     PAIRS.forEach((_, i) => updateOrbUI(i));
-    ui('live', 'En expansion…');
+    ui('live', _useRawOsc ? 'En expansion…' : 'En expansion ✦');
   } catch(err) {
     flowing = false; nodes = {};
     ui('idle', 'Erreur audio — relancer');
@@ -287,14 +391,16 @@ async function stopFlow() {
       masterGain.gain.setTargetAtTime(0, _t, _fadeDur / 8);
     }
   } catch(e) {}
+  flowing = false;
+  // Worklet : coupe en douceur ; raw : stop + dispose
+  _post({ t: 'alloff' });
   const nodesCopy = {...nodes};
   nodes = {};
-  flowing = false;
-  const _rawCtx = Tone.context.rawContext;
+  Object.keys(_initedSlots).forEach(k => delete _initedSlots[k]);
   Object.values(nodesCopy).forEach(n => {
     if (!n) return;
     try {
-      const now = _rawCtx.currentTime;
+      const now = _AC.currentTime;
       n.g.gain.cancelScheduledValues(now);
       n.g.gain.setTargetAtTime(0, now, 0.05);
       n.o.stop(now + 0.3);
@@ -302,10 +408,12 @@ async function stopFlow() {
     setTimeout(() => {
       try { n.o.disconnect(); } catch(e) {}
       try { n.g.disconnect(); } catch(e) {}
-      try { n.p.disconnect(); } catch(e) {}
+      try { n.p && n.p.disconnect(); } catch(e) {}
     }, 500);
   });
   setTimeout(() => {
+    try { omchaNode?.disconnect(); } catch(e) {}
+    omchaNode = null;
     [_lfoNode, _lfoGain, _breathLFO, _breathGain, masterGain, analyser].forEach(x => {
       try { x?.disconnect(); } catch(e){}
       try { x?.dispose?.(); } catch(e){}
