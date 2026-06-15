@@ -1,0 +1,37 @@
+/* Polices embarquées en local — zéro dépendance Google Fonts au runtime.
+   L'app reste lisible et identique hors-ligne (APK). woff2 prioritaire,
+   woff en repli. Sous-ensembles latin + latin-ext. */
+
+/* ── Cinzel Decorative ── */
+@font-face {
+  font-family: 'Cinzel Decorative'; font-style: normal; font-weight: 400;
+  font-display: swap;
+  src: url('fonts/cinzel-decorative-latin-400-normal.woff2') format('woff2'),
+       url('fonts/cinzel-decorative-latin-400-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'Cinzel Decorative'; font-style: normal; font-weight: 700;
+  font-display: swap;
+  src: url('fonts/cinzel-decorative-latin-700-normal.woff2') format('woff2'),
+       url('fonts/cinzel-decorative-latin-700-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'Cinzel Decorative'; font-style: normal; font-weight: 900;
+  font-display: swap;
+  src: url('fonts/cinzel-decorative-latin-900-normal.woff2') format('woff2'),
+       url('fonts/cinzel-decorative-latin-900-normal.woff') format('woff');
+}
+
+/* ── IM Fell English ── */
+@font-face {
+  font-family: 'IM Fell English'; font-style: normal; font-weight: 400;
+  font-display: swap;
+  src: url('fonts/im-fell-english-latin-400-normal.woff2') format('woff2'),
+       url('fonts/im-fell-english-latin-400-normal.woff') format('woff');
+}
+@font-face {
+  font-family: 'IM Fell English'; font-style: italic; font-weight: 400;
+  font-display: swap;
+  src: url('fonts/im-fell-english-latin-400-italic.woff2') format('woff2'),
+       url('fonts/im-fell-english-latin-400-italic.woff') format('woff');
+}
