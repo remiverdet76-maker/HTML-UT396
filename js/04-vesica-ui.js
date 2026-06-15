@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   04-vesica-ui.js — Sphère FBF396 (bulle unique)
+   04-vesica-ui.js — Sphère 0mcha396 (bulle unique)
    ═══════════════════════════════════════════ */
 
 // Détection tap court vs long press sur la sphère
@@ -11,7 +11,7 @@ function _sphStart(e) {
   clearTimeout(_sphTimer);
   _sphTimer = setTimeout(() => {
     _sphFired = true; _sphTimer = null;
-    triggerFBF396(); // long press = re-random
+    trigger0mcha396(); // long press = re-random
   }, 500);
 }
 function _sphEnd() {
@@ -65,7 +65,7 @@ function buildVesicaPairs() {
   sphere.innerHTML = `
     <div class="sph-shine"></div>
     <div class="sph-content">
-      <div class="sph-label">FBF396</div>
+      <div class="sph-label">0mcha396</div>
       <div class="sph-freq" id="sphere-freq">${masterFreq}</div>
       <div class="sph-sub" id="sphere-sub">Press &amp; Destress</div>
     </div>`;
@@ -111,7 +111,7 @@ function fbfSpherePress() {
   if (typeof flowing !== 'undefined' && flowing) {
     stopFlow();
   } else {
-    triggerFBF396();
+    trigger0mcha396();
   }
 }
 

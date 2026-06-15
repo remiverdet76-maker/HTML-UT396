@@ -550,7 +550,7 @@ function updateDisplay() {
   const msf = document.getElementById('ms-freq'); if (msf) msf.textContent = masterFreq;
   const mi  = document.getElementById('master-input');
   if (mi && document.activeElement!==mi) mi.value = masterFreq;
-  document.title = 'FBF396 · ' + masterFreq + ' Hz';
+  document.title = '0mcha396 · ' + masterFreq + ' Hz';
   PAIRS.forEach((_,i) => updatePairUI(i));
   updateMasterState();
   patchRandomTable();

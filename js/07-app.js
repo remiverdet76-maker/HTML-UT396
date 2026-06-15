@@ -167,7 +167,7 @@ function tPanel(panId, btnId) {
   const btn = document.getElementById(btnId);
   if (!pan) return;
 
-  // Désactiver le bouton principal FBF396 quand un panel est ouvert
+  // Désactiver le bouton principal 0mcha396 quand un panel est ouvert
   const mainBtn = document.getElementById('bnt-main');
 
   if (_openPanel === panId) {
@@ -432,7 +432,7 @@ function init() {
   window.updateDisplay = function() {
     _uD && _uD();
     typeof updateSphereDisplay === 'function' && updateSphereDisplay();
-    document.title = 'FBF396 · ' + masterFreq + ' Hz';
+    document.title = '0mcha396 · ' + masterFreq + ' Hz';
   };
   window.patchFBFState = function() {
     _pF && _pF();
