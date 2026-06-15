@@ -92,9 +92,15 @@ PAIRS.forEach((p, i) => { _slotOf[p.pingala.id] = 2 * i; _slotOf[p.ida.id] = 2 *
 
 async function _ensureWorklet(ctx) {
   if (_workletReady) return;
-  const url = URL.createObjectURL(new Blob([_WORKLET_SRC], { type: 'application/javascript' }));
-  await ctx.audioWorklet.addModule(url);
-  URL.revokeObjectURL(url);
+  try {
+    // Tentative Blob URL
+    const url = URL.createObjectURL(new Blob([_WORKLET_SRC], { type: 'application/javascript' }));
+    await ctx.audioWorklet.addModule(url);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    // Fallback data URL (certains WebView Capacitor bloquent les Blob pour les worklets)
+    await ctx.audioWorklet.addModule('data:application/javascript,' + encodeURIComponent(_WORKLET_SRC));
+  }
   _workletReady = true;
 }
 
@@ -297,7 +303,8 @@ async function startFlow() {
     omchaNode = new AudioWorkletNode(_rawCtx, 'omcha-proc', {
       numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2]
     });
-    Tone.connect(omchaNode, masterGain);
+    // Connexion nœud raw Web Audio → Tone.Gain (via .input = le GainNode sous-jacent)
+    omchaNode.connect(masterGain.input);
     flowing = true;
     // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
     // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).

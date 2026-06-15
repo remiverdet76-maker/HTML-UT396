@@ -5,6 +5,39 @@
 /* Overlay portrait (conservé pour compat, non affiché) */
 #rotate-overlay { display: none !important; }
 
+/* ── Bouton latéral Flux on/Off ──────────────────────────────── */
+#flux-toggle-btn {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 900;
+  width: 44px;
+  height: 72px;
+  border: none;
+  border-radius: 14px 0 0 14px;
+  background: rgba(20,10,40,.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-left: 1px solid rgba(180,120,255,.25);
+  border-top: 1px solid rgba(180,120,255,.18);
+  border-bottom: 1px solid rgba(180,120,255,.18);
+  color: rgba(180,120,255,.9);
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .25s, color .25s;
+  touch-action: manipulation;
+}
+#flux-toggle-btn.live {
+  background: rgba(40,10,60,.82);
+  color: #86FFC0;
+  border-color: rgba(134,255,192,.35);
+}
+#flux-toggle-btn:active { opacity: .7; }
+
 /* ═══ Smartphone ═══════════════════════════════════════════════════ */
 @media (max-width: 900px), (max-height: 500px) {
 
