@@ -1,7 +1,12 @@
 # 📱 Omcha FBF432 — App Android (Capacitor)
 
 Wrapper natif de l'app web. L'app reste 100 % offline : tous les assets
-(HTML/JS/CSS, Tone.js local plus tard, samples) sont embarqués dans l'APK.
+(HTML/JS/CSS, **Tone.js vendorisé en local** `js/lib/Tone.js`, samples) sont
+embarqués dans l'APK — aucune dépendance CDN au runtime.
+
+> ⚠️ Les polices Google Fonts restent chargées depuis un CDN dans `index.html`
+> (non bloquant : fallback police système hors-ligne). À vendoriser aussi pour
+> un rendu typographique identique sans réseau.
 
 ---
 
