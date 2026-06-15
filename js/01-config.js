@@ -40,6 +40,7 @@ const RATIO_OPTS = [
 // Band B : 108–256 Hz (oscs 2,3)
 // Band C : 256–432 Hz (oscs 4,5)
 // Maître : variable   (osc 6)
+// Band D : 432–648 Hz (oscs 7,8) — harmoniques éthérés, vol fixe léger
 const PAIRS = [
   { label:'Band A·1', color:'#FF6B6B', grad:['#FF6B6B','#FF9A8B'],
     pingala:{id:'p0', ri:2, n:0.3, baseFreq:63,  vol:.12}, ida:{id:'i0', delta:1.8, polarity:1, vol:.12} },
@@ -55,6 +56,10 @@ const PAIRS = [
     pingala:{id:'p5', ri:2, n:2.9, baseFreq:324, vol:.12}, ida:{id:'i5', delta:1.8, polarity:1, vol:.12} },
   { label:'Maître',   color:'#FFB0FF', grad:['#FFB0FF','#FF80C0'],
     pingala:{id:'p6', ri:0, n:1.0, baseFreq:252, vol:.14}, ida:{id:'i6', delta:1.8, polarity:1, vol:.14} },
+  { label:'Band D·1', color:'#B0FFEE', grad:['#B0FFEE','#D0FFF8'],
+    pingala:{id:'p7', ri:0, n:1.0, baseFreq:486, vol:.06}, ida:{id:'i7', delta:0.8, polarity:1, vol:.06} },
+  { label:'Band D·2', color:'#D0E8FF', grad:['#D0E8FF','#E8F4FF'],
+    pingala:{id:'p8', ri:0, n:1.0, baseFreq:576, vol:.06}, ida:{id:'i8', delta:1.2, polarity:1, vol:.06} },
 ];
 
 let mutedOscs = {};
@@ -80,7 +85,8 @@ function waveState(hz) {
 // calcPFreq utilise baseFreq pour les bandes, masterFreq pour le maître
 function calcPFreq(i) {
   if (i === MASTER_IDX) return masterFreq;
-  return Math.max(36, Math.min(432, PAIRS[i].pingala.baseFreq));
+  const cap = i >= 7 ? 648 : 432;
+  return Math.max(36, Math.min(cap, PAIRS[i].pingala.baseFreq));
 }
 function calcIFreq(i) {
   const { ida } = PAIRS[i];

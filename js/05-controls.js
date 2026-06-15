@@ -16,11 +16,15 @@ function trigger0mcha396() {
   PAIRS[3].pingala.baseFreq = 108 + Math.floor(Math.random() * 148);
   PAIRS[4].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
   PAIRS[5].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
+  PAIRS[7].pingala.baseFreq = 432 + Math.floor(Math.random() * 216);
+  PAIRS[8].pingala.baseFreq = 432 + Math.floor(Math.random() * 216);
 
   // Volumes selon point d'observation toroïdal
   const zVols = TORUS_ZOOMS[zoomLevel].bandVols;
   for (let i = 0; i < MASTER_IDX; i++) { PAIRS[i].pingala.vol = zVols[i]; PAIRS[i].ida.vol = zVols[i]; }
   PAIRS[MASTER_IDX].pingala.vol = .14; PAIRS[MASTER_IDX].ida.vol = .14;
+  PAIRS[7].pingala.vol = .06; PAIRS[7].ida.vol = .06;
+  PAIRS[8].pingala.vol = .06; PAIRS[8].ida.vol = .06;
 
   if (typeof flowing !== 'undefined' && flowing) {
     PAIRS.forEach((_, i) => {
@@ -297,11 +301,14 @@ function resetAll() {
     mutedOscs[p.pingala.id] = false; mutedOscs[p.ida.id] = false;
   });
   PAIRS[MASTER_IDX].pingala.vol = .14; PAIRS[MASTER_IDX].ida.vol = .14;
+  PAIRS[7].pingala.vol = .06; PAIRS[7].ida.vol = .06;
+  PAIRS[8].pingala.vol = .06; PAIRS[8].ida.vol = .06;
   // Réinitialise baseFreq aux valeurs de bande par défaut
   PAIRS[0].pingala.baseFreq = 63;  PAIRS[1].pingala.baseFreq = 81;
   PAIRS[2].pingala.baseFreq = 162; PAIRS[3].pingala.baseFreq = 192;
   PAIRS[4].pingala.baseFreq = 288; PAIRS[5].pingala.baseFreq = 324;
   PAIRS[6].pingala.baseFreq = 252;
+  PAIRS[7].pingala.baseFreq = 486; PAIRS[8].pingala.baseFreq = 576;
   try { localStorage.removeItem(LS_KEY); } catch(e) {}
   const mvs = document.getElementById('mvol-slider'); if (mvs) mvs.value = 0.8;
   const mvv = document.getElementById('mvol-val');    if (mvv) mvv.textContent = '80%';

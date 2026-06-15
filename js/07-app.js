@@ -78,7 +78,8 @@ function loadState() {
       if (sp.ri>=0&&sp.ri<RATIO_OPTS.length) PAIRS[i].pingala.ri = sp.ri;
       if (!isNaN(sp.n)&&sp.n>=0) PAIRS[i].pingala.n = sp.n;
       if (sp.volP>=0) PAIRS[i].pingala.vol = sp.volP;
-      if (sp.baseFreq>=36&&sp.baseFreq<=432) PAIRS[i].pingala.baseFreq = sp.baseFreq;
+      const freqMax = i >= 7 ? 648 : 432;
+      if (sp.baseFreq>=36&&sp.baseFreq<=freqMax) PAIRS[i].pingala.baseFreq = sp.baseFreq;
       if (sp.delta>0) PAIRS[i].ida.delta = sp.delta;
       if (sp.polarity===1||sp.polarity===-1) PAIRS[i].ida.polarity = sp.polarity;
       if (sp.volI>=0) PAIRS[i].ida.vol = sp.volI;
