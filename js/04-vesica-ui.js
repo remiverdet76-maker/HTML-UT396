@@ -106,6 +106,10 @@ function updateSphereDisplay() {
 
   const isFlowing = typeof flowing !== 'undefined' && flowing;
   sphere.classList.toggle('sph-flowing', isFlowing);
+  const ftb = document.getElementById('flux-toggle-btn');
+  const fti = document.getElementById('flux-toggle-ico');
+  if (ftb) ftb.classList.toggle('live', isFlowing);
+  if (fti) fti.textContent = isFlowing ? '■' : '▶';
 
   _applyStyle(sphere, SPHERE_COLORS_12[_sphereColorIdx]);
 }
