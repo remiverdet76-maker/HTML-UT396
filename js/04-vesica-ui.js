@@ -67,6 +67,7 @@ function buildVesicaPairs() {
     <div class="sph-content">
       <div class="sph-label">0mcha396</div>
       <div class="sph-freq" id="sphere-freq">${masterFreq}</div>
+      <div class="sph-zoom" id="sphere-zoom">${TORUS_ZOOMS[zoomLevel].icon} ${TORUS_ZOOMS[zoomLevel].name}</div>
       <div class="sph-sub" id="sphere-sub">Press &amp; Destress</div>
     </div>`;
 
@@ -97,6 +98,9 @@ function updateSphereDisplay() {
   const freqEl = document.getElementById('sphere-freq');
   if (freqEl) freqEl.textContent = masterFreq;
 
+  const zoomEl = document.getElementById('sphere-zoom');
+  if (zoomEl) { const z = TORUS_ZOOMS[zoomLevel]; zoomEl.textContent = z.icon + ' ' + z.name; }
+
   const sphere = document.getElementById('fbf-sphere');
   if (!sphere) return;
 
@@ -106,10 +110,12 @@ function updateSphereDisplay() {
   _applyStyle(sphere, SPHERE_COLORS_12[_sphereColorIdx]);
 }
 
-// Tap court = toggle flux ; si on démarre → random complet
+// Tap court = cycle zoom si flux actif ; sinon démarre
 function fbfSpherePress() {
   if (typeof flowing !== 'undefined' && flowing) {
-    stopFlow();
+    zoomLevel = (zoomLevel + 1) % TORUS_ZOOMS.length;
+    applyZoom();
+    updateSphereDisplay();
   } else {
     trigger0mcha396();
   }

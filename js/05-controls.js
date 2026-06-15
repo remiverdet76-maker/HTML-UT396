@@ -16,10 +16,15 @@ function trigger0mcha396() {
   PAIRS[3].pingala.baseFreq = 108 + Math.floor(Math.random() * 148);
   PAIRS[4].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
   PAIRS[5].pingala.baseFreq = 256 + Math.floor(Math.random() * 176);
+  PAIRS[7].pingala.baseFreq = 432 + Math.floor(Math.random() * 216);
+  PAIRS[8].pingala.baseFreq = 432 + Math.floor(Math.random() * 216);
 
-  // Reset volumes
-  PAIRS.forEach(p => { p.pingala.vol = .12; p.ida.vol = .12; });
+  // Volumes selon point d'observation toroïdal
+  const zVols = TORUS_ZOOMS[zoomLevel].bandVols;
+  for (let i = 0; i < MASTER_IDX; i++) { PAIRS[i].pingala.vol = zVols[i]; PAIRS[i].ida.vol = zVols[i]; }
   PAIRS[MASTER_IDX].pingala.vol = .14; PAIRS[MASTER_IDX].ida.vol = .14;
+  PAIRS[7].pingala.vol = .06; PAIRS[7].ida.vol = .06;
+  PAIRS[8].pingala.vol = .06; PAIRS[8].ida.vol = .06;
 
   if (typeof flowing !== 'undefined' && flowing) {
     PAIRS.forEach((_, i) => {
@@ -254,6 +259,22 @@ function fbfToggle() {
   if (typeof flowing !== 'undefined' && flowing) stopFlow(); else startFlow();
 }
 
+// ── Flux Toroïdal — point d'observation ──────────────────────────
+function applyZoom() {
+  const z = TORUS_ZOOMS[zoomLevel];
+  for (let i = 0; i < MASTER_IDX; i++) {
+    PAIRS[i].pingala.vol = z.bandVols[i];
+    PAIRS[i].ida.vol     = z.bandVols[i];
+    if (typeof nodes !== 'undefined') {
+      const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
+      if (!mutedOscs[pid] && nodes[pid]) safeRamp(nodes[pid].g.gain, z.bandVols[i], 1.2);
+      if (!mutedOscs[iid] && nodes[iid]) safeRamp(nodes[iid].g.gain, z.bandVols[i], 1.2);
+    }
+  }
+  updateDisplay();
+  saveState();
+}
+
 // Alias pour compatibilité panel FX / raccourci clavier
 function triggerMagicAuto() { trigger0mcha396(); }
 
@@ -275,16 +296,19 @@ function resetAll() {
   masterFreq = 252; globalDelta = 1.8; masterVol = 0.8;
   PAIRS.forEach((p, i) => {
     p.pingala.ri = i % RATIO_OPTS.length;
-    p.pingala.n  = (i === MASTER_IDX) ? 1.0 : 0.2 + (i * 0.5);
+    p.pingala.n  = (i === MASTER_IDX || i >= 7) ? 1.0 : 0.2 + (i * 0.5);
     p.pingala.vol = .12; p.ida.delta = 1.8; p.ida.polarity = 1; p.ida.vol = .12;
     mutedOscs[p.pingala.id] = false; mutedOscs[p.ida.id] = false;
   });
   PAIRS[MASTER_IDX].pingala.vol = .14; PAIRS[MASTER_IDX].ida.vol = .14;
+  PAIRS[7].pingala.vol = .06; PAIRS[7].ida.vol = .06;
+  PAIRS[8].pingala.vol = .06; PAIRS[8].ida.vol = .06;
   // Réinitialise baseFreq aux valeurs de bande par défaut
   PAIRS[0].pingala.baseFreq = 63;  PAIRS[1].pingala.baseFreq = 81;
   PAIRS[2].pingala.baseFreq = 162; PAIRS[3].pingala.baseFreq = 192;
   PAIRS[4].pingala.baseFreq = 288; PAIRS[5].pingala.baseFreq = 324;
   PAIRS[6].pingala.baseFreq = 252;
+  PAIRS[7].pingala.baseFreq = 486; PAIRS[8].pingala.baseFreq = 576;
   try { localStorage.removeItem(LS_KEY); } catch(e) {}
   const mvs = document.getElementById('mvol-slider'); if (mvs) mvs.value = 0.8;
   const mvv = document.getElementById('mvol-val');    if (mvv) mvv.textContent = '80%';
