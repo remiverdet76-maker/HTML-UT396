@@ -20,71 +20,114 @@ let _btKeepalive = null;               // oscillateur silencieux — maintient l
 let _fadeDur = 2;
 let metaAngle = 0, masterRAF = null;
 
-// ── Oscillateurs ─────────────────────────────────────────────
-function buildOsc(id, freq, vol, pan) {
-  const p = new Tone.Panner(pan);
-  const o = new Tone.Oscillator({ frequency: safeF(freq), type: 'sine' });
-  const g = new Tone.Gain(0);
-  o.connect(p); p.connect(g); g.connect(masterGain);
-  o.start();
-  if (!mutedOscs[id] && vol > 0) {
-    const now = Tone.now();
-    g.gain.cancelScheduledValues(now);
-    g.gain.setValueAtTime(0, now);
-    g.gain.setTargetAtTime(vol, now, FADE / 5);
+// ── Moteur AudioWorklet (synthèse sinus dans le thread audio) ──
+// Tous les oscillateurs sont générés échantillon par échantillon dans
+// le thread de rendu audio → immunisé au jank du thread principal
+// (GC, layout, RAF) qui causait les craquements/déchirements sur WebView
+// Android. Phase continue + lissage fréq/gain par échantillon = zéro clic.
+// Le processeur est injecté via Blob URL (aucun fichier externe dans l'APK).
+const _WORKLET_SRC = `
+class OmchaProcessor extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.N = 24;
+    this.phase = new Float32Array(this.N);
+    this.freq  = new Float32Array(this.N);
+    this.tFreq = new Float32Array(this.N);
+    this.gain  = new Float32Array(this.N);
+    this.tGain = new Float32Array(this.N);
+    this.panL  = new Float32Array(this.N);
+    this.panR  = new Float32Array(this.N);
+    this.act   = new Uint8Array(this.N);
+    // Coeffs de lissage one-pole (constantes de temps en secondes)
+    this.cF = Math.exp(-1 / (0.06 * sampleRate));
+    this.cG = Math.exp(-1 / (0.08 * sampleRate));
+    for (let s = 0; s < this.N; s++) { this.panL[s] = 0.707; this.panR[s] = 0.707; }
+    this.port.onmessage = (e) => {
+      const d = e.data, s = d.s;
+      if (d.t === 's') {
+        if (d.f !== undefined) { this.tFreq[s] = d.f; if (d.init) this.freq[s] = d.f; }
+        if (d.g !== undefined) this.tGain[s] = d.g;
+        if (d.p !== undefined) {
+          const a = (d.p + 1) * 0.25 * Math.PI;
+          this.panL[s] = Math.cos(a); this.panR[s] = Math.sin(a);
+        }
+        if (d.init) this.phase[s] = Math.random();
+        this.act[s] = 1;
+      } else if (d.t === 'alloff') {
+        for (let k = 0; k < this.N; k++) this.tGain[k] = 0;
+      }
+    };
   }
-  return { o, g, p };
+  process(inputs, outputs) {
+    const out = outputs[0], L = out[0], R = out[1], n = L.length;
+    const TWO_PI = 6.283185307179586, sr = sampleRate, cF = this.cF, cG = this.cG;
+    for (let i = 0; i < n; i++) {
+      let l = 0, r = 0;
+      for (let s = 0; s < this.N; s++) {
+        if (!this.act[s]) continue;
+        this.freq[s] = this.tFreq[s] + (this.freq[s] - this.tFreq[s]) * cF;
+        this.gain[s] = this.tGain[s] + (this.gain[s] - this.tGain[s]) * cG;
+        let ph = this.phase[s] + this.freq[s] / sr;
+        ph -= Math.floor(ph);
+        this.phase[s] = ph;
+        const v = Math.sin(ph * TWO_PI) * this.gain[s];
+        l += v * this.panL[s]; r += v * this.panR[s];
+      }
+      L[i] = l; R[i] = r;
+    }
+    return true;
+  }
+}
+registerProcessor('omcha-proc', OmchaProcessor);
+`;
+
+let omchaNode = null;
+let _workletReady = false;
+const _initedSlots = {};
+
+// Slot par oscillateur : pingala paire i → 2*i, ida → 2*i+1
+const _slotOf = {};
+PAIRS.forEach((p, i) => { _slotOf[p.pingala.id] = 2 * i; _slotOf[p.ida.id] = 2 * i + 1; });
+
+async function _ensureWorklet(ctx) {
+  if (_workletReady) return;
+  const url = URL.createObjectURL(new Blob([_WORKLET_SRC], { type: 'application/javascript' }));
+  await ctx.audioWorklet.addModule(url);
+  URL.revokeObjectURL(url);
+  _workletReady = true;
 }
 
-function tuneOsc(id, freq) {
-  const node = nodes[id]; if (!node) return;
-  try {
-    const f = safeF(freq), now = Tone.now();
-    node.o.frequency.cancelScheduledValues(now);
-    node.o.frequency.setValueAtTime(node.o.frequency.value, now);
-    node.o.frequency.exponentialRampToValueAtTime(Math.max(1, f), now + TUNE_T);
-  } catch(e) {}
-}
+function _post(msg) { if (omchaNode) try { omchaNode.port.postMessage(msg); } catch(e) {} }
 
-function releaseOsc(node) {
-  try {
-    const now = Tone.now();
-    node.g.gain.cancelScheduledValues(now);
-    node.g.gain.setValueAtTime(node.g.gain.value, now);
-    node.g.gain.setTargetAtTime(0, now, FADE / 5);
-    node.o.stop(now + FADE + 0.1);
-  } catch(e) {}
-  setTimeout(() => {
-    ['o','g','p'].forEach(k => { try { node[k].dispose?.(); } catch(e){} });
-  }, (FADE + 0.4) * 1000);
-}
+// Règle le gain d'un oscillateur (id p0/i0…) — lissé dans le worklet
+function setOscGain(id, vol) { _post({ t: 's', s: _slotOf[id], g: vol }); }
 
-// Oscillateurs PERSISTANTS : on ne détruit/recrée jamais en plein jeu.
-// 1re fois → on construit ; ensuite → retune lisse (zéro clic, zéro GC).
+// Glisse la fréquence d'un oscillateur — lissée dans le worklet (zéro clic)
+function tuneOsc(id, freq) { _post({ t: 's', s: _slotOf[id], f: safeF(freq) }); }
+
+// Active/retune un oscillateur (init au 1er appel : phase aléatoire, freq directe)
 function swapPingala(i) {
-  if (!flowing || !masterGain) return;
+  if (!flowing) return;
   const { pingala } = PAIRS[i];
-  if (nodes[pingala.id]) {
-    tuneOsc(pingala.id, calcPFreq(i));
-  } else {
-    nodes[pingala.id] = buildOsc(pingala.id, calcPFreq(i), pingala.vol, -1);
-  }
-  setTimeout(() => { if (flowing && masterGain) swapIda(i); }, 40);
+  const slot = 2 * i, init = !_initedSlots[slot];
+  _post({ t: 's', s: slot, f: safeF(calcPFreq(i)), g: mutedOscs[pingala.id] ? 0 : pingala.vol, p: -1, init });
+  _initedSlots[slot] = true;
+  swapIda(i);
   updatePairUI(i);
 }
 function swapIda(i) {
-  if (!flowing || !masterGain) return;
+  if (!flowing) return;
   const { ida } = PAIRS[i];
-  if (nodes[ida.id]) {
-    tuneOsc(ida.id, calcIFreq(i));
-  } else {
-    nodes[ida.id] = buildOsc(ida.id, calcIFreq(i), ida.vol, 1);
-  }
+  const slot = 2 * i + 1, init = !_initedSlots[slot];
+  _post({ t: 's', s: slot, f: safeF(calcIFreq(i)), g: mutedOscs[ida.id] ? 0 : ida.vol, p: 1, init });
+  _initedSlots[slot] = true;
   updatePairUI(i);
 }
 function swapPDebounced(i) { clearTimeout(swapTimers['p'+i]); swapTimers['p'+i] = setTimeout(() => swapPingala(i), 380); }
 function swapIDebounced(i) { clearTimeout(swapTimers['i'+i]); swapTimers['i'+i] = setTimeout(() => swapIda(i), 380); }
 
+// Rampe douce sur un AudioParam Tone (masterGain) — inchangé
 function safeRamp(gainParam, target, duration) {
   const now = Tone.now();
   gainParam.cancelScheduledValues(now);
@@ -230,6 +273,8 @@ async function startFlow() {
         Tone.context.resume();
       }
     });
+    const _rawCtx = Tone.context.rawContext;
+    await _ensureWorklet(_rawCtx);
     _startBTKeepalive();
     initFXChain();
     analyser   = new Tone.Analyser('waveform', 256);
@@ -248,13 +293,18 @@ async function startFlow() {
     if (LFO_STATE.on) _lfoNode.connect(_lfoGain.gain);
     _breathLFO = new Tone.LFO({ frequency: BREATH_STATE.rate, min: 1 - BREATH_STATE.depth, max: 1 + BREATH_STATE.depth, type: 'sine' }).start();
     if (BREATH_STATE.on) _breathLFO.connect(_breathGain.gain);
+    // Worklet : un seul nœud stéréo génère tous les oscillateurs → masterGain
+    omchaNode = new AudioWorkletNode(_rawCtx, 'omcha-proc', {
+      numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2]
+    });
+    Tone.connect(omchaNode, masterGain);
     flowing = true;
     // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
     // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).
     try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
-    // Bandes A–C + Maître démarrent en séquence, Band D (7,8) après 3s pour éviter le pic CPU
-    for (let i = 0; i <= MASTER_IDX; i++) setTimeout(() => swapPingala(i), 60 + i * 60);
-    setTimeout(() => { if (flowing) { swapPingala(7); swapPingala(8); } }, 3000);
+    // Tous les oscillateurs démarrent ensemble : le worklet ne crée aucun
+    // nœud sur le thread principal, donc aucun pic CPU. Fade-in via le gain.
+    PAIRS.forEach((_, i) => swapPingala(i));
     PAIRS.forEach((_, i) => updateOrbUI(i));
     ui('live', 'En expansion…');
   } catch(err) {
@@ -275,20 +325,13 @@ async function stopFlow() {
       masterGain.gain.setTargetAtTime(0, _t, _fadeDur / 8);
     }
   } catch(e) {}
-  const nodesCopy = {...nodes};
-  nodes = {};
   flowing = false;
-  Object.values(nodesCopy).forEach(n => {
-    if (!n) return;
-    try {
-      const _t = Tone.now();
-      n.g.gain.cancelScheduledValues(_t);
-      n.g.gain.setTargetAtTime(0, _t, 0.05);
-      n.o.stop(_t + 0.3);
-    } catch(e) {}
-    setTimeout(() => { ['o','g','p'].forEach(k => { try { n[k].dispose?.(); } catch(e){} }); }, 500);
-  });
+  // Coupe doucement tous les oscillateurs dans le worklet (lissage interne)
+  _post({ t: 'alloff' });
+  Object.keys(_initedSlots).forEach(k => delete _initedSlots[k]);
   setTimeout(() => {
+    try { omchaNode?.disconnect(); } catch(e) {}
+    omchaNode = null;
     [_lfoNode, _lfoGain, _breathLFO, _breathGain, masterGain, analyser].forEach(x => {
       try { x?.disconnect(); } catch(e){}
       try { x?.dispose?.(); } catch(e){}

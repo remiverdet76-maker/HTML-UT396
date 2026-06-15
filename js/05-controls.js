@@ -157,29 +157,27 @@ function togglePolarity(i) {
 function toggleMuteP(i) {
   const pid = PAIRS[i].pingala.id;
   mutedOscs[pid] = !mutedOscs[pid];
-  const node = nodes[pid];
-  if (node) safeRamp(node.g.gain, mutedOscs[pid] ? 0 : PAIRS[i].pingala.vol, 0.5);
+  if (flowing) setOscGain(pid, mutedOscs[pid] ? 0 : PAIRS[i].pingala.vol);
   updatePairUI(i); saveState();
 }
 function toggleMuteI(i) {
   const iid = PAIRS[i].ida.id;
   mutedOscs[iid] = !mutedOscs[iid];
-  const node = nodes[iid];
-  if (node) safeRamp(node.g.gain, mutedOscs[iid] ? 0 : PAIRS[i].ida.vol, 0.5);
+  if (flowing) setOscGain(iid, mutedOscs[iid] ? 0 : PAIRS[i].ida.vol);
   updatePairUI(i); if (typeof updateMasterState==='function') updateMasterState(); saveState();
 }
 function setVolP(i, vol) {
   PAIRS[i].pingala.vol = vol;
   const pid = PAIRS[i].pingala.id;
   const d = document.getElementById('o-pvol-'+i); if (d) d.textContent = vol.toFixed(2);
-  const node = nodes[pid]; if (node && !mutedOscs[pid]) safeRamp(node.g.gain, vol, 0.3);
+  if (flowing && !mutedOscs[pid]) setOscGain(pid, vol);
   saveState();
 }
 function setVolI(i, vol) {
   PAIRS[i].ida.vol = vol;
   const iid = PAIRS[i].ida.id;
   const d = document.getElementById('o-ivol-'+i); if (d) d.textContent = vol.toFixed(2);
-  const node = nodes[iid]; if (node && !mutedOscs[iid]) safeRamp(node.g.gain, vol, 0.3);
+  if (flowing && !mutedOscs[iid]) setOscGain(iid, vol);
   saveState();
 }
 function setMasterVol(v) {
@@ -265,11 +263,9 @@ function applyZoom() {
   for (let i = 0; i < MASTER_IDX; i++) {
     PAIRS[i].pingala.vol = z.bandVols[i];
     PAIRS[i].ida.vol     = z.bandVols[i];
-    if (typeof nodes !== 'undefined') {
-      const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
-      if (!mutedOscs[pid] && nodes[pid]) safeRamp(nodes[pid].g.gain, z.bandVols[i], 1.2);
-      if (!mutedOscs[iid] && nodes[iid]) safeRamp(nodes[iid].g.gain, z.bandVols[i], 1.2);
-    }
+    const pid = PAIRS[i].pingala.id, iid = PAIRS[i].ida.id;
+    if (flowing && !mutedOscs[pid]) setOscGain(pid, z.bandVols[i]);
+    if (flowing && !mutedOscs[iid]) setOscGain(iid, z.bandVols[i]);
   }
   updateDisplay();
   saveState();
