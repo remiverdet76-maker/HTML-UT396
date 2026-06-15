@@ -36,11 +36,6 @@
   <div id="panel-fx-body"></div>
 </div>
 
-<!-- Panel UT432 (accessible via onglet bas) -->
-<div class="pan-right" id="panUT">
-  <div id="panel-horloge-body"></div>
-</div>
-
 <!-- Navigation bas d'écran — 2 boutons + tiroir -->
 <nav id="bottom-nav">
   <button class="bnav active" id="bnt-main" onclick="closePanel();closeMenu()">
@@ -57,9 +52,6 @@
 <div id="drop-menu">
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
-  </button>
-  <button class="dmenu-item" onclick="tPanel('panUT',null);closeMenu()">
-    <span class="dmenu-ico">⊙</span>UT432 — Horloge solaire
   </button>
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
     <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran

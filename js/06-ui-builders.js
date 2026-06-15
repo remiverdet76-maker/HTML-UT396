@@ -468,32 +468,6 @@ function buildMasterFXHTML() {
   </div>`;
 }
 
-// ── Horloge UT432 HTML ────────────────────────────────────────────
-function buildHorloge432HTML() {
-  return `<div class="h432-panel">
-    <div class="h432-display">
-      <div class="h432-num" id="h432-val" style="color:#FFD060;">—</div>
-      <div class="h432-seuil" id="h432-seuil" style="color:rgba(255,200,80,.6);">UT432</div>
-    </div>
-    <div class="h432-bar-wrap">
-      <div class="h432-bar-bg"><div class="h432-bar-fill" id="h432-progress" style="width:0%"></div></div>
-      <div class="h432-bar-labels"><span>0</span><span>108</span><span>216</span><span>324</span><span>432</span></div>
-    </div>
-    <div class="h432-civil" id="h432-civil">--:--:--</div>
-    <button class="btn-h432" id="btn-h432" onclick="triggerHorloge432()">⊙ Jeu UT432</button>
-    <div class="h432-desc">
-      <p>Le nombre UT432 mesure le temps solaire de Paris (0 → 432) en résonance avec les 9 Sephirot de la Kabbale.</p>
-      <p>⊙ Jeu UT432 génère une configuration harmonique basée sur la valeur de l'instant présent.</p>
-    </div>
-    <div style="margin-top:.5rem;padding:.8rem;background:rgba(255,200,60,.06);border:1px solid rgba(255,200,60,.18);border-radius:10px;font-size:.65rem;font-family:'IM Fell English',serif;font-style:italic;color:rgba(255,200,100,.55);text-align:center;line-height:1.6;">
-      <b>Les Seuils UT432</b><br>
-      0 Kether · 54 Chokhmah · 108 Binah<br>
-      162 Chesed · 216 Tiphereth · 270 Netzach<br>
-      324 Hod · 378 Yesod · 432 Malkuth
-    </div>
-  </div>`;
-}
-
 // ── Progression HTML ──────────────────────────────────────────────
 function buildProgHTML() {
   return `<div class="prog-wrap">
