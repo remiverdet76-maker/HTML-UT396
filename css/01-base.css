@@ -12,11 +12,16 @@ body{
   background:#02010D;
 }
 
-/* Image cosmique de fond */
+/* Image cosmique de fond (18 fonds commutables) */
 #cosmic-bg{
   position:fixed;inset:0;z-index:-1;
-  width:100%;height:100%;object-fit:cover;
-  opacity:0.38;transition:opacity 1s ease;
+  background:#02010D center center / cover no-repeat;
+  transition:background-image .6s ease;
+}
+#cosmic-bg::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center, transparent 28%, rgba(2,1,13,.55) 100%);
+  pointer-events:none;
 }
 
 /* Couche sphère */

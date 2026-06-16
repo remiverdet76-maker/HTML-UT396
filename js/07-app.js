@@ -402,6 +402,9 @@ function init() {
   // Build random table
   buildRandomTable();
 
+  // Initialise les 18 fonds d'écran (+ restaure le dernier choisi)
+  initBackgrounds();
+
   // Démarre la boucle de visualisation audio (spectroïde + halo sphère)
   masterTick();
 

@@ -21,6 +21,9 @@
 </head>
 <body>
 
+<!-- Couche fond d'écran (18 fonds commutables) -->
+<div id="cosmic-bg"></div>
+
 <!-- Titre discret en haut -->
 <div id="app-title">0mcha396</div>
 
@@ -30,6 +33,18 @@
 <!-- Panel FX (accessible via onglet bas) -->
 <div class="pan-right" id="panFX">
   <div id="panel-fx-body"></div>
+</div>
+
+<!-- Panel Fonds d'écran -->
+<div class="pan-right" id="panBG">
+  <div class="bg-panel">
+    <div class="bg-panel-head">✦ Fonds d'écran</div>
+    <div class="bg-nav">
+      <button onclick="prevBackground()" aria-label="Fond précédent">‹</button>
+      <button onclick="nextBackground()" aria-label="Fond suivant">›</button>
+    </div>
+    <div id="bg-grid" class="bg-grid"></div>
+  </div>
 </div>
 
 <!-- Navigation bas d'écran — 2 boutons + tiroir -->
@@ -48,6 +63,9 @@
 <div id="drop-menu">
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
+  </button>
+  <button class="dmenu-item" onclick="tPanel('panBG',null);closeMenu()">
+    <span class="dmenu-ico">🖼</span>Fonds d'écran
   </button>
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
     <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran
@@ -82,6 +100,7 @@
 
 <script src="js/01-config.js"></script>
 <script src="js/02-audio.js"></script>
+<script src="js/03-backgrounds.js"></script>
 <script src="js/04-vesica-ui.js"></script>
 <script src="js/05-controls.js"></script>
 <script src="js/06-ui-builders.js"></script>

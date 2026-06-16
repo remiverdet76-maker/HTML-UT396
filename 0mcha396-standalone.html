@@ -27,11 +27,16 @@ body{
   background:#02010D;
 }
 
-/* Image cosmique de fond */
+/* Image cosmique de fond (18 fonds commutables) */
 #cosmic-bg{
   position:fixed;inset:0;z-index:-1;
-  width:100%;height:100%;object-fit:cover;
-  opacity:0.38;transition:opacity 1s ease;
+  background:#02010D center center / cover no-repeat;
+  transition:background-image .6s ease;
+}
+#cosmic-bg::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center, transparent 28%, rgba(2,1,13,.55) 100%);
+  pointer-events:none;
 }
 
 /* Couche sphère */
@@ -1156,6 +1161,33 @@ input.param-input{
 }
 .btn-preset-launch:hover{background:rgba(200,100,255,.24);box-shadow:0 0 28px rgba(200,100,255,.32);border-color:#F3D9FF;}
 
+/* ─── Sélecteur de fonds d'écran (18 fonds, tactile mobile) ─────── */
+.bg-panel{padding:1rem .9rem 2.2rem;}
+.bg-panel-head{
+  font-family:'Cinzel Decorative',serif;font-size:1rem;letter-spacing:.16em;
+  color:#F3D9FF;text-align:center;margin-bottom:.8rem;font-weight:bold;
+}
+.bg-nav{display:flex;justify-content:center;gap:1rem;margin-bottom:.9rem;}
+.bg-nav button{
+  width:48px;height:48px;border-radius:50%;
+  background:rgba(200,100,255,.12);border:2px solid rgba(200,100,255,.45);
+  color:#F3D9FF;font-size:1.4rem;line-height:1;cursor:pointer;transition:all .25s;
+}
+.bg-nav button:active{background:rgba(200,100,255,.3);transform:scale(.92);}
+.bg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;}
+.bg-thumb{
+  position:relative;aspect-ratio:9/16;min-height:84px;border-radius:10px;
+  background-size:cover;background-position:center;cursor:pointer;
+  border:2px solid rgba(255,255,255,.12);transition:all .2s;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+.bg-thumb:active{transform:scale(.95);}
+.bg-thumb.active{border-color:#86FFC0;box-shadow:0 0 16px rgba(134,255,192,.55);}
+.bg-thumb-num{
+  position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:bold;
+  color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.9);
+}
+
 /* ═══════════════════════════════════════════
    05-mobile.css — Mobile smartphone
    ═══════════════════════════════════════════ */
@@ -1200,11 +1232,24 @@ input.param-input{
 </head>
 <body>
 
+<div id="cosmic-bg"></div>
+
 <div id="app-title">0mcha396</div>
 <div id="sphere-layer"></div>
 
 <div class="pan-right" id="panFX">
   <div id="panel-fx-body"></div>
+</div>
+
+<div class="pan-right" id="panBG">
+  <div class="bg-panel">
+    <div class="bg-panel-head">✦ Fonds d'écran</div>
+    <div class="bg-nav">
+      <button onclick="prevBackground()" aria-label="Fond précédent">‹</button>
+      <button onclick="nextBackground()" aria-label="Fond suivant">›</button>
+    </div>
+    <div id="bg-grid" class="bg-grid"></div>
+  </div>
 </div>
 
 <nav id="bottom-nav">
@@ -1221,6 +1266,9 @@ input.param-input{
 <div id="drop-menu">
   <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
+  </button>
+  <button class="dmenu-item" onclick="tPanel('panBG',null);closeMenu()">
+    <span class="dmenu-ico">🖼</span>Fonds d'écran
   </button>
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
     <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran
@@ -1668,6 +1716,64 @@ function ui(state, text) {
   const bray = document.getElementById('btn-ray');
   if (bdis) bdis.disabled = (state !== 'live');
   if (bray) bray.disabled = (state === 'live');
+}
+
+/* ═══════════════════════════════════════════
+   03-backgrounds.js — 18 Fonds d'écran (.png) + dégradés de secours
+   ═══════════════════════════════════════════ */
+const BG_COUNT = 18;
+const BG_KEY   = 'omcha-bg-idx';
+const BG_GRAD = Array.from({ length: BG_COUNT }, (_, i) => {
+  const h  = Math.round(i * 360 / BG_COUNT);
+  const h2 = (h + 42) % 360;
+  return `radial-gradient(circle at 28% 22%, hsl(${h2},70%,30%), transparent 60%),`
+       + `radial-gradient(circle at 78% 82%, hsl(${h},66%,24%), transparent 55%),`
+       + `linear-gradient(158deg, hsl(${h},55%,9%), #02010D 82%)`;
+});
+let _bgIdx = 0;
+function _bgFile(i) { return `img/bg-${String(i + 1).padStart(2, '0')}.png`; }
+function setBackground(i) {
+  _bgIdx = ((i % BG_COUNT) + BG_COUNT) % BG_COUNT;
+  const el = document.getElementById('cosmic-bg');
+  if (el) {
+    el.style.backgroundImage = BG_GRAD[_bgIdx];
+    const url = _bgFile(_bgIdx);
+    const probe = new Image();
+    probe.onload  = () => { el.style.backgroundImage = `url("${url}")`; };
+    probe.onerror = () => {};
+    probe.src = url;
+  }
+  document.querySelectorAll('.bg-thumb').forEach((t, k) => t.classList.toggle('active', k === _bgIdx));
+  try { localStorage.setItem(BG_KEY, _bgIdx); } catch (e) {}
+}
+function nextBackground() { setBackground(_bgIdx + 1); }
+function prevBackground() { setBackground(_bgIdx - 1); }
+function buildBgGrid() {
+  const grid = document.getElementById('bg-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  for (let i = 0; i < BG_COUNT; i++) {
+    const b = document.createElement('button');
+    b.className = 'bg-thumb';
+    b.style.backgroundImage = BG_GRAD[i];
+    b.setAttribute('aria-label', 'Fond ' + (i + 1));
+    b.onclick = () => setBackground(i);
+    const num = document.createElement('span');
+    num.className = 'bg-thumb-num';
+    num.textContent = i + 1;
+    b.appendChild(num);
+    grid.appendChild(b);
+    const url = _bgFile(i), probe = new Image();
+    probe.onload = () => { b.style.backgroundImage = `url("${url}")`; };
+    probe.src = url;
+  }
+  document.querySelectorAll('.bg-thumb').forEach((t, k) => t.classList.toggle('active', k === _bgIdx));
+}
+function initBackgrounds() {
+  let saved = 0;
+  try { saved = parseInt(localStorage.getItem(BG_KEY)) || 0; } catch (e) {}
+  buildBgGrid();
+  setBackground(saved);
 }
 
 /* ═══════════════════════════════════════════
@@ -3169,6 +3275,9 @@ function init() {
 
   // Build random table
   buildRandomTable();
+
+  // Initialise les 18 fonds d'écran (+ restaure le dernier choisi)
+  initBackgrounds();
 
   // Démarre la boucle de visualisation audio (spectroïde + halo sphère)
   masterTick();
