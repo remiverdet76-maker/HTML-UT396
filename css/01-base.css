@@ -19,13 +19,6 @@ body{
   opacity:0.38;transition:opacity 1s ease;
 }
 
-/* Canvas 3D */
-#meta-canvas{
-  position:fixed;inset:0;width:100%;height:100%;
-  display:block;z-index:0;
-  background:transparent;
-}
-
 /* Couche sphère */
 #sphere-layer{
   position:fixed;inset:0;z-index:10;

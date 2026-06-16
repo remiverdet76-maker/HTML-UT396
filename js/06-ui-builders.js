@@ -119,15 +119,6 @@ function patchFreqMini() {
   });
 }
 
-// ── Geometry grid (Paramètres 3D panel) ──────────────────────────
-function buildGeoGrid() {
-  const grid = document.getElementById('geo-grid');
-  if (!grid) return;
-  grid.innerHTML = GEO_NAMES.map((name, i) =>
-    `<button class="geometry-btn${i===activeGeometry?' active':''}" onclick="setGeometry(${i})">${name}</button>`
-  ).join('');
-}
-
 // ── Random table (Jeu Aléatoire panel) ───────────────────────────
 function buildRandomTable() {
   const wrap = document.getElementById('random-table');
@@ -349,26 +340,6 @@ function buildMasterFXHTML() {
           <span class="fx-label">Reverb</span>
           <input type="range" class="fx-slider" id="reverbWet" min="0" max="1" step="0.02" value="0" oninput="updateFX('reverbWet',this.value)">
           <span class="fx-val-disp" id="reverbWet-val">0%</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- ⑥ Chorus -->
-    <div class="fx-block">
-      <div class="fx-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>⑥ Chorus / Ensemble</span>
-        <label class="fx-toggle"><input type="checkbox" id="chorus-on" onchange="setChorusDepth(this.checked?parseFloat(document.getElementById('chorus-depth').value):0)"><span class="fx-tog-track"></span></label>
-      </div>
-      <div class="fx-row">
-        <div class="fx-control-group">
-          <span class="fx-label">Profond.</span>
-          <input type="range" class="fx-slider" id="chorus-depth" min="0" max="1" step="0.01" value="0.35" oninput="if(document.getElementById('chorus-on').checked)setChorusDepth(this.value);document.getElementById('chd-val').textContent=parseFloat(this.value).toFixed(2)">
-          <span class="fx-val-disp" id="chd-val">0.35</span>
-        </div>
-        <div class="fx-control-group">
-          <span class="fx-label">Rythme</span>
-          <input type="range" class="fx-slider" id="chorus-rate" min="0.1" max="8" step="0.1" value="0.8" oninput="setChorusRate(this.value);document.getElementById('chr-val').textContent=parseFloat(this.value).toFixed(1)+'Hz'">
-          <span class="fx-val-disp" id="chr-val">0.8Hz</span>
         </div>
       </div>
     </div>
