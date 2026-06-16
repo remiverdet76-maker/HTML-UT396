@@ -11,14 +11,14 @@ let nodes = {}, masterGain = null, analyser = null;
 let limiter = null;
 let eqLow = null, eqMid = null, eqHigh = null;
 let masterDelay = null, masterReverb = null, pingPongDelay = null;
-let chorus = null, compressor = null;
+let compressor = null;
 const LFO_STATE    = {on:false, rate:.25,  depth:.08};
 const BREATH_STATE = {on:false, rate:0.13, depth:0.35};
 let _lfoNode = null, _lfoGain = null;  // LFO natif Tone.js (audio thread)
 let _breathLFO = null, _breathGain = null;
 let _btKeepalive = null;               // oscillateur silencieux — maintient le stream A2DP actif
 let _fadeDur = 2;
-let metaAngle = 0, masterRAF = null;
+let masterRAF = null;
 
 // ── Moteur AudioWorklet (synthèse sinus dans le thread audio) ──
 // Tous les oscillateurs sont générés échantillon par échantillon dans
@@ -147,7 +147,6 @@ function initFXChain() {
   eqLow       = new Tone.Filter({ type: 'lowshelf',  frequency: 200,  Q: 1, gain: 0 });
   eqMid       = new Tone.Filter({ type: 'peaking',   frequency: 1000, Q: 1, gain: 0 });
   eqHigh      = new Tone.Filter({ type: 'highshelf', frequency: 5000, Q: 1, gain: 0 });
-  chorus      = new Tone.Chorus({ frequency: 0.8, delayTime: 3.5, depth: 0, wet: 0 }).start();
   compressor  = new Tone.Compressor({ threshold: -24, ratio: 4, attack: 0.02, release: 0.25 });
   masterDelay  = new Tone.FeedbackDelay({ delayTime: 0.3, feedback: 0.3, wet: 0 });
   masterReverb = new Tone.Reverb({ decay: 1.5, preDelay: 0.05, wet: 0 });
@@ -156,7 +155,7 @@ function initFXChain() {
   // Réverbe à convolution NON inline par défaut (off) : elle convolue en
   // permanence sinon = gros coût CPU mobile → underrun BT. On la branche
   // seulement quand wet > 0 (voir _setReverbActive).
-  eqLow.chain(eqMid, eqHigh, chorus, compressor, masterDelay, pingPongDelay, limiter);
+  eqLow.chain(eqMid, eqHigh, compressor, masterDelay, pingPongDelay, limiter);
 }
 
 // Branche/débranche la réverbe selon qu'elle est utilisée (anti-craquement BT).
@@ -251,8 +250,6 @@ function _startBTKeepalive() {
   } catch(e) {}
 }
 
-function setChorusDepth(v) { if (chorus) try { chorus.depth = parseFloat(v); } catch(e) {} }
-function setChorusRate(v)  { if (chorus) try { chorus.frequency.value = parseFloat(v); } catch(e) {} }
 function setCompThresh(v)  { if (compressor) try { compressor.threshold.value = parseFloat(v); } catch(e) {} }
 function setCompRatio(v)   { if (compressor) try { compressor.ratio.value = parseFloat(v); } catch(e) {} }
 
@@ -355,8 +352,6 @@ async function stopFlow() {
 let _glowFrame = 0;
 function masterTick() {
   masterRAF = requestAnimationFrame(masterTick);
-  metaAngle = (metaAngle + 0.003) % (Math.PI * 2);
-  drawMetatron();
   // LFO géré nativement par Tone.LFO — aucun traitement JS ici
   if (!flowing || !analyser || document.visibilityState === 'hidden') return;
   // Throttle des écritures boxShadow (style-recalc) : 1 frame sur 2.

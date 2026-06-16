@@ -87,7 +87,7 @@ function setRandUseFX(v) { RAND_OPTS.useFX = !!v; }
 
 // ── FX aléatoire (mobile-safe) ──────────────────────────────────────
 function randomizeFX() {
-  // Tout sur mobile (APK) : pas de reverb, delay léger, EQ doux, chorus off
+  // Tout sur mobile (APK) : pas de reverb, delay léger, EQ doux
   const delT  = +(0.15 + Math.random() * .5).toFixed(2);
   const delFB = +(Math.random() * .3).toFixed(2);
   const delW  = +(Math.random() * .12).toFixed(2);  // max 12% — évite les saturations
@@ -108,10 +108,6 @@ function randomizeFX() {
     const sl = document.getElementById(id); if (sl) sl.value = val;
     if (typeof updateFX === 'function') updateFX(id, val);
   });
-  // Chorus désactivé sur mobile (source principale de craquement)
-  if (typeof chorus !== 'undefined' && chorus) {
-    try { chorus.depth = 0; chorus.wet.value = 0; } catch(e) {}
-  }
   // Respiration : activée aléatoirement (40% chance), rythme méditation 4.8–15 /min
   const breathOn    = Math.random() < 0.4;
   const breathRate  = +(0.08 + Math.random() * 0.17).toFixed(3);

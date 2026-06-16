@@ -121,3 +121,33 @@ input.param-input{
   cursor:pointer;transition:all .3s;margin:0 auto;display:block;font-weight:bold;
 }
 .btn-preset-launch:hover{background:rgba(200,100,255,.24);box-shadow:0 0 28px rgba(200,100,255,.32);border-color:#F3D9FF;}
+
+/* ─── Sélecteur de fonds d'écran (18 fonds, tactile mobile) ─────── */
+.bg-panel{padding:1rem .9rem 2.2rem;}
+.bg-panel-head{
+  font-family:'Cinzel Decorative',serif;font-size:1rem;letter-spacing:.16em;
+  color:#F3D9FF;text-align:center;margin-bottom:.8rem;font-weight:bold;
+}
+.bg-nav{display:flex;justify-content:center;gap:1rem;margin-bottom:.9rem;}
+.bg-nav button{
+  width:48px;height:48px;border-radius:50%;
+  background:rgba(200,100,255,.12);border:2px solid rgba(200,100,255,.45);
+  color:#F3D9FF;font-size:1.4rem;line-height:1;cursor:pointer;transition:all .25s;
+}
+.bg-nav button:active{background:rgba(200,100,255,.3);transform:scale(.92);}
+.bg-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;
+}
+.bg-thumb{
+  position:relative;aspect-ratio:9/16;min-height:84px;border-radius:10px;
+  background-size:cover;background-position:center;cursor:pointer;
+  border:2px solid rgba(255,255,255,.12);transition:all .2s;overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+.bg-thumb:active{transform:scale(.95);}
+.bg-thumb.active{border-color:#86FFC0;box-shadow:0 0 16px rgba(134,255,192,.55);}
+.bg-thumb-num{
+  position:absolute;bottom:4px;right:6px;font-size:.7rem;font-weight:bold;
+  color:rgba(255,255,255,.85);text-shadow:0 1px 3px rgba(0,0,0,.9);
+}
+@media (max-width:480px){ .bg-grid{grid-template-columns:repeat(3,1fr);} }
