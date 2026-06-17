@@ -316,6 +316,69 @@ function _doFadeStop() {
   }, 150);
 }
 
+// ── Bol Tibétain — toggle lecture continue ────────────────────────
+function bowlToggle() {
+  const btn = document.getElementById('btn-bowl-toggle');
+  if (Bowl.playing) {
+    Bowl.stop();
+    if (btn) { btn.textContent = '▶ Démarrer'; btn.style.borderColor = '#86FFC0'; btn.style.color = '#86FFC0'; }
+  } else {
+    Bowl.start();
+    if (btn) { btn.textContent = '■ Arrêter'; btn.style.borderColor = '#FF8E8E'; btn.style.color = '#FF8E8E'; }
+  }
+}
+
+// ── FX state capture / restore (pour presets complets) ───────────
+function _captureFXState() {
+  const v = id => { const el = document.getElementById(id); return el ? parseFloat(el.value) : null; };
+  const b = id => { const el = document.getElementById(id); return el ? el.checked : null; };
+  return {
+    eq: EQ_BANDS.map(band => ({ freq: band.freq, gain: band.gain })),
+    delay:  { time: v('delayTime'),   feedback: v('delayFeedback'), wet: v('delayWet') },
+    reverb: { wet: v('reverbWet') },
+    pp:     { time: v('ppTime'),      feedback: v('ppFeedback'),    wet: v('ppWet') },
+    comp:   { threshold: v('compThresh'), ratio: v('compRatio') },
+    lfo:    { on: b('lfo-on'),   rate: v('lfo-rate'),   depth: v('lfo-depth') },
+    breath: { on: b('breath-on'), rate: v('breath-rate'), depth: v('breath-depth') },
+  };
+}
+
+function _restoreFXState(fx) {
+  if (!fx) return;
+  if (fx.eq) {
+    const ids = [['eqLowFreq','eqLowGain'],['eqMidFreq','eqMidGain'],['eqHighFreq','eqHighGain']];
+    fx.eq.forEach((b, i) => {
+      if (b.freq != null) { const el = document.getElementById(ids[i][0]); if (el) el.value = b.freq; updateFX(ids[i][0], b.freq); }
+      if (b.gain != null) { const el = document.getElementById(ids[i][1]); if (el) el.value = b.gain; updateFX(ids[i][1], b.gain); }
+    });
+    const cv = document.getElementById('eq2d-canvas'); if (cv) drawEQ2D(cv);
+  }
+  [['delayTime',fx.delay?.time],['delayFeedback',fx.delay?.feedback],['delayWet',fx.delay?.wet],
+   ['reverbWet',fx.reverb?.wet],
+   ['ppTime',fx.pp?.time],['ppFeedback',fx.pp?.feedback],['ppWet',fx.pp?.wet]]
+  .forEach(([id, val]) => { if (val != null) { const el = document.getElementById(id); if (el) el.value = val; updateFX(id, val); } });
+  if (fx.comp?.threshold != null) {
+    const el = document.getElementById('compThresh'); if (el) el.value = fx.comp.threshold;
+    setCompThresh(fx.comp.threshold);
+    const vEl = document.getElementById('compThresh-val'); if (vEl) vEl.textContent = fx.comp.threshold + 'dB';
+  }
+  if (fx.comp?.ratio != null) {
+    const el = document.getElementById('compRatio'); if (el) el.value = fx.comp.ratio;
+    setCompRatio(fx.comp.ratio);
+    const vEl = document.getElementById('compRatio-val'); if (vEl) vEl.textContent = fx.comp.ratio + ':1';
+  }
+  if (fx.lfo) {
+    if (fx.lfo.rate  != null) { const el = document.getElementById('lfo-rate');  if (el) el.value = fx.lfo.rate;  lfoSet('rate', fx.lfo.rate); }
+    if (fx.lfo.depth != null) { const el = document.getElementById('lfo-depth'); if (el) el.value = fx.lfo.depth; lfoSet('depth', fx.lfo.depth); }
+    if (fx.lfo.on    != null) { const el = document.getElementById('lfo-on');    if (el) el.checked = fx.lfo.on;  lfoToggle(fx.lfo.on); }
+  }
+  if (fx.breath) {
+    if (fx.breath.rate  != null) { const el = document.getElementById('breath-rate');  if (el) el.value = fx.breath.rate;  breathSet('rate', fx.breath.rate); }
+    if (fx.breath.depth != null) { const el = document.getElementById('breath-depth'); if (el) el.value = fx.breath.depth; breathSet('depth', fx.breath.depth); }
+    if (fx.breath.on    != null) { const el = document.getElementById('breath-on');    if (el) el.checked = fx.breath.on;  breathToggle(fx.breath.on); }
+  }
+}
+
 // ── Presets de session ────────────────────────────────────────────
 const PS_KEY = 'fbf432-session-presets';
 let _sessionPresets = [null, null, null, null, null];
@@ -336,7 +399,8 @@ function savePreset(slot) {
     pairs: PAIRS.map(p => ({
       ri:p.pingala.ri, n:p.pingala.n, vp:p.pingala.vol,
       dt:p.ida.delta, po:p.ida.polarity, vi:p.ida.vol
-    }))
+    })),
+    fx: _captureFXState()
   };
   try { localStorage.setItem(PS_KEY, JSON.stringify(_sessionPresets)); } catch(e) {}
   _renderPresets();
@@ -358,6 +422,7 @@ function loadPreset(slot) {
   });
   updateDisplay();
   if (flowing) PAIRS.forEach((_,i) => { tuneOsc(PAIRS[i].pingala.id,calcPFreq(i)); tuneOsc(PAIRS[i].ida.id,calcIFreq(i)); });
+  if (p.fx) _restoreFXState(p.fx);
   saveState();
 }
 
@@ -401,6 +466,10 @@ function init() {
 
   // Build random table
   buildRandomTable();
+
+  // Inject Bowl panel
+  const bowlBody = document.getElementById('bowl-panel-body');
+  if (bowlBody) bowlBody.innerHTML = buildBowlHTML();
 
   // Initialise les 18 fonds d'écran (+ restaure le dernier choisi)
   initBackgrounds();

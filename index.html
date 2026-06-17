@@ -38,6 +38,11 @@
   <div id="panel-fx-body"></div>
 </div>
 
+<!-- Panel Bol Tibétain -->
+<div class="pan-right" id="panBowl">
+  <div id="bowl-panel-body"></div>
+</div>
+
 <!-- Panel Fonds d'écran -->
 <div class="pan-right" id="panBG">
   <div class="bg-panel">
@@ -70,6 +75,9 @@
   <button class="dmenu-item" onclick="tPanel('panBG',null);closeMenu()">
     <span class="dmenu-ico">🖼</span>Fonds d'écran
   </button>
+  <button class="dmenu-item" onclick="tPanel('panBowl',null);closeMenu()">
+    <span class="dmenu-ico">⌕</span>Bol Tibétain
+  </button>
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
     <span class="dmenu-ico" id="btn-fs">⤢</span>Plein écran
   </button>
@@ -89,7 +97,7 @@
 <div id="backdrop" onclick="closeOscModal()"></div>
 
 <!-- Bouton latéral Flux on/Off -->
-<button id="flux-toggle-btn" onclick="fbfToggle()" aria-label="Flux on/off">
+<button id="flux-toggle-btn" onclick="fbfToggle()" aria-label="Flux on/off" aria-pressed="false">
   <span id="flux-toggle-ico">▶</span>
 </button>
 
