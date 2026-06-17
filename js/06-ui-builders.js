@@ -160,6 +160,8 @@ function patchFBFState() {
   if (btn)  btn.classList.toggle('flowing', !!flowing);
   if (stEl) stEl.textContent = flowing ? '◉ Rayonnant' : '⬤ Veille';
   if (fBtn) fBtn.classList.toggle('flowing', !!flowing);
+  const ftBtn = document.getElementById('flux-toggle-btn');
+  if (ftBtn) ftBtn.setAttribute('aria-pressed', String(!!flowing));
   if (fIcon) fIcon.textContent = flowing ? '◉' : '◎';
   if (fSt)  fSt.textContent   = flowing ? 'ON'  : 'OFF';
   if (fTxt) fTxt.style.color  = flowing ? '#63E6FF' : '';
@@ -219,7 +221,7 @@ function buildMasterFXHTML() {
   return `<div class="fx-panel">
     <div style="display:flex;align-items:center;gap:.7rem;margin-bottom:.4rem;">
       <div class="dot" id="dot"></div>
-      <span id="stxt" style="font-size:.9rem;font-style:italic;letter-spacing:.1em;color:rgba(200,170,255,.7);">Initialisation...</span>
+      <span id="stxt" role="status" aria-live="polite" style="font-size:.9rem;font-style:italic;letter-spacing:.1em;color:rgba(200,170,255,.7);">Initialisation...</span>
       <span class="wave-badge" id="wave-badge"></span>
     </div>
     <div class="flow-row">
@@ -435,6 +437,59 @@ function buildMasterFXHTML() {
 
     <div style="text-align:center;margin-top:.4rem;padding-bottom:.5rem;">
       <button class="btn-flow" onclick="exportState()" style="padding:.45rem 1.1rem;font-size:.72rem;border-color:rgba(99,230,255,.5);color:#63E6FF;background:rgba(99,230,255,.06);">⎘ Partager Config</button>
+    </div>
+  </div>`;
+}
+
+// ── Bol Tibétain HTML ─────────────────────────────────────────────
+function buildBowlHTML() {
+  return `<div class="fx-panel">
+    <div class="bg-panel-head" style="padding:.8rem;font-family:'Cinzel Decorative',serif;font-size:.85rem;letter-spacing:.18em;color:rgba(200,190,255,.9);">⌕ Bol Tibétain</div>
+    <p style="font-size:.74rem;font-style:italic;color:rgba(200,170,255,.5);margin:.1rem .8rem .9rem;text-align:center;">
+      Synthèse 5 partiels inharmoniques · gamme 432 Hz
+    </p>
+
+    <div class="fx-block">
+      <div class="fx-title">Lecture continue</div>
+      <div style="display:flex;gap:.5rem;justify-content:center;margin:.4rem 0;">
+        <button class="btn-flow" id="btn-bowl-toggle" onclick="bowlToggle()"
+          style="border-color:#86FFC0;color:#86FFC0;background:rgba(134,255,192,0.06);">▶ Démarrer</button>
+      </div>
+      <div class="fx-row">
+        <div class="fx-control-group" style="flex:1">
+          <span class="fx-label">Densité</span>
+          <input type="range" class="fx-slider" id="bowl-density" min="0.2" max="3" step="0.1" value="1"
+            oninput="Bowl.setParams({density:parseFloat(this.value)});document.getElementById('bowl-density-val').textContent=parseFloat(this.value).toFixed(1)+'×'">
+          <span class="fx-val-disp" id="bowl-density-val">1.0×</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="fx-block">
+      <div class="fx-title">Frappe manuelle</div>
+      <div class="fx-space-btns" style="margin-top:.4rem;">
+        <button class="fx-space-btn" onclick="Bowl.strike({kind:'strike',dur:2,gain:.55})">⊙ Court</button>
+        <button class="fx-space-btn" onclick="Bowl.strike({kind:'strike',dur:9,gain:.55})">⊙⊙ Long</button>
+        <button class="fx-space-btn" onclick="Bowl.strike({kind:'bowed',dur:8,gain:.45})">〜 Frotter</button>
+      </div>
+    </div>
+
+    <div class="fx-block">
+      <div class="fx-title">Pondération des gestes</div>
+      <div class="fx-row">
+        <div class="fx-control-group" style="flex:1">
+          <span class="fx-label">Long</span>
+          <input type="range" class="fx-slider" id="bowl-w-long" min="0" max="1" step="0.05" value="0.32"
+            oninput="Bowl.setParams({weights:{long:parseFloat(this.value)}});document.getElementById('bowl-wl-v').textContent=Math.round(parseFloat(this.value)*100)+'%'">
+          <span class="fx-val-disp" id="bowl-wl-v">32%</span>
+        </div>
+        <div class="fx-control-group" style="flex:1">
+          <span class="fx-label">Frotter</span>
+          <input type="range" class="fx-slider" id="bowl-w-bowed" min="0" max="1" step="0.05" value="0.20"
+            oninput="Bowl.setParams({weights:{bowed:parseFloat(this.value)}});document.getElementById('bowl-wb-v').textContent=Math.round(parseFloat(this.value)*100)+'%'">
+          <span class="fx-val-disp" id="bowl-wb-v">20%</span>
+        </div>
+      </div>
     </div>
   </div>`;
 }

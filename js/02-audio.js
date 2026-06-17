@@ -92,16 +92,21 @@ PAIRS.forEach((p, i) => { _slotOf[p.pingala.id] = 2 * i; _slotOf[p.ida.id] = 2 *
 
 async function _ensureWorklet(ctx) {
   if (_workletReady) return;
+  // Tentative 1 : Blob URL
   try {
-    // Tentative Blob URL
     const url = URL.createObjectURL(new Blob([_WORKLET_SRC], { type: 'application/javascript' }));
     await ctx.audioWorklet.addModule(url);
     URL.revokeObjectURL(url);
-  } catch(e) {
-    // Fallback data URL (certains WebView Capacitor bloquent les Blob pour les worklets)
+    _workletReady = true;
+    return;
+  } catch(e) {}
+  // Tentative 2 : data URL (certains WebView Capacitor bloquent les Blob pour les worklets)
+  try {
     await ctx.audioWorklet.addModule('data:application/javascript,' + encodeURIComponent(_WORKLET_SRC));
-  }
-  _workletReady = true;
+    _workletReady = true;
+    return;
+  } catch(e) {}
+  throw new Error('AudioWorklet indisponible (Blob + data URL échoués)');
 }
 
 function _post(msg) { if (omchaNode) try { omchaNode.port.postMessage(msg); } catch(e) {} }
@@ -237,6 +242,28 @@ function breathSet(param, v) {
     : parseFloat(v).toFixed(2);
 }
 
+// MediaSession API — déclare l'app comme source audio système (anti-Doze Android)
+// Permet aux contrôles notification/écran verrouillé de pauser/reprendre le flux.
+function _setupMediaSession(active) {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    if (active) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: '0mcha396 — ' + masterFreq + ' Hz',
+        artist: 'FBF 432',
+        album: 'Flux Binaural Fractal',
+      });
+      navigator.mediaSession.setActionHandler('play',  () => { if (!flowing) startFlow(); });
+      navigator.mediaSession.setActionHandler('pause', () => { if (flowing) stopFlow(); });
+      navigator.mediaSession.setActionHandler('stop',  () => { if (flowing) stopFlow(); });
+      navigator.mediaSession.playbackState = 'playing';
+    } else {
+      navigator.mediaSession.playbackState = 'none';
+      ['play','pause','stop'].forEach(a => { try { navigator.mediaSession.setActionHandler(a, null); } catch(e) {} });
+    }
+  } catch(e) {}
+}
+
 function _startBTKeepalive() {
   if (_btKeepalive) return;
   try {
@@ -306,6 +333,9 @@ async function startFlow() {
     // APK Android : empêche la veille CPU/écran pendant le flux (anti-throttle
     // Doze → moins de craquement BT). Ignoré sur le web (Capacitor absent).
     try { window.Capacitor?.Plugins?.KeepAwake?.keepAwake?.(); } catch(e) {}
+    // MediaSession : déclare l'app comme source audio active → focus audio système
+    // Android Doze respecte les apps ayant le focus audio → sessions longues préservées
+    _setupMediaSession(true);
     // Tous les oscillateurs démarrent ensemble : le worklet ne crée aucun
     // nœud sur le thread principal, donc aucun pic CPU. Fade-in via le gain.
     PAIRS.forEach((_, i) => swapPingala(i));
@@ -313,13 +343,18 @@ async function startFlow() {
     ui('live', 'En expansion…');
   } catch(err) {
     flowing = false; nodes = {};
-    ui('idle', 'Erreur audio — relancer');
+    const msg = err?.message?.includes('AudioWorklet')
+      ? '⚠ Moteur audio indisponible — relancer'
+      : '⚠ Erreur audio — relancer';
+    ui('idle', msg);
+    console.error('[0mcha396] startFlow:', err);
   }
 }
 
 async function stopFlow() {
   ui('idle', 'Dissolution…');
   try { window.Capacitor?.Plugins?.KeepAwake?.allowSleep?.(); } catch(e) {}
+  _setupMediaSession(false);
   if (progRunning) stopProgression();
   Object.keys(swapTimers).forEach(k => { clearTimeout(swapTimers[k]); delete swapTimers[k]; });
   try {
