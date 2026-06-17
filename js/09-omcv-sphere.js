@@ -129,14 +129,10 @@ function _omDrawLevel(ctx, scale, rot, alpha, withLabels) {
 }
 
 function _omTick() {
-  _omRAF = requestAnimationFrame(_omTick);
-  const now = performance.now();
-  if (now - _omLast < 32) return;   // ~30 fps : doux pour l'œil, léger pour le CPU
-  _omLast = now;
-
   const cv = document.getElementById('omcv-canvas');
-  if (!cv) return;
+  if (!cv) { _omRAF = setTimeout(_omTick, 33); return; }
   const mob = window.innerWidth <= 900 || window.innerHeight <= 500;
+  const verySmall = window.innerWidth <= 360;
   const dpr = Math.min(window.devicePixelRatio || 1, mob ? 1.5 : 2);
   const vw = window.innerWidth, vh = window.innerHeight;
   const nW = Math.round(vw * dpr), nH = Math.round(vh * dpr);
@@ -144,7 +140,8 @@ function _omTick() {
   const ctx = cv.getContext('2d');
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   _omW = vw; _omH = vh; _omCx = vw / 2; _omCy = vh / 2;
-  _omR = Math.min(vw, vh) * 0.30;
+  // Réduit le rayon sur très petit écran (≤360px) pour laisser de la place aux panneaux
+  _omR = Math.min(vw, vh) * (verySmall ? 0.22 : mob ? 0.28 : 0.30);
   ctx.clearRect(0, 0, vw, vh);
 
   // Évolution autonome (kaléidoscope)
@@ -157,10 +154,12 @@ function _omTick() {
   _omDrawLevel(ctx, 1.00,  0,            1.0,  true);
   _omDrawLevel(ctx, 0.46, -OV.t * 0.10,  0.55, false);
   _omDrawLevel(ctx, 0.20,  OV.t * 0.18,  0.32, false);
+
+  _omRAF = setTimeout(_omTick, 33); // ~30 fps sans overhead RAF inutile
 }
 
 function initOmcv() {
-  if (_omRAF) cancelAnimationFrame(_omRAF);
-  _omLast = 0;
+  if (_omRAF) clearTimeout(_omRAF);
+  _omRAF = null;
   _omTick();
 }

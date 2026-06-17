@@ -385,14 +385,14 @@ async function stopFlow() {
 
 // ── Master Tick (RAF) ─────────────────────────────────────────
 let _glowFrame = 0;
+let _analyserSnap = null; // cache unique par frame — évite double getValue() (glow + spectroid)
 function masterTick() {
   masterRAF = requestAnimationFrame(masterTick);
-  // LFO géré nativement par Tone.LFO — aucun traitement JS ici
-  if (!flowing || !analyser || document.visibilityState === 'hidden') return;
+  if (!flowing || !analyser || document.visibilityState === 'hidden') { _analyserSnap = null; return; }
+  _analyserSnap = analyser.getValue(); // un seul appel par frame, partagé avec drawSpectroid
   // Throttle des écritures boxShadow (style-recalc) : 1 frame sur 2.
-  // Soulage le thread principal → moins d'underruns audio sur mobile/BT.
   if ((_glowFrame++ & 1) === 0) { drawSpectroid(); return; }
-  const data = analyser.getValue();
+  const data = _analyserSnap;
   let sum = 0, count = 0;
   for (let k = 0; k < data.length; k += 4) { sum += Math.abs(data[k]); count++; }
   const e = Math.min(1, sum / count * 7);

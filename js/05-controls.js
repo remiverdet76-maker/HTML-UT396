@@ -8,6 +8,7 @@
 // Band C (256–432): oscs 4,5
 // Maître : aléatoire 36–432
 function trigger0mcha396() {
+  try { navigator.vibrate([40, 20, 40, 20, 40]); } catch(e) {}
   masterFreq = 36 + Math.floor(Math.random() * 397);
 
   PAIRS[0].pingala.baseFreq = 36  + Math.floor(Math.random() * 72);
@@ -250,6 +251,7 @@ function onMasterChange(raw) {
 
 // FBF toggle flux
 function fbfToggle() {
+  try { navigator.vibrate(flowing ? [25] : [40, 20, 40]); } catch(e) {}
   if (typeof flowing !== 'undefined' && flowing) stopFlow(); else startFlow();
 }
 
