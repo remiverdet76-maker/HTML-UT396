@@ -8,7 +8,7 @@ const EQ_BANDS=[
   {id:'mid', freq:1000,gain:0,color:'#FFD060',type:'peak',     fMin:200, fMax:6000, label:'MID'},
   {id:'high',freq:5000,gain:0,color:'#FF8EFF',type:'highshelf',fMin:2000,fMax:20000,label:'HAUT'},
 ];
-var _eqDrag=null;
+var _eqDrag=null, _eq2dDirty=true;
 function _f2x(f,w){return w*Math.log(f/20)/Math.log(1000);}
 function _x2f(x,w){return 20*Math.pow(1000,x/w);}
 function _g2y(g,h){return h*(1-(g+18)/36);}
@@ -66,6 +66,7 @@ function _eqApply(bi){
   if(bi===0&&typeof eqLow!=='undefined'&&eqLow){eqLow.frequency.value=b.freq;eqLow.gain.value=b.gain;}
   if(bi===1&&typeof eqMid!=='undefined'&&eqMid){eqMid.frequency.value=b.freq;eqMid.gain.value=b.gain;}
   if(bi===2&&typeof eqHigh!=='undefined'&&eqHigh){eqHigh.frequency.value=b.freq;eqHigh.gain.value=b.gain;}
+  _eq2dDirty=true;
 }
 function initEQ2D(cv){
   if(!cv)return;
@@ -78,7 +79,7 @@ function initEQ2D(cv){
     const b=EQ_BANDS[_eqDrag],W=cv.offsetWidth,H=cv.offsetHeight;
     b.freq=Math.max(b.fMin,Math.min(b.fMax,_x2f(x,W)));
     b.gain=Math.max(-18,Math.min(18,_y2g(y,H)));
-    _eqApply(_eqDrag);drawEQ2D(cv);
+    _eqApply(_eqDrag); _eq2dDirty=true;
   };
   cv.addEventListener('mousedown',e=>{const{x,y}=getXY(e);_eqDrag=findBand(x,y);if(_eqDrag>=0)e.preventDefault();});
   window.addEventListener('mousemove',e=>{if(_eqDrag===null||_eqDrag<0)return;const r=cv.getBoundingClientRect();drag(e.clientX-r.left,e.clientY-r.top);});
@@ -86,7 +87,7 @@ function initEQ2D(cv){
   cv.addEventListener('touchstart',e=>{const{x,y}=getXY(e);_eqDrag=findBand(x,y);if(_eqDrag>=0)e.preventDefault();},{passive:false});
   cv.addEventListener('touchmove',e=>{if(_eqDrag===null||_eqDrag<0)return;e.preventDefault();const r=cv.getBoundingClientRect();drag(e.touches[0].clientX-r.left,e.touches[0].clientY-r.top);},{passive:false});
   cv.addEventListener('touchend',()=>{_eqDrag=null;});
-  (function loop(){drawEQ2D(cv);requestAnimationFrame(loop);})();
+  (function loop(){ if(_eq2dDirty){drawEQ2D(cv);_eq2dDirty=false;} requestAnimationFrame(loop); })();
 }
 
 // ── Mini frequency table (bottom left) ───────────────────────────
@@ -182,7 +183,8 @@ function _drawSpectroidOnCanvas(canvas) {
     ctx.fillText('· en attente de rayonnement ·', canvas.width/2, canvas.height/2+4);
     return;
   }
-  const values = analyser.getValue();
+  // Réutilise le snapshot du masterTick si disponible — évite un double getValue() par frame
+  const values = (typeof _analyserSnap !== 'undefined' && _analyserSnap) ? _analyserSnap : analyser.getValue();
   ctx.fillStyle = 'rgba(5,3,18,.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.beginPath(); ctx.lineWidth = 2;
   const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
@@ -468,9 +470,9 @@ function buildBowlHTML() {
     <div class="fx-block">
       <div class="fx-title">Frappe manuelle</div>
       <div class="fx-space-btns" style="margin-top:.4rem;">
-        <button class="fx-space-btn" onclick="Bowl.strike({kind:'strike',dur:2,gain:.55})">⊙ Court</button>
-        <button class="fx-space-btn" onclick="Bowl.strike({kind:'strike',dur:9,gain:.55})">⊙⊙ Long</button>
-        <button class="fx-space-btn" onclick="Bowl.strike({kind:'bowed',dur:8,gain:.45})">〜 Frotter</button>
+        <button class="fx-space-btn" onclick="try{navigator.vibrate([30]);}catch(e){}Bowl.strike({kind:'strike',dur:2,gain:.55})">⊙ Court</button>
+        <button class="fx-space-btn" onclick="try{navigator.vibrate([50]);}catch(e){}Bowl.strike({kind:'strike',dur:9,gain:.55})">⊙⊙ Long</button>
+        <button class="fx-space-btn" onclick="try{navigator.vibrate([30,15,30]);}catch(e){}Bowl.strike({kind:'bowed',dur:8,gain:.45})">〜 Frotter</button>
       </div>
     </div>
 

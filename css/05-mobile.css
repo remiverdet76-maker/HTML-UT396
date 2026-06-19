@@ -38,6 +38,14 @@
 }
 #flux-toggle-btn:active { opacity: .7; }
 
+/* ═══ Indicateur panel actif dans le menu ═══════════════════════ */
+.dmenu-item.on {
+  background: rgba(180,100,255,.12);
+  border-left: 3px solid rgba(180,100,255,.6);
+  padding-left: calc(.9rem - 3px);
+  color: rgba(220,180,255,1);
+}
+
 /* ═══ Smartphone ═══════════════════════════════════════════════════ */
 @media (max-width: 900px), (max-height: 500px) {
 
@@ -68,4 +76,44 @@
   #freq-mini { display: none !important; }
   #infobar   { display: none !important; }
   #right-dock { display: none !important; }
+}
+
+/* ═══ Très petit écran (≤360px) ════════════════════════════════════ */
+@media (max-width: 360px) {
+  /* Panel pleine largeur sans marge */
+  .pan-right.open {
+    max-width: 100vw !important;
+    padding: 10px 8px !important;
+  }
+  /* Réduire la nav bas pour gagner de la hauteur */
+  #bottom-nav { height: 52px !important; }
+  .bnav-lbl   { font-size: .62rem !important; }
+  /* Réduire la taille de base des textes dans les panels */
+  .fx-panel   { font-size: .8rem; }
+}
+
+/* ═══ Paysage mobile (landscape) ══════════════════════════════════ */
+@media (max-height: 500px) {
+  /* Panel latéral plus étroit en paysage pour laisser voir la sphère */
+  .pan-right.open {
+    max-width: 280px !important;
+    font-size: .8rem;
+  }
+  /* Nav bas plus fine */
+  #bottom-nav {
+    height: 50px !important;
+  }
+  .bnav-icon { font-size: 1rem !important; }
+  .bnav-lbl  { display: none !important; }
+
+  /* Bouton latéral Flux remonté pour ne pas chevaucher la nav */
+  #flux-toggle-btn {
+    height: 56px;
+    width: 38px;
+  }
+  /* Timer HUD plus petit en paysage */
+  #ses-timer-hud {
+    width: 34px !important;
+    height: 34px !important;
+  }
 }

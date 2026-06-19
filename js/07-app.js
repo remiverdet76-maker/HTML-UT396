@@ -168,11 +168,11 @@ function tPanel(panId, btnId) {
   const btn = document.getElementById(btnId);
   if (!pan) return;
 
-  // Désactiver le bouton principal 0mcha396 quand un panel est ouvert
   const mainBtn = document.getElementById('bnt-main');
 
   if (_openPanel === panId) {
     pan.classList.remove('open');
+    pan.setAttribute('inert', '');
     if (btn) btn.classList.remove('on');
     _openPanel = null; _openBtnId = null;
     if (mainBtn) mainBtn.classList.add('active');
@@ -181,22 +181,23 @@ function tPanel(panId, btnId) {
 
   if (_openPanel) {
     const old = document.getElementById(_openPanel);
-    if (old) old.classList.remove('open');
+    if (old) { old.classList.remove('open'); old.setAttribute('inert', ''); }
     if (_openBtnId) { const ob = document.getElementById(_openBtnId); if (ob) ob.classList.remove('on'); }
   }
 
   pan.classList.add('open');
+  pan.removeAttribute('inert');
   if (btn) btn.classList.add('on');
   _openPanel = panId; _openBtnId = btnId;
   if (mainBtn) mainBtn.classList.remove('active');
-  if (panId === 'panFX') requestAnimationFrame(()=>initEQ2D(document.getElementById('eq2d-canvas')));
+  if (panId === 'panFX') requestAnimationFrame(()=>{ initEQ2D(document.getElementById('eq2d-canvas')); _eq2dDirty=true; });
 }
 
 function openTab(id) { tPanel(id, null); }
 function closePanel() {
   if (_openPanel) {
     const old = document.getElementById(_openPanel);
-    if (old) old.classList.remove('open');
+    if (old) { old.classList.remove('open'); old.setAttribute('inert', ''); }
     if (_openBtnId) { const ob = document.getElementById(_openBtnId); if (ob) ob.classList.remove('on'); }
     _openPanel = null; _openBtnId = null;
   }
@@ -250,6 +251,7 @@ function closeOscModal() {
 }
 
 // ── Minuterie de méditation ───────────────────────────────────────
+const _TIMER_KEY = 'fbf432-timer';
 let _sesTimer = null, _sesDur = 0, _sesElapsed = 0, _sesMins = 20;
 
 function timerPreset(mins) {
@@ -266,6 +268,13 @@ function timerToggle() {
   _updateTimerDisplay(_sesDur);
   _updateTimerHUD(_sesDur, _sesDur);
   playBell();
+  _startTimerTick();
+  const btn = document.getElementById('btn-timer-start');
+  if (btn) { btn.textContent = '■ Arrêter'; btn.style.color = '#FF8E8E'; btn.style.borderColor = '#FF8E8E44'; }
+}
+function _startTimerTick() {
+  // Persiste startMs+dur → reprise possible après fermeture de l'app
+  try { localStorage.setItem(_TIMER_KEY, JSON.stringify({ startMs: Date.now() - _sesElapsed * 1000, dur: _sesDur })); } catch(e) {}
   _sesTimer = setInterval(() => {
     _sesElapsed++;
     const rem = _sesDur - _sesElapsed;
@@ -273,14 +282,29 @@ function timerToggle() {
     _updateTimerHUD(rem, _sesDur);
     if (rem <= 0) { _stopTimer(); playBell(); setTimeout(playBell,2500); _doFadeStop(); }
   }, 1000);
-  const btn = document.getElementById('btn-timer-start');
-  if (btn) { btn.textContent = '■ Arrêter'; btn.style.color = '#FF8E8E'; btn.style.borderColor = '#FF8E8E44'; }
 }
 function _stopTimer() {
   clearInterval(_sesTimer); _sesTimer = null;
+  try { localStorage.removeItem(_TIMER_KEY); } catch(e) {}
   _updateTimerHUD(0, 0);
   const btn = document.getElementById('btn-timer-start');
   if (btn) { btn.textContent = '▶ Démarrer'; btn.style.color = ''; btn.style.borderColor = ''; }
+}
+function _resumeTimerIfNeeded() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(_TIMER_KEY));
+    if (!saved?.startMs || !saved?.dur) return;
+    const elapsed = Math.floor((Date.now() - saved.startMs) / 1000);
+    const remaining = saved.dur - elapsed;
+    if (remaining <= 5) { localStorage.removeItem(_TIMER_KEY); return; }
+    _sesDur = saved.dur; _sesElapsed = elapsed;
+    _sesMins = Math.ceil(saved.dur / 60);
+    _updateTimerDisplay(remaining);
+    _updateTimerHUD(remaining, saved.dur);
+    const btn = document.getElementById('btn-timer-start');
+    if (btn) { btn.textContent = '■ Reprend'; btn.style.color = '#FFD060'; btn.style.borderColor = '#FFD06044'; }
+    _startTimerTick();
+  } catch(e) {}
 }
 
 function _updateTimerHUD(remaining, total) {
@@ -460,6 +484,9 @@ function init() {
 
   // Load session presets
   _loadSessionPresets();
+
+  // Reprend la minuterie si l'app a été fermée en cours de session
+  _resumeTimerIfNeeded();
 
   // Build vesica spheres
   buildVesicaPairs();

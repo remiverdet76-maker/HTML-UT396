@@ -33,18 +33,18 @@
 <!-- Couche sphère unique -->
 <div id="sphere-layer"></div>
 
-<!-- Panel FX (accessible via onglet bas) -->
-<div class="pan-right" id="panFX">
+<!-- Panel FX (inert par défaut — keyboard nav désactivé quand fermé) -->
+<div class="pan-right" id="panFX" inert>
   <div id="panel-fx-body"></div>
 </div>
 
 <!-- Panel Bol Tibétain -->
-<div class="pan-right" id="panBowl">
+<div class="pan-right" id="panBowl" inert>
   <div id="bowl-panel-body"></div>
 </div>
 
 <!-- Panel Fonds d'écran -->
-<div class="pan-right" id="panBG">
+<div class="pan-right" id="panBG" inert>
   <div class="bg-panel">
     <div class="bg-panel-head">✦ Fonds d'écran</div>
     <div class="bg-nav">
@@ -69,13 +69,13 @@
 
 <!-- Tiroir menu déroulant -->
 <div id="drop-menu">
-  <button class="dmenu-item" onclick="tPanel('panFX',null);closeMenu()">
+  <button class="dmenu-item" id="dmenu-fx" onclick="tPanel('panFX','dmenu-fx');closeMenu()">
     <span class="dmenu-ico">✦</span>FX — Effets sonores
   </button>
-  <button class="dmenu-item" onclick="tPanel('panBG',null);closeMenu()">
+  <button class="dmenu-item" id="dmenu-bg" onclick="tPanel('panBG','dmenu-bg');closeMenu()">
     <span class="dmenu-ico">🖼</span>Fonds d'écran
   </button>
-  <button class="dmenu-item" onclick="tPanel('panBowl',null);closeMenu()">
+  <button class="dmenu-item" id="dmenu-bowl" onclick="tPanel('panBowl','dmenu-bowl');closeMenu()">
     <span class="dmenu-ico">⌕</span>Bol Tibétain
   </button>
   <button class="dmenu-item" onclick="toggleFullscreen();closeMenu()">
@@ -118,5 +118,10 @@
 <script src="js/07-app.js"></script>
 <script src="js/08-bowl-engine.js"></script>
 <script src="js/09-omcv-sphere.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+  }
+</script>
 </body>
 </html>
