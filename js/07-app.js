@@ -501,8 +501,8 @@ function init() {
   // Initialise les 18 fonds d'écran (+ restaure le dernier choisi)
   initBackgrounds();
 
-  // Démarre la Sphère OmCv (structure 3D fractale, évolution autonome)
-  initOmcv();
+  // Démarre la Sphère Solaire Mandala (fond génératif SVG 3D)
+  initSolarSphere();
 
   // Démarre la boucle de visualisation audio (spectroïde + halo sphère)
   masterTick();
@@ -534,6 +534,7 @@ function init() {
   window.patchFBFState = function() {
     _pF && _pF();
     typeof updateSphereDisplay === 'function' && updateSphereDisplay();
+    typeof setSolarBreathing === 'function' && setSolarBreathing(!!flowing);
   };
 })();
 

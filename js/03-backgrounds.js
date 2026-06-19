@@ -23,7 +23,11 @@ const BG_GRAD = Array.from({ length: BG_COUNT }, (_, i) => {
 
 let _bgIdx = 0;
 
-function _bgFile(i) { return `img/bg-${String(i + 1).padStart(2, '0')}.png`; }
+// Slot 0 = fond cosmique par défaut (toujours présent), slots 1–17 = img/bg-02 … bg-18
+function _bgFile(i) {
+  if (i === 0) return 'resources/fondcosmique.jpg';
+  return `img/bg-${String(i + 1).padStart(2, '0')}.png`;
+}
 
 // Affiche le fond i : dégradé de secours immédiat, puis le vrai .png s'il existe.
 function setBackground(i) {
@@ -72,4 +76,15 @@ function initBackgrounds() {
   try { saved = parseInt(localStorage.getItem(BG_KEY)) || 0; } catch (e) {}
   buildBgGrid();
   setBackground(saved);
+}
+
+// Import d'une image depuis l'appareil — session uniquement (pas de persistance)
+function handleBgUpload(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const el = document.getElementById('cosmic-bg');
+  if (el) el.style.backgroundImage = `url("${url}")`;
+  document.querySelectorAll('.bg-thumb').forEach(t => t.classList.remove('active'));
+  input.value = '';
 }
