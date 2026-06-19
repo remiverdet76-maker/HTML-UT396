@@ -18,19 +18,24 @@
 <link rel="stylesheet" href="css/03-controls.css">
 <link rel="stylesheet" href="css/04-ui.css">
 <link rel="stylesheet" href="css/05-mobile.css">
+<link rel="stylesheet" href="css/06-solar.css">
 </head>
 <body>
 
 <!-- Couche fond d'écran (18 fonds commutables) -->
 <div id="cosmic-bg"></div>
 
-<!-- Sphère OmCv — structure 3D fractale kaléidoscopique -->
-<canvas id="omcv-canvas"></canvas>
+<!-- Sphère Solaire Mandala (fond génératif SVG 3D) -->
+<div id="solar-layer">
+  <div class="solar-scene">
+    <div id="solar-sphere"></div>
+  </div>
+</div>
 
 <!-- Titre discret en haut -->
 <div id="app-title">0mcha396</div>
 
-<!-- Couche sphère unique -->
+<!-- Couche sphère unique (planète 3D centrale) -->
 <div id="sphere-layer"></div>
 
 <!-- Panel FX (inert par défaut — keyboard nav désactivé quand fermé) -->
@@ -52,6 +57,17 @@
       <button onclick="nextBackground()" aria-label="Fond suivant">›</button>
     </div>
     <div id="bg-grid" class="bg-grid"></div>
+    <!-- Couleur du mandala solaire -->
+    <div class="solar-palette-section">
+      <span class="solar-palette-label">✦ Couleur Mandala</span>
+      <div id="solar-palette-bar"></div>
+    </div>
+    <!-- Import image personnalisée depuis l'appareil -->
+    <div class="bg-upload-row">
+      <label class="bg-upload-btn" for="bg-upload-input">↑ Importer une image</label>
+      <input type="file" id="bg-upload-input" accept="image/*" style="display:none"
+             onchange="handleBgUpload(this)">
+    </div>
   </div>
 </div>
 
@@ -117,7 +133,7 @@
 <script src="js/06-ui-builders.js"></script>
 <script src="js/07-app.js"></script>
 <script src="js/08-bowl-engine.js"></script>
-<script src="js/09-omcv-sphere.js"></script>
+<script src="js/10-solar-sphere.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));

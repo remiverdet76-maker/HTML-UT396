@@ -22,20 +22,21 @@ function _sphEnd() {
 }
 function _sphCancel() { clearTimeout(_sphTimer); _sphTimer = null; }
 
-// Calcule le style inline de la bulle selon la couleur active
+// Calcule le style inline de la bulle (planète 3D avec volume et reflets)
 function _sphereStyle(color) {
   return {
-    borderColor: color + 'BB',
-    background: `radial-gradient(circle at 35% 28%,
-      rgba(255,255,255,.88) 0%,
-      rgba(255,255,255,.45) 5%,
-      ${color}AA 18%,
-      ${color}77 44%,
-      ${color}33 68%,
-      rgba(8,2,24,.55) 88%)`,
-    boxShadow: `0 0 90px ${color}55,0 0 44px ${color}33,
-      inset 0 0 65px ${color}18,
-      inset 28px 28px 52px rgba(255,255,255,.13)`
+    borderColor: color + '66',
+    background: `radial-gradient(circle at 34% 28%,
+      rgba(255,255,255,.92) 0%,
+      rgba(255,255,255,.55) 4%,
+      ${color}CC 12%,
+      ${color}88 30%,
+      ${color}44 55%,
+      rgba(0,0,0,.74) 100%)`,
+    boxShadow: `0 0 90px ${color}44, 0 0 44px ${color}22,
+      inset 0 0 70px ${color}22,
+      inset -20px -20px 42px rgba(0,0,0,.62),
+      0 18px 55px rgba(0,0,0,.72)`
   };
 }
 

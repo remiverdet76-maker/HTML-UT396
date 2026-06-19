@@ -1,0 +1,160 @@
+/* ═══════════════════════════════════════════
+   06-solar.css — Sphère Solaire Mandala (fond génératif)
+   ═══════════════════════════════════════════ */
+
+#solar-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: .68;
+}
+
+.solar-scene {
+  perspective: 1600px;
+  perspective-origin: 50% 46%;
+  width: min(90vmin, 700px);
+  aspect-ratio: 1 / 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 0 60px rgba(180,100,255,.2));
+}
+
+#solar-sphere {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: solarRespire 9s ease-in-out infinite;
+}
+
+@keyframes solarRespire {
+  0%, 100% { transform: scale(.97) rotateX(7deg); }
+  50%       { transform: scale(1.01) rotateX(7deg); }
+}
+
+/* Couches SVG */
+.solar-couche {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.solar-couche svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Profondeur Z + rotations différentielles (parallaxe 3D) */
+.solar-rayons     { --sz: -120px; transform: translateZ(-120px); animation: sTurnA 120s linear infinite; }
+.solar-anneau-ext { --sz: -40px;  transform: translateZ(-40px);  animation: sTurnB  90s linear infinite; }
+.solar-anneau-med { --sz:  20px;  transform: translateZ( 20px);  animation: sTurnA  70s linear infinite; }
+.solar-petales    { --sz:  60px;  transform: translateZ( 60px);  animation: sTurnB  55s linear infinite; }
+.solar-coeur      { --sz: 110px;  transform: translateZ(110px);  animation: sTurnA  40s linear infinite; }
+.solar-noyau      { --sz: 160px;  transform: translateZ(160px); }
+
+@keyframes sTurnA {
+  to { transform: translateZ(var(--sz, 0)) rotate(360deg); }
+}
+@keyframes sTurnB {
+  to { transform: translateZ(var(--sz, 0)) rotate(-360deg); }
+}
+
+/* Ombrage sphérique volumétrique */
+.solar-volume {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  transform: translateZ(170px);
+  background: radial-gradient(circle at 36% 30%,
+    rgba(255,255,255,.26) 0%, rgba(255,255,255,.06) 28%,
+    rgba(0,0,0,.08) 60%, rgba(0,0,0,.26) 100%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+/* Respiration active (flux ON) */
+#solar-sphere.breathing {
+  animation: solarRespire 9s ease-in-out infinite, solarBreathGlow 3.5s ease-in-out infinite;
+}
+@keyframes solarBreathGlow {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50%       { filter: brightness(1.22) saturate(1.38); }
+}
+
+/* ── Sélecteur de palette ─────────────────────── */
+.solar-palette-section {
+  margin-top: 1rem;
+  padding-top: .8rem;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.solar-palette-label {
+  display: block;
+  font-size: .52rem;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(200,180,255,.35);
+  margin-bottom: .55rem;
+}
+#solar-palette-bar {
+  display: flex;
+  gap: .55rem;
+  flex-wrap: wrap;
+}
+.solar-pal-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.14);
+  cursor: pointer;
+  transition: all .2s;
+  flex-shrink: 0;
+}
+.solar-pal-btn:hover  { transform: scale(1.22); border-color: rgba(255,255,255,.5); }
+.solar-pal-btn.active { border-color: #86FFC0; box-shadow: 0 0 12px rgba(134,255,192,.5); }
+
+/* ── Upload fond personnalisé ─────────────────── */
+.bg-upload-row {
+  margin-top: .9rem;
+  display: flex;
+  justify-content: center;
+}
+.bg-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .65rem 1.2rem;
+  border-radius: 8px;
+  background: rgba(200,100,255,.1);
+  border: 1.5px solid rgba(200,100,255,.38);
+  color: rgba(220,180,255,.85);
+  font-family: 'IM Fell English', serif;
+  font-size: .85rem;
+  cursor: pointer;
+  transition: all .22s;
+  letter-spacing: .06em;
+  user-select: none;
+}
+.bg-upload-btn:hover {
+  background: rgba(200,100,255,.22);
+  border-color: rgba(200,100,255,.68);
+  color: #F3D9FF;
+}
+
+/* ── Responsive ───────────────────────────────── */
+@media (max-width: 900px), (max-height: 500px) {
+  .solar-scene { width: min(80vmin, 540px); }
+  #solar-layer  { opacity: .6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .solar-rayons, .solar-anneau-ext, .solar-anneau-med,
+  .solar-petales, .solar-coeur, #solar-sphere { animation: none !important; }
+}
